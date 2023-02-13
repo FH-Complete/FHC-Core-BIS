@@ -1,2 +1,3 @@
 config/BISClient.php
+config/BISSync.php
 .idea

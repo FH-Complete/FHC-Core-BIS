@@ -7,12 +7,15 @@ abstract class BISClientModel extends CI_Model
 {
 	protected $_apiSetName; // to store the name of the api set name
 
+	public $hasBadRequestError; // wether bad request error is returned
+	public $hasNotFoundError; // wether not found request error is returned
+
 	/**
 	 *
 	 */
 	public function __construct()
 	{
-		// Loads the BisClientLib library
+		// Loads the BISClientLib library
 		$this->load->library('extensions/FHC-Core-BIS/BISClientLib');
 	}
 
@@ -38,6 +41,8 @@ abstract class BISClientModel extends CI_Model
 		// If an error occurred return it
 		if ($this->bisclientlib->isError())
 		{
+			$this->hasBadRequestError = $this->bisclientlib->hasBadRequestError();
+			$this->hasNotFoundError = $this->bisclientlib->hasNotFoundError();
 			$wsResult = error($this->bisclientlib->getError(), $this->bisclientlib->getErrorCode());
 		}
 		else // otherwise return a success
@@ -52,4 +57,3 @@ abstract class BISClientModel extends CI_Model
 		return $wsResult;
 	}
 }
-

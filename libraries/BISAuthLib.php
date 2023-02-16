@@ -2,7 +2,6 @@
 
 if (!defined('BASEPATH')) exit('No direct script access allowed');
 
-
 /**
  * Library to Connect to BIS Services
  */

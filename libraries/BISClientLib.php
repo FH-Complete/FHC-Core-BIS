@@ -13,7 +13,6 @@ class BISClientLib
 	const URI_TEMPLATE = '%s://%s/%s/%s'; // URI format
 	const AUTHORIZATION_HEADER_NAME = 'Authorization'; // accept header name
 	const AUTHORIZATION_HEADER_PREFIX = 'Bearer'; // accept header name
-	const ACCEPT_HEADER_NAME = 'Accept'; // accept header name
 	const ACCEPT_HEADER_VALUE = 'application/json'; // accept header value
 
 	// Configs parameters names
@@ -58,6 +57,8 @@ class BISClientLib
 
 	private $_hasData;		// indicates if there are data in the response or not
 	private $_emptyResponse;	// indicates if the response is empty or not
+	private $_hasBadRequestError;	// indicates if a "bad request" error was returned
+	private $_hasNotFoundError;	// indicates if a "not found" error was returned
 
 	private $_ci;			// Code igniter instance
 
@@ -203,6 +204,22 @@ class BISClientLib
 	}
 
 	/**
+	 * Returns true if the response has a bad request error, otherwise false
+	 */
+	public function hasBadRequestError()
+	{
+		return $this->_hasBadRequestError;
+	}
+
+	/**
+	 * Returns true if the response has a not found error, otherwise false
+	 */
+	public function hasNotFoundError()
+	{
+		return $this->_hasNotFoundError;
+	}
+
+	/**
 	 * Reset the library properties to default values
 	 */
 	public function resetToDefault()
@@ -216,6 +233,8 @@ class BISClientLib
 		$this->_errorMessage = '';
 		$this->_hasData = false;
 		$this->_emptyResponse = false;
+		$this->_hasBadRequestError = false;
+		$this->_hasNotFoundError = false;
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -236,6 +255,8 @@ class BISClientLib
 		$this->_errorMessage = '';
 		$this->_hasData = false;
 		$this->_emptyResponse = false;
+		$this->_hasBadRequestError = false;
+		$this->_hasNotFoundError = false;
 	}
 
 	/**
@@ -290,7 +311,7 @@ class BISClientLib
 		$queryString = '';
 
 		// Create the query string
-		foreach ($this->_uriParametersArray as $name => $value)
+		foreach ($this->_uriParametersArray as $value)
 		{
 				$queryString .= '/'.urlencode($value);
 		}
@@ -395,10 +416,10 @@ class BISClientLib
 				{
 					// otherwise everything is fine
 					// If data are present in the body of the response
-						$checkResponse = $response->body; // returns a success
+					$checkResponse = $response->body; // returns a success
 
-						// Set property _hasData
-						$this->_hasData = !isEmptyArray($response->body);
+					// Set property _hasData
+					$this->_hasData = !isEmptyArray($response->body);
 				}
 				else // ...if body empty
 				{
@@ -414,6 +435,10 @@ class BISClientLib
 			}
 			else // otherwise checks what error occurred
 			{
+				// set error flags
+				if ($response->code == self::HTTP_BAD_REQUEST) $this->_hasBadRequestError = true;
+				if ($response->code == self::HTTP_NOT_FOUND) $this->_hasNotFoundError = true;
+
 				$errorCode = self::ERROR; // generic error code by default
 				$errorMessage = 'A fatal error occurred on the remote server'; // default error message
 
@@ -422,7 +447,7 @@ class BISClientLib
 				{
 					// Try to retrieve the error message from body
 					if (isset($response->body) && isset($response->body->IsError) && $response->body->IsError == '1'
-						&& isset($response->body->ErrorMessage))
+						&& isset($response->body->ErrorMessage) && !isEmptyString($response->body->ErrorMessage))
 					{
 						$errorMessage = $response->body->ErrorMessage;
 					}
@@ -438,7 +463,7 @@ class BISClientLib
 				}
 
 				// Finally set the error!
-				$this->_error($errorCode, $errorMessage);
+				$this->_error($errorCode, $errorMessage.'; HTTP code: '.$response->code);
 			}
 		}
 		else // if the response has no body

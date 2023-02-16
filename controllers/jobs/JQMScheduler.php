@@ -3,7 +3,7 @@
 if (!defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
- *
+ * Adds jobs to queue.
  */
 class JQMScheduler extends JQW_Controller
 {

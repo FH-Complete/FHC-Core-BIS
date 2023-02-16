@@ -1,6 +1,6 @@
 <?php
 
-require_once APPPATH.'/models/extensions/FHC-Core-BIS/BISClientModel.php';
+require_once APPPATH.'models/extensions/FHC-Core-BIS/BISClientModel.php';
 
 /**
  * Implements the UHSTAT webservice calls for UHSTAT1

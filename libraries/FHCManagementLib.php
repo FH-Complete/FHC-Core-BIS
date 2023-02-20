@@ -22,7 +22,7 @@ class FHCManagementLib
 	// Public methods
 
 	/**
-	 * Gets all valid prestudents of a person.
+	 * Gets student data needed for sending as UHSTAT0 data.
 	 * @param int $person_id
 	 * @param string $studiensemester
 	 * @param array $status_kurzbz

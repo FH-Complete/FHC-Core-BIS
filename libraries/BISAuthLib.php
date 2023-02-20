@@ -12,7 +12,7 @@ class BISAuthLib
 
 	const USERNAME = 'username';
 	const PASSWORD = 'password';
-	const AUTHENTICATION_PATH = '/oauth/token';
+	const AUTHENTICATION_PATH = 'oauth/token';
 	const AUTHENTICATION_GRANT_TYPE_NAME = 'grant_type';
 	const AUTHENTICATION_GRANT_TYPE_VALUE = 'password';
 	const AUTHORIZATION_HEADER_NAME = 'Authorization';

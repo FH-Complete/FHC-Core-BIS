@@ -85,7 +85,7 @@ class BISDataManagementLib extends BISErrorProducerLib
 
 		if (isError($uhstat1Res))
 		{
-			// if not found error, this usually means there is no data entry.
+			// if "not found" error, this usually means there is no data entry.
 			// yeah, this is pretty vaguely implemented, an assumption has to be made...
 			if ($this->_ci->UHSTAT1Model->hasNotFoundError)
 				$this->addWarning("Keine UHSTAT 1 Daten gefunden");

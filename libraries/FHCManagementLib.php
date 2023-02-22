@@ -33,9 +33,10 @@ class FHCManagementLib
 		$params = array($prestudent_id, $studiensemester_kurzbz, $status_kurzbz);
 
 		$prstQry = "SELECT
-						DISTINCT ON (prestudent_id) substring(sem.studienjahr_kurzbz, 0, 5) AS studienjahr, sem.studiensemester_kurzbz,
-						ps.studiengang_kz, stg_orgform.code AS studiengang_orgform_code,
-						ps.zgv_code, ps.zgvmas_code,
+						DISTINCT ON (prestudent_id) ps.prestudent_id, pers.person_id,
+						substring(sem.studienjahr_kurzbz, 0, 5) AS studienjahr, sem.studiensemester_kurzbz,
+						ps.studiengang_kz, stg.oe_kurzbz, stg.typ AS studiengang_typ, stg_orgform.code AS studiengang_orgform_code,
+						lgart.lgart_biscode, ps.zgv_code, ps.zgvmas_code,
 						studplan_orgform.code AS studienplan_orgform_code, pss_orgform.code AS prestudentstatus_orgform_code,
 						pers.svnr, pers.ersatzkennzeichen, pers.geschlecht, pers.gebdatum, pers.staatsbuergerschaft AS staatsbuergerschaft_code
 					FROM
@@ -49,6 +50,7 @@ class FHCManagementLib
 						LEFT JOIN bis.tbl_orgform studplan_orgform
 							ON studplan_orgform.orgform_kurzbz = studplan.orgform_kurzbz AND studplan_orgform.rolle = TRUE
 						LEFT JOIN bis.tbl_orgform pss_orgform ON pss_orgform.orgform_kurzbz = pss.orgform_kurzbz AND pss_orgform.rolle = TRUE
+						LEFT JOIN bis.tbl_lgartcode lgart ON (stg.lgartcode = lgart.lgartcode)
 					WHERE
 						prestudent_id = ?
 						AND studiensemester_kurzbz = ?

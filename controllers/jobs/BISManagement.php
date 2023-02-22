@@ -7,6 +7,7 @@ if (!defined('BASEPATH')) exit('No direct script access allowed');
  */
 class BISManagement extends JQW_Controller
 {
+	const APP = 'bis'; // application
 	private $_logInfos; // stores config param for info display
 
 	/**
@@ -17,6 +18,14 @@ class BISManagement extends JQW_Controller
 		parent::__construct();
 
 		// load libraries
+		$this->load->library(
+			'IssuesLib',
+			array(
+				'app' => self::APP,
+				'insertvon' => 'bissync',
+				'fallbackFehlercode' => 'BIS_ERROR'
+			)
+		);
 		$this->load->library('extensions/FHC-Core-BIS/BISDataManagementLib');
 
 		// load configs and save "log infos" parameter
@@ -71,10 +80,17 @@ class BISManagement extends JQW_Controller
 
 						foreach ($errors as $error)
 						{
+							// write error log
 							$this->logError(
 								"Fehler beim Senden der UHSTAT 0 Daten, Prestudent Id $prestudent_id, Studiensemester $studiensemester_kurzbz"
-								.": ".getError($error)
+								.": ".getError($error->error)
 							);
+
+							// write issue
+							$addIssueRes = $this->_addIssue($error);
+
+							// log error if adding of issue failed
+							if (isError($addIssueRes)) $this->logError("Fehler beim Hinzufügen des BIS issue für prestudent mit ID $prestudent_id");
 						}
 					}
 
@@ -85,10 +101,17 @@ class BISManagement extends JQW_Controller
 
 						foreach ($warnings as $warning)
 						{
+							// write warning log
 							$this->logWarning(
 								"Fehler beim Senden der UHSTAT 0 Daten, Prestudent Id $prestudent_id, Studiensemester $studiensemester_kurzbz"
-								.": ".getError($warning)
+								.": ".getError($warning->error)
 							);
+
+							// write issue
+							$addIssueRes = $this->_addIssue($warning);
+
+							// log error if adding of issue failed
+							if (isError($addIssueRes)) $this->logError("Fehler beim Hinzufügen des  BIS issue für prestudent with ID $prestudent_id");
 						}
 					}
 
@@ -96,7 +119,7 @@ class BISManagement extends JQW_Controller
 					if (isSuccess($sendUHSTAT0Res))
 					{
 						$this->_logInfoIfEnabled(
-							"UHSTAT0 data for Prestudent Id $prestudent_id, Studiensemester $studiensemester_kurzbz erfolgreich gesendet"
+							"UHSTAT0 data für Prestudent Id $prestudent_id, Studiensemester $studiensemester_kurzbz erfolgreich gesendet"
 						);
 					}
 				}
@@ -151,5 +174,29 @@ class BISManagement extends JQW_Controller
 	{
 		if ($this->_logInfos === true)
 			$this->logInfo($info);
+	}
+
+	/**
+	 * Adds issue.
+	 * @param object $issue
+	 */
+	private function _addIssue($issue)
+	{
+		// if issue is really an issue
+		if (isset($issue->issue->issue_fehler_kurzbz))
+		{
+			$issue = $issue->issue;
+			// add issue with its params
+			return $this->issueslib->addFhcIssue(
+				$issue->issue_fehler_kurzbz,
+				isset($issue->person_id) ? $issue->person_id : null,
+				isset($issue->oe_kurzbz) ? $issue->oe_kurzbz : null,
+				isset($issue->issue_fehlertext_params) ? $issue->issue_fehlertext_params : null,
+				isset($issue->issue_resolution_params) ? $issue->issue_resolution_params : null
+			);
+		}
+
+		// do nothing if not issue
+		return success();
 	}
 }

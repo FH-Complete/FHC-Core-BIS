@@ -38,6 +38,9 @@ class BISDataManagementLib extends BISErrorProducerLib
 		$this->_ci->load->model('extensions/FHC-Core-BIS/UHSTAT1Model', 'UHSTAT1Model');
 		$this->_ci->load->model('extensions/FHC-Core-BIS/synctables/BISUHSTAT0_model', 'BISUHSTAT0Model');
 
+		// load helpers
+		$this->_ci->load->helper('extensions/FHC-Core-BIS/hlp_sync_helper');
+
 		// load configs
 		$this->_ci->config->load('extensions/FHC-Core-BIS/BISSync');
 
@@ -68,7 +71,7 @@ class BISDataManagementLib extends BISErrorProducerLib
 
 		if (!hasData($studentRes))
 		{
-			$this->addError("Fehler beim Senden der UHSTAT0 Daten: FHC Datensatz nicht gefunden");
+			$this->addError(error("Fehler beim Senden der UHSTAT0 Daten: FHC Datensatz nicht gefunden"));
 			return null;
 		}
 
@@ -88,9 +91,9 @@ class BISDataManagementLib extends BISErrorProducerLib
 			// if "not found" error, this usually means there is no data entry.
 			// yeah, this is pretty vaguely implemented, an assumption has to be made...
 			if ($this->_ci->UHSTAT1Model->hasNotFoundError)
-				$this->addWarning("Keine UHSTAT 1 Daten gefunden");
+				$this->addWarning(error("Keine UHSTAT 1 Daten gefunden"));
 			else // otherwise there is another, a "serious" error
-				$this->addError("Fehler beim Prüfen des UHSTAT1 Eintrags: ".getError($uhstat1Res));
+				$this->addError(error("Fehler beim Prüfen des UHSTAT1 Eintrags: ".getError($uhstat1Res)));
 
 			// return null since UHSTAT0 request did not get through
 			return null;
@@ -131,13 +134,12 @@ class BISDataManagementLib extends BISErrorProducerLib
 		// write error if adding of sync entry failed
 		if (isError($uhstatSyncSaveRes))
 		{
-			$this->addError("UHSTAT0 Daten erfolgreich gesendet, Fehler beim Speichern der Meldung in FHC");
+			$this->addError(error("UHSTAT0 Daten erfolgreich gesendet, Fehler beim Speichern der Meldung in FHC"));
 			return null;
 		}
 
 		return success("UHSTAT0 Daten erfolgreich gesendet");
 	}
-
 
 	// --------------------------------------------------------------------------------------------
 	// Private methods
@@ -165,20 +167,37 @@ class BISDataManagementLib extends BISErrorProducerLib
 			$codeData->semesterCode = $this->_semester_codes[$semester_type];
 		else
 		{
-			$this->addError("Kein Code zum Studiensemestertyp gefunden");
+			$this->addError(error("Kein Code zum Studiensemestertyp gefunden"));
 			$errorOccured = true;
 		}
 
 		// get correct orgform
-		if (isset($studentData->studienplan_orgform_code) && !isEmptyString($studentData->studienplan_orgform_code))
+		if (isset($studentData->studienplan_orgform_code) && is_numeric($studentData->studienplan_orgform_code))
 			$codeData->orgForm = $studentData->studienplan_orgform_code;
-		elseif (isset($studentData->prestudentstatus_orgform_code) && !isEmptyString($studentData->prestudentstatus_orgform_code))
+		elseif (isset($studentData->prestudentstatus_orgform_code) && is_numeric($studentData->prestudentstatus_orgform_code))
 			$codeData->orgForm = $studentData->prestudentstatus_orgform_code;
-		elseif (isset($studentData->studiengang_orgform_code) && !isEmptyString($studentData->studiengang_orgform_code))
+		elseif (isset($studentData->studiengang_orgform_code) && is_numeric($studentData->studiengang_orgform_code))
 			$codeData->orgForm = $studentData->studiengang_orgform_code;
 		else
 		{
-			$this->addError("Organisationsform nicht gefunden");
+			// add issue if data missing
+			$this->addWarning(
+				error("Organisationsform nicht gefunden"),
+				createIssueObj(
+					'uhstatOrgformFehlt',
+					$studentData->person_id,
+					$studentData->oe_kurzbz,
+					array(
+						'prestudent_id' => $studentData->prestudent_id,
+						'studiensemester_kurzbz' => $studentData->studiensemester_kurzbz
+					), // fehlertext params
+					array(
+						'prestudent_id' => $studentData->prestudent_id,
+						'studiensemester_kurzbz' => $studentData->studiensemester_kurzbz
+					) // resolution params
+				)
+			);
+			// error occured, do not report student
 			$errorOccured = true;
 		}
 
@@ -195,7 +214,15 @@ class BISDataManagementLib extends BISErrorProducerLib
 		}
 		else
 		{
-			$this->addWarning("Weder svnr noch Ersatzkennzeichen vorhanden");
+			// add issue if data missing
+			$this->addWarning(
+				error("Svnr und Ersatzkennzeichen fehlt"),
+				createIssueObj(
+					'uhstatSvnrUndEkzFehlt',
+					$studentData->person_id
+				)
+			);
+			// error occured, do not report student
 			$errorOccured = true;
 		}
 
@@ -206,22 +233,54 @@ class BISDataManagementLib extends BISErrorProducerLib
 		}
 		else
 		{
-			$this->addWarning("Staatsbuergerschaft nicht vorhanden");
+			// add issue if data missing
+			$this->addWarning(
+				error("Staatsbürgerschaft nicht vorhanden"),
+				createIssueObj(
+					'uhstatStaatsbuergerschaftFehlt',
+					$studentData->person_id
+				)
+			);
+			// error occured, do not report student
 			$errorOccured = true;
 		}
 
 		// get Zugangsberechtigung
-		if (isset($studentData->zgvmas_code) && !isEmptyString($studentData->zgvmas_code))
+		$zgvMissing = false;
+
+		if ($studentData->studiengang_typ == 'm' || $studentData->lgart_biscode == '1') // zgv master for master Studiengang/Lehrgang
 		{
-			$codeData->Zugangsberechtigung = $studentData->zgvmas_code;
-		}
-		elseif (isset($studentData->zgv_code) && !isEmptyString($studentData->zgv_code))
-		{
-			$codeData->Zugangsberechtigung = $studentData->zgv_code;
+			if (isset($studentData->zgvmas_code) && is_numeric($studentData->zgvmas_code))
+			{
+				$codeData->Zugangsberechtigung = $studentData->zgvmas_code;
+			}
+			else
+				$zgvMissing = true;
 		}
 		else
 		{
-			$this->addWarning("Zgv/Zgv Master nicht vorhanden");
+			if (isset($studentData->zgv_code) && is_numeric($studentData->zgv_code))
+			{
+				$codeData->Zugangsberechtigung = $studentData->zgv_code;
+			}
+			else
+				$zgvMissing = true;
+		}
+
+		if ($zgvMissing)
+		{
+			// add issue if data missing
+			$this->addWarning(
+				error("Zgv oder Zgv Master nicht vorhanden"),
+				createIssueObj(
+					'uhstatZgvOderZgvMasterFehlt',
+					$studentData->person_id,
+					$studentData->oe_kurzbz,
+					array('prestudent_id' => $studentData->prestudent_id), // fehlertext params
+					array('prestudent_id' => $studentData->prestudent_id) // resolution params
+				)
+			);
+			// error occured, do not report student
 			$errorOccured = true;
 		}
 

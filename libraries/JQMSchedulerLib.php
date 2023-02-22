@@ -72,17 +72,16 @@ class JQMSchedulerLib
 				WHERE
 					studiensemester_kurzbz IN ?
 					AND status_kurzbz IN ?
-					AND EXISTS (
+					AND EXISTS ( /* is registered for Reihungstest */
 						SELECT 1
 						FROM
 							public.tbl_rt_person rtp
 							JOIN tbl_reihungstest rt ON(rtp.rt_id = rt.reihungstest_id)
 						WHERE
-							rt.stufe = 1
 							AND rtp.person_id = ps.person_id
 							AND rt.studiensemester_kurzbz = pss.studiensemester_kurzbz
 					)
-					AND NOT EXISTS (
+					AND NOT EXISTS ( /* has not been sent to BIS yet*/
 						SELECT 1
 						FROM
 							sync.tbl_bis_uhstat0

@@ -9,22 +9,38 @@ class BISErrorProducerLib
 	private $_errors = array();
 	private $_warnings = array();
 
+	public function __construct()
+	{
+		$this->_ci =& get_instance(); // get code igniter instance
+
+		// load helpers
+		$this->_ci->load->helper('extensions/FHC-Core-BIS/hlp_sync_helper');
+	}
+
 	/**
 	 * Adds error to error list.
 	 * @param $error
 	 */
-	protected function addError($error)
+	protected function addError($error, $issue = null)
 	{
-		$this->_errors[] = is_string($error) ? error($error) : $error;
+		$errorObj = new stdClass();
+		$errorObj->error = $error;
+		$errorObj->issue = $issue;
+
+		$this->_errors[] = $errorObj;
 	}
 
 	/**
 	 * Adds warning to warning list.
 	 * @param $warning
 	 */
-	protected function addWarning($warning)
+	protected function addWarning($warning, $issue = null)
 	{
-		$this->_warnings[] = is_string($warning) ? error($warning) : $warning;
+		$errorObj = new stdClass();
+		$errorObj->error = $warning;
+		$errorObj->issue = $issue;
+
+		$this->_warnings[] = $errorObj;
 	}
 
 	/**

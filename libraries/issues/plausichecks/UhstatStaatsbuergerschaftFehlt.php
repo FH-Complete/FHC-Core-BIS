@@ -8,7 +8,7 @@ require_once APPPATH.'libraries/issues/plausichecks/PlausiChecker.php';
 /**
  * Staatsbürgerschaft missing
  */
-class uhstatStaatsbuergerschaftFehlt extends PlausiChecker
+class UhstatStaatsbuergerschaftFehlt extends PlausiChecker
 {
 	public function executePlausiCheck($params)
 	{
@@ -24,10 +24,11 @@ class uhstatStaatsbuergerschaftFehlt extends PlausiChecker
 
 		// get students
 		$qry = "SELECT
-					DISTINCT prestudent_id, studiensemester_kurzbz
+					DISTINCT prestudent_id, studiensemester_kurzbz, person_id
 				FROM
 					public.tbl_prestudent ps
 					JOIN public.tbl_prestudentstatus pss USING (prestudent_id)
+					JOIN public.tbl_person USING (person_id)
 				WHERE
 					studiensemester_kurzbz = ?
 					AND status_kurzbz IN ?
@@ -37,9 +38,10 @@ class uhstatStaatsbuergerschaftFehlt extends PlausiChecker
 							public.tbl_rt_person rtp
 							JOIN tbl_reihungstest rt ON(rtp.rt_id = rt.reihungstest_id)
 						WHERE
-							AND rtp.person_id = ps.person_id
+							rtp.person_id = ps.person_id
 							AND rt.studiensemester_kurzbz = pss.studiensemester_kurzbz
-					)";
+					)
+					AND staatsbuergerschaft IS NULL";
 
 		$dbModel = new DB_Model();
 
@@ -54,7 +56,7 @@ class uhstatStaatsbuergerschaftFehlt extends PlausiChecker
 		// If students are present
 		if (hasData($studResult))
 		{
-			$prestudents = getData($studRes);
+			$prestudents = getData($studResult);
 
 			// populate results with data necessary for writing issues
 			foreach ($prestudents as $prestudent)

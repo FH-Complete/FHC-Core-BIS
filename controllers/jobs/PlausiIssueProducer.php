@@ -14,7 +14,7 @@ class PlausiIssueProducer extends PlausiIssueProducer_Controller
 		// set fehler which can be produced by the job
 		// structure: fehler_kurzbz => class (library) name for resolving
 		$this->_fehlerLibMappings = array(
-			'uhstatStaatsbuergerschaftFehlt' => 'uhstatStaatsbuergerschaftFehlt'
+			'uhstatStaatsbuergerschaftFehlt' => 'UhstatStaatsbuergerschaftFehlt'
 		);
 	}
 }

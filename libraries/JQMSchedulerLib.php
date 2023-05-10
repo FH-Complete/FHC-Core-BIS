@@ -78,7 +78,7 @@ class JQMSchedulerLib
 							public.tbl_rt_person rtp
 							JOIN tbl_reihungstest rt ON(rtp.rt_id = rt.reihungstest_id)
 						WHERE
-							AND rtp.person_id = ps.person_id
+							rtp.person_id = ps.person_id
 							AND rt.studiensemester_kurzbz = pss.studiensemester_kurzbz
 					)
 					AND NOT EXISTS ( /* has not been sent to BIS yet*/

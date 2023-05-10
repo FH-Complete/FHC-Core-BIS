@@ -11,7 +11,7 @@ $config['fhc_bis_studiensemester_meldezeitraum'] = array(
 		'bis' => '2023-02-28' // to this date
 	),
 	'WS2022' => array(
-		'von' => '2022-06-01', // sync students of summer semester from this date
+		'von' => '2022-06-01', // sync students of winter semester from this date
 		'bis' => '2023-06-01' // to this date
 	)
 );

@@ -1,6 +1,6 @@
 {
 	"name": "FHC-Core-BIS",
-	"description": "My pretty Extension",
+	"description": "Extension for syncing BIS data (SOBIS)",
 	"version": "1",
 	"license": "GPL",
 	"url": "https://github.com/FH-Complete/FHC-Core-BIS",

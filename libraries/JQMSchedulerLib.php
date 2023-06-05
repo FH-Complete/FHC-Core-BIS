@@ -72,6 +72,8 @@ class JQMSchedulerLib
 				WHERE
 					studiensemester_kurzbz IN ?
 					AND status_kurzbz IN ?
+					AND ps.bismelden
+					AND EXISTS (SELECT 1 FROM public.tbl_studiengang WHERE melderelevant AND studiengang_kz = ps.studiengang_kz)
 					AND EXISTS ( /* is registered for Reihungstest */
 						SELECT 1
 						FROM

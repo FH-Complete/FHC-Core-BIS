@@ -115,7 +115,7 @@ class BISClientLib
 		}
 		else
 		{
-			$this->_error(self::WRONG_WS_PARAMETERS, 'Have you ever herd about HTTP methods?');
+			$this->_error(self::WRONG_WS_PARAMETERS, 'Have you ever heard about HTTP methods?');
 		}
 
 		// Checks that the webservice uri parameters are present in an array

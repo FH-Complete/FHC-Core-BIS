@@ -55,7 +55,8 @@ class FHCManagementLib
 						prestudent_id = ?
 						AND studiensemester_kurzbz = ?
 						AND pss.status_kurzbz IN ?
-						ORDER BY prestudent_id, pss.datum DESC, pss.insertamum DESC";
+					ORDER BY
+						prestudent_id, pss.datum DESC, pss.insertamum DESC";
 
 		return $this->_dbModel->execReadOnlyQuery(
 			$prstQry,

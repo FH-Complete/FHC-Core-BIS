@@ -31,7 +31,7 @@ DO $$
 	BEGIN
 		ALTER TABLE sync.tbl_bis_uhstat0
 			ADD CONSTRAINT tbl_bis_uhstat0_prestudent_id_fkey FOREIGN KEY (prestudent_id)
-				REFERENCES public.tbl_person(prestudent_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+				REFERENCES public.tbl_prestudent(prestudent_id) ON UPDATE CASCADE ON DELETE RESTRICT;
 	EXCEPTION WHEN OTHERS THEN NULL;
 	END $$;
 

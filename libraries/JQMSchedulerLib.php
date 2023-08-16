@@ -12,6 +12,7 @@ class JQMSchedulerLib
 	private $_studiensemester = array(); // default Studiensemster for which data is sent
 
 	const JOB_TYPE_UHSTAT0 = 'BISUHSTAT0';
+	const JOB_TYPE_UHSTAT1 = 'BISUHSTAT1';
 
 	/**
 	 * Object initialization
@@ -91,6 +92,52 @@ class JQMSchedulerLib
 							prestudent_id = ps.prestudent_id
 							AND studiensemester_kurzbz = pss.studiensemester_kurzbz
 					)";
+
+		$dbModel = new DB_Model();
+
+		$studToSyncResult = $dbModel->execReadOnlyQuery(
+			$qry,
+			$params
+		);
+
+		// If error occurred while retrieving students from database then return the error
+		if (isError($studToSyncResult)) return $studToSyncResult;
+
+		// If students are present
+		if (hasData($studToSyncResult))
+		{
+			$jobInput = json_encode(getData($studToSyncResult));
+		}
+
+		return success($jobInput);
+	}
+
+	/**
+	 * Gets students for input of UHSTAT1 job.
+	 * @return object students
+	 */
+	public function sendUHSTAT1()
+	{
+		$jobInput = null;
+
+		if (!isset($this->_status_kurzbz[self::JOB_TYPE_UHSTAT1]))
+			return error("Kein status angegeben");
+
+		$params = array($this->_status_kurzbz[self::JOB_TYPE_UHSTAT1]);
+
+		// get students not sent to BIS yet
+		$qry = "SELECT
+					DISTINCT person_id
+				FROM
+					public.tbl_prestudent ps
+					JOIN public.tbl_prestudentstatus pss USING (prestudent_id)
+					JOIN bis.tbl_uhstat1daten uhstat_daten USING (person_id)
+					LEFT JOIN sync.tbl_bis_uhstat1 uhstat_sync USING (uhstat1daten_id)
+				WHERE
+					status_kurzbz IN ?
+					AND ps.bismelden
+					AND EXISTS (SELECT 1 FROM public.tbl_studiengang WHERE melderelevant AND studiengang_kz = ps.studiengang_kz)
+					AND (uhstat_sync.uhstat1_id IS NULL OR uhstat_daten.updateamum > uhstat_sync.gemeldetamum)";
 
 		$dbModel = new DB_Model();
 

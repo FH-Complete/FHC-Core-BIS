@@ -3,9 +3,9 @@
 if (! defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
- * Staatsbürgerschaft missing
+ * Geburtsnation missing
  */
-class BIS_UHSTAT0_0003 implements IIssueResolvedChecker
+class BIS_UHSTAT1_0001 implements IIssueResolvedChecker
 {
 	public function checkIfIssueIsResolved($params)
 	{
@@ -16,8 +16,8 @@ class BIS_UHSTAT0_0003 implements IIssueResolvedChecker
 
 		$this->_ci->load->model('person/Person_model', 'PersonModel');
 
-		// load staatsbuergerschaft for the given person
-		$this->_ci->PersonModel->addSelect('staatsbuergerschaft');
+		// load geburtsnation for the given person
+		$this->_ci->PersonModel->addSelect('geburtsnation');
 		$personRes = $this->_ci->PersonModel->load($params['issue_person_id']);
 
 		if (isError($personRes)) return $personRes;
@@ -27,8 +27,8 @@ class BIS_UHSTAT0_0003 implements IIssueResolvedChecker
 			// get person data
 			$personData = getData($personRes)[0];
 
-			// if staatsbuergerschaft present, issue is resolved
-			return success(!isEmptyString($personData->staatsbuergerschaft));
+			// if geburtsnation present, issue is resolved
+			return success(!isEmptyString($personData->geburtsnation));
 		}
 		else
 			return success(false); // if no person found, not resolved

@@ -115,7 +115,7 @@ class BISDataManagementLib extends BISErrorProducerLib
 			$uhstat0Result = $this->_ci->UHSTAT0Model->saveEntry(
 				$idData['studienjahr'],
 				$idData['semesterCode'],
-				$idData['studiengang_kz'],
+				$idData['melde_studiengang_kz'],
 				$idData['orgForm'],
 				$idData['persIdType'],
 				$idData['persId'],
@@ -251,8 +251,28 @@ class BISDataManagementLib extends BISErrorProducerLib
 			$errorOccured = true;
 		}
 
-		// TODO negative Studiengang kz von Lehrgängen??
-		$idData['studiengang_kz'] = $studentData->studiengang_kz;
+		// get "report" (Melde-) Studiengangskennzahl
+		if (!is_numeric($studentData->melde_studiengang_kz))
+		{
+			// add issue if Studiengangskennzahl missing
+			$this->addWarning(
+				error("Keine valide Meldestudiengangskennzahl gefunden; Prestudent Id ".$studentData->prestudent_id),
+				createIssueObj(
+					'meldeStudiengangKzFehlt',
+					$studentData->person_id,
+					$studentData->oe_kurzbz,
+					array(
+						'prestudent_id' => $studentData->prestudent_id
+					), // fehlertext params
+					array(
+						'prestudent_id' => $studentData->prestudent_id
+					) // resolution params
+				)
+			);
+			// error occured, do not report student
+			$errorOccured = true;
+		}
+		$idData['melde_studiengang_kz'] = $studentData->melde_studiengang_kz;
 
 		// get correct orgform
 		if (isset($studentData->studienplan_orgform_code) && is_numeric($studentData->studienplan_orgform_code))

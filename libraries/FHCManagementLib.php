@@ -35,7 +35,7 @@ class FHCManagementLib
 		$prstQry = "SELECT
 						DISTINCT ON (prestudent_id) ps.prestudent_id, pers.person_id,
 						substring(sem.studienjahr_kurzbz, 0, 5) AS studienjahr, sem.studiensemester_kurzbz,
-						ps.studiengang_kz, stg.oe_kurzbz, stg.typ AS studiengang_typ, stg_orgform.code AS studiengang_orgform_code,
+						stg.melde_studiengang_kz, stg.oe_kurzbz, stg.typ AS studiengang_typ, stg_orgform.code AS studiengang_orgform_code,
 						lgart.lgart_biscode, ps.zgv_code, ps.zgvmas_code,
 						studplan_orgform.code AS studienplan_orgform_code, pss_orgform.code AS prestudentstatus_orgform_code,
 						pers.svnr, pers.ersatzkennzeichen, pers.geschlecht, pers.gebdatum, pers.staatsbuergerschaft AS staatsbuergerschaft_code

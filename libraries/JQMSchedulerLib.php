@@ -70,11 +70,12 @@ class JQMSchedulerLib
 				FROM
 					public.tbl_prestudent ps
 					JOIN public.tbl_prestudentstatus pss USING (prestudent_id)
+					JOIN public.tbl_studiengang stg on ps.studiengang_kz = stg.studiengang_kz
 				WHERE
 					studiensemester_kurzbz IN ?
 					AND status_kurzbz IN ?
 					AND ps.bismelden
-					AND EXISTS (SELECT 1 FROM public.tbl_studiengang WHERE melderelevant AND studiengang_kz = ps.studiengang_kz)
+					AND stg.melderelevant
 					AND EXISTS ( /* is registered for Reihungstest */
 						SELECT 1
 						FROM
@@ -131,12 +132,16 @@ class JQMSchedulerLib
 				FROM
 					public.tbl_prestudent ps
 					JOIN public.tbl_prestudentstatus pss USING (prestudent_id)
+					JOIN public.tbl_studiengang stg on ps.studiengang_kz = stg.studiengang_kz
 					JOIN bis.tbl_uhstat1daten uhstat_daten USING (person_id)
 					LEFT JOIN sync.tbl_bis_uhstat1 uhstat_sync USING (uhstat1daten_id)
 				WHERE
 					status_kurzbz IN ?
 					AND ps.bismelden
-					AND EXISTS (SELECT 1 FROM public.tbl_studiengang WHERE melderelevant AND studiengang_kz = ps.studiengang_kz)
+					AND stg.melderelevant
+					-- application is sent
+					AND pss.bewerbung_abgeschicktamum IS NOT NULL
+					-- data not sent yet or updated
 					AND (uhstat_sync.uhstat1_id IS NULL OR uhstat_daten.updateamum > uhstat_sync.gemeldetamum)";
 
 		$dbModel = new DB_Model();

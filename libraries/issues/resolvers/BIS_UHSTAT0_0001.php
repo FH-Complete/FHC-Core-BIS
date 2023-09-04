@@ -24,7 +24,7 @@ class BIS_UHSTAT0_0001 implements IIssueResolvedChecker
 
 		// load uhstat data including orgforms for given prestudent
 		$studDataRes = $this->_ci->fhcmanagementlib->getUHSTAT0StudentData(
-			$params['prestudent_id'],
+			array($params['prestudent_id']),
 			$params['studiensemester_kurzbz'],
 			$this->_ci->config->item('fhc_bis_status_kurzbz')[JQMSchedulerLib::JOB_TYPE_UHSTAT0]
 		);

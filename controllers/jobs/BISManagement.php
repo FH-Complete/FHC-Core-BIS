@@ -7,7 +7,6 @@ if (!defined('BASEPATH')) exit('No direct script access allowed');
  */
 class BISManagement extends JQW_Controller
 {
-	const APP = 'bis'; // application
 	private $_logInfos; // stores config param for info display
 
 	/**
@@ -18,14 +17,6 @@ class BISManagement extends JQW_Controller
 		parent::__construct();
 
 		// load libraries
-		$this->load->library(
-			'IssuesLib',
-			array(
-				'app' => self::APP,
-				'insertvon' => 'bissync',
-				'fallbackFehlercode' => 'BIS_ERROR'
-			)
-		);
 		$this->load->library('extensions/FHC-Core-BIS/BISDataManagementLib');
 
 		// load configs and save "log infos" parameter
@@ -59,68 +50,49 @@ class BISManagement extends JQW_Controller
 			);
 
 			// get students from queue
-			$student_arr = $this->_getInputObjArray(getData($lastJobs));
+			$studiensemester_prestudent_id_arr = $this->_mergeStudiensemesterPrestudentIdArray(getData($lastJobs));
 
-			foreach ($student_arr as $studobj)
+			foreach ($studiensemester_prestudent_id_arr as $studiensemester_kurzbz => $prestudent_id_arr)
 			{
-				if (!isset($studobj->prestudent_id) || !isset($studobj->studiensemester_kurzbz))
-					$this->logError("Fehler beim Senden der UHSTAT0 Daten, ungültige Parameter übergeben");
-				else
+				// send UHSTAT0 data for the student
+				$this->bisdatamanagementlib->sendUHSTAT0($studiensemester_kurzbz, $prestudent_id_arr);
+
+				// log errors if occured
+				if ($this->bisdatamanagementlib->hasError())
 				{
-					$prestudent_id = $studobj->prestudent_id;
-					$studiensemester_kurzbz = $studobj->studiensemester_kurzbz;
+					$errors = $this->bisdatamanagementlib->readErrors();
 
-					// send UHSTAT0 data for the student
-					$sendUHSTAT0Res = $this->bisdatamanagementlib->sendUHSTAT0($prestudent_id, $studiensemester_kurzbz);
-
-					// log errors if occured
-					if ($this->bisdatamanagementlib->hasError())
+					foreach ($errors as $error)
 					{
-						$errors = $this->bisdatamanagementlib->readErrors();
-
-						foreach ($errors as $error)
-						{
-							// write error log
-							$this->logError(
-								"Fehler beim Senden der UHSTAT 0 Daten, Prestudent Id $prestudent_id, Studiensemester $studiensemester_kurzbz"
-								.": ".getError($error->error)
-							);
-
-							// write issue
-							$addIssueRes = $this->_addIssue($error);
-
-							// log error if adding of issue failed
-							if (isError($addIssueRes)) $this->logError("Fehler beim Hinzufügen des BIS issue für prestudent mit ID $prestudent_id");
-						}
-					}
-
-					// log warnings if occured
-					if ($this->bisdatamanagementlib->hasWarning())
-					{
-						$warnings = $this->bisdatamanagementlib->readWarnings();
-
-						foreach ($warnings as $warning)
-						{
-							// write warning log
-							$this->logWarning(
-								"Fehler beim Senden der UHSTAT 0 Daten, Prestudent Id $prestudent_id, Studiensemester $studiensemester_kurzbz"
-								.": ".getError($warning->error)
-							);
-
-							// write issue
-							$addIssueRes = $this->_addIssue($warning);
-
-							// log error if adding of issue failed
-							if (isError($addIssueRes)) $this->logError("Fehler beim Hinzufügen des  BIS issue für prestudent with ID $prestudent_id");
-						}
-					}
-
-					// write info if success
-					if (isSuccess($sendUHSTAT0Res))
-					{
-						$this->_logInfoIfEnabled(
-							"UHSTAT0 data für Prestudent Id $prestudent_id, Studiensemester $studiensemester_kurzbz erfolgreich gesendet"
+						// write error log
+						$this->logError(
+							"Fehler beim Senden der UHSTAT 0 Daten: ".getError($error->error)
 						);
+					}
+				}
+
+				// log warnings if occured
+				if ($this->bisdatamanagementlib->hasWarning())
+				{
+					$warnings = $this->bisdatamanagementlib->readWarnings();
+
+					foreach ($warnings as $warning)
+					{
+						// write warning log
+						$this->logWarning(
+							"Fehler beim Senden der UHSTAT 0 Daten: ".getError($warning->error)
+						);
+					}
+				}
+
+				// write info log
+				if ($this->bisdatamanagementlib->hasInfo())
+				{
+					$infos = $this->bisdatamanagementlib->readInfos();
+
+					foreach ($infos as $info)
+					{
+						if (!isEmptyString($info)) $this->_logInfoIfEnabled($info);
 					}
 				}
 			}
@@ -138,31 +110,163 @@ class BISManagement extends JQW_Controller
 		$this->logInfo('BISUHSTAT0 job stop');
 	}
 
+	/**
+	 * Initialises sendUHSTAT1 job, handles job queue, logs infos/errors
+	 */
+	public function sendUHSTAT1()
+	{
+		$jobType = 'BISUHSTAT1';
+		$this->logInfo('BISUHSTAT1 job start');
+
+		// Gets the latest jobs
+		$lastJobs = $this->getLastJobs($jobType);
+		if (isError($lastJobs))
+		{
+			$this->logError(getCode($lastJobs).': '.getError($lastJobs), $jobType);
+		}
+		elseif (hasData($lastJobs))
+		{
+			$this->updateJobs(
+				getData($lastJobs), // Jobs to be updated
+				array(JobsQueueLib::PROPERTY_START_TIME), // Job properties to be updated
+				array(date('Y-m-d H:i:s')) // Job properties new values
+			);
+
+			// get students from queue
+			$person_id_arr = $this->_mergePersonIdArray(getData($lastJobs));
+
+			// send UHSTAT1 data for the student
+			$this->bisdatamanagementlib->sendUHSTAT1($person_id_arr);
+
+			// log errors if occured
+			if ($this->bisdatamanagementlib->hasError())
+			{
+				$errors = $this->bisdatamanagementlib->readErrors();
+
+				foreach ($errors as $error)
+				{
+					// write error log
+					$this->logError(
+						"Fehler beim Senden der UHSTAT 1 Daten: ".getError($error->error)
+					);
+				}
+			}
+
+			// log warnings if occured
+			if ($this->bisdatamanagementlib->hasWarning())
+			{
+				$warnings = $this->bisdatamanagementlib->readWarnings();
+
+				foreach ($warnings as $warning)
+				{
+					// write warning log
+					$this->logWarning(
+						"Fehler beim Senden der UHSTAT 1 Daten: ".getError($warning->error)
+					);
+				}
+			}
+
+			// write info log
+			if ($this->bisdatamanagementlib->hasInfo())
+			{
+				$infos = $this->bisdatamanagementlib->readInfos();
+
+				foreach ($infos as $info)
+				{
+					if (!isEmptyString($info)) $this->_logInfoIfEnabled($info);
+				}
+			}
+
+			// Update jobs properties values
+			$this->updateJobs(
+				getData($lastJobs), // Jobs to be updated
+				array(JobsQueueLib::PROPERTY_STATUS, JobsQueueLib::PROPERTY_END_TIME), // Job properties to be updated
+				array(JobsQueueLib::STATUS_DONE, date('Y-m-d H:i:s')) // Job properties new values
+			);
+
+			if (hasData($lastJobs)) $this->updateJobsQueue($jobType, getData($lastJobs));
+		}
+
+		$this->logInfo('BISUHSTAT1 job stop');
+	}
+
 	// --------------------------------------------------------------------------------------------
 	// Private methods
 
 	/**
-	 * Extracts input data from jobs.
-	 * @param $jobs
-	 * @return array with jobinput
+	 * Extract person Ids from jobs
+	 * @param $jobs array with jobs
+	 * @return array with person Ids
 	 */
-	private function _getInputObjArray($jobs)
+	private function _mergePersonIdArray($jobs, $jobsAmount = 99999)
 	{
+		$jobsCounter = 0;
 		$mergedUsersArray = array();
 
+		// If no jobs then return an empty array
 		if (count($jobs) == 0) return $mergedUsersArray;
 
+		// For each job
 		foreach ($jobs as $job)
 		{
+			// Decode the json input
 			$decodedInput = json_decode($job->input);
+
+			// If decoding was fine
 			if ($decodedInput != null)
 			{
+				// For each element in the array
 				foreach ($decodedInput as $el)
 				{
-					$mergedUsersArray[] = $el;
+					// extract the Person Id
+					if (isset($el->person_id)) $mergedUsersArray[] = $el->person_id;
 				}
 			}
+
+			$jobsCounter++; // jobs counter
+
+			if ($jobsCounter >= $jobsAmount) break; // if the required amount is reached then exit
 		}
+
+		return $mergedUsersArray;
+	}
+
+	/**
+	 * Extract Studiensemester prestudents from jobs.
+	 * @param $jobs array with jobs
+	 * @return array with Studiensemester as key, prestudent Id as element
+	 */
+	private function _mergeStudiensemesterPrestudentIdArray($jobs, $jobsAmount = 99999)
+	{
+		$jobsCounter = 0;
+		$mergedUsersArray = array();
+
+		// If no jobs then return an empty array
+		if (count($jobs) == 0) return $mergedUsersArray;
+
+		// For each job
+		foreach ($jobs as $job)
+		{
+			// Decode the json input
+			$decodedInput = json_decode($job->input);
+
+			// If decoding was fine
+			if ($decodedInput != null)
+			{
+				// For each element in the array
+				foreach ($decodedInput as $el)
+				{
+					// extract prestudent Id and assign to Studiensemester
+					if (isset($el->studiensemester_kurzbz) && isset($el->prestudent_id))
+						$mergedUsersArray[$el->studiensemester_kurzbz][] = $el->prestudent_id;
+				}
+			}
+
+			$jobsCounter++; // jobs counter
+
+			if ($jobsCounter >= $jobsAmount) break; // if the required amount is reached then exit
+		}
+
 		return $mergedUsersArray;
 	}
 
@@ -174,29 +278,5 @@ class BISManagement extends JQW_Controller
 	{
 		if ($this->_logInfos === true)
 			$this->logInfo($info);
-	}
-
-	/**
-	 * Adds issue.
-	 * @param object $issue
-	 */
-	private function _addIssue($issue)
-	{
-		// if issue is really an issue
-		if (isset($issue->issue->issue_fehler_kurzbz))
-		{
-			$issue = $issue->issue;
-			// add issue with its params
-			return $this->issueslib->addFhcIssue(
-				$issue->issue_fehler_kurzbz,
-				isset($issue->person_id) ? $issue->person_id : null,
-				isset($issue->oe_kurzbz) ? $issue->oe_kurzbz : null,
-				isset($issue->issue_fehlertext_params) ? $issue->issue_fehlertext_params : null,
-				isset($issue->issue_resolution_params) ? $issue->issue_resolution_params : null
-			);
-		}
-
-		// do nothing if not issue
-		return success();
 	}
 }

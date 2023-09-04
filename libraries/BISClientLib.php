@@ -392,6 +392,7 @@ class BISClientLib
 	 */
 	private function _callPUT($uri)
 	{
+		var_dump($uri);
 		return \Httpful\Request::put($uri)
 			->expectsJson() // dangerous expectations
 			->addHeader(self::AUTHORIZATION_HEADER_NAME, self::AUTHORIZATION_HEADER_PREFIX.' '.$this->_authToken)
@@ -400,6 +401,9 @@ class BISClientLib
 			->send();
 	}
 
+	/**
+	 * Check HTTP response for errors.
+	 */
 	private function _checkResponse($response)
 	{
 		$checkResponse = null;

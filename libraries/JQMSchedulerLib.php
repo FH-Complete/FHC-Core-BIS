@@ -59,7 +59,7 @@ class JQMSchedulerLib
 		if (isEmptyArray($studiensemester_kurzbz_arr))
 			return error("Kein Studiensemester angegeben");
 
-		if (!isset($this->_status_kurzbz[self::JOB_TYPE_UHSTAT0]))
+		if (!isset($this->_status_kurzbz[self::JOB_TYPE_UHSTAT0]) || isEmptyArray($this->_status_kurzbz[self::JOB_TYPE_UHSTAT0]))
 			return error("Kein status angegeben");
 
 		$params = array($studiensemester_kurzbz_arr, $this->_status_kurzbz[self::JOB_TYPE_UHSTAT0]);
@@ -121,7 +121,7 @@ class JQMSchedulerLib
 	{
 		$jobInput = null;
 
-		if (!isset($this->_status_kurzbz[self::JOB_TYPE_UHSTAT1]))
+		if (!isset($this->_status_kurzbz[self::JOB_TYPE_UHSTAT1]) || isEmptyArray($this->_status_kurzbz[self::JOB_TYPE_UHSTAT1]))
 			return error("Kein status angegeben");
 
 		$params = array($this->_status_kurzbz[self::JOB_TYPE_UHSTAT1]);

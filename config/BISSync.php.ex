@@ -19,5 +19,5 @@ $config['fhc_bis_studiensemester_meldezeitraum'] = array(
 // Only students with given status_kurzbz (defined for each job) are sent
 $config['fhc_bis_status_kurzbz'] = array(
 	'BISUHSTAT0' => array('Interessent'),
-	'BISUHSTAT1' => array('Interessent')
+	'BISUHSTAT1' => array('Bewerber')
 );

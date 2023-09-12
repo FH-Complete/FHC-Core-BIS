@@ -141,13 +141,13 @@ class BISClientLib
 		// get and save authentication token
 		$authToken = $this->_ci->bisauthlib->getToken();
 
-		if (isEmptyString($authToken))
+		if (isError($authToken))
 		{
-			$this->_error(self::INVALID_AUTHENTICATION_TOKEN, 'Error when getting token?');
+			$this->_error(self::INVALID_AUTHENTICATION_TOKEN, getError($authToken));
 		}
 		else
 		{
-			$this->_authToken = $authToken;
+			$this->_authToken = getData($authToken);
 		}
 
 		if ($this->isError()) return null; // If an error was raised then return a null value
@@ -400,6 +400,9 @@ class BISClientLib
 			->send();
 	}
 
+	/**
+	 * Check HTTP response for errors.
+	 */
 	private function _checkResponse($response)
 	{
 		$checkResponse = null;

@@ -23,19 +23,19 @@ class FHCManagementLib
 
 	/**
 	 * Gets student data needed for sending as UHSTAT0 data.
-	 * @param int $person_id
-	 * @param string $studiensemester
+	 * @param string $studiensemester_kurzbz
+	 * @param array $prestudent_id_arr
 	 * @param array $status_kurzbz
 	 * @return object success with prestudents or error
 	 */
-	public function getUHSTAT0StudentData($prestudent_id, $studiensemester_kurzbz, $status_kurzbz)
+	public function getUHSTAT0StudentData($studiensemester_kurzbz, $prestudent_id_arr, $status_kurzbz)
 	{
-		$params = array($prestudent_id, $studiensemester_kurzbz, $status_kurzbz);
+		$params = array($studiensemester_kurzbz, $prestudent_id_arr, $status_kurzbz);
 
 		$prstQry = "SELECT
 						DISTINCT ON (prestudent_id) ps.prestudent_id, pers.person_id,
 						substring(sem.studienjahr_kurzbz, 0, 5) AS studienjahr, sem.studiensemester_kurzbz,
-						ps.studiengang_kz, stg.oe_kurzbz, stg.typ AS studiengang_typ, stg_orgform.code AS studiengang_orgform_code,
+						stg.melde_studiengang_kz, stg.oe_kurzbz, stg.typ AS studiengang_typ, stg_orgform.code AS studiengang_orgform_code,
 						lgart.lgart_biscode, ps.zgv_code, ps.zgvmas_code,
 						studplan_orgform.code AS studienplan_orgform_code, pss_orgform.code AS prestudentstatus_orgform_code,
 						pers.svnr, pers.ersatzkennzeichen, pers.geschlecht, pers.gebdatum, pers.staatsbuergerschaft AS staatsbuergerschaft_code
@@ -52,11 +52,47 @@ class FHCManagementLib
 						LEFT JOIN bis.tbl_orgform pss_orgform ON pss_orgform.orgform_kurzbz = pss.orgform_kurzbz AND pss_orgform.rolle = TRUE
 						LEFT JOIN bis.tbl_lgartcode lgart ON (stg.lgartcode = lgart.lgartcode)
 					WHERE
-						prestudent_id = ?
-						AND studiensemester_kurzbz = ?
+						studiensemester_kurzbz = ?
+						AND prestudent_id IN ?
 						AND pss.status_kurzbz IN ?
 					ORDER BY
 						prestudent_id, pss.datum DESC, pss.insertamum DESC";
+
+		return $this->_dbModel->execReadOnlyQuery(
+			$prstQry,
+			$params
+		);
+	}
+
+	/**
+	 * Gets person data needed for sending as UHSTAT1 data.
+	 * @param array $person_id_arr
+	 * @param string $studiensemester
+	 * @param array $status_kurzbz
+	 * @return object success with prestudents or error
+	 */
+	public function getUHSTAT1PersonData($person_id_arr)
+	{
+		$params = array($person_id_arr);
+
+		$prstQry = "SELECT
+						DISTINCT ON (pers.person_id)
+						pers.person_id, uhstat_daten.uhstat1daten_id, pers.svnr, pers.ersatzkennzeichen, pers.geburtsnation,
+						uhstat_daten.mutter_geburtsstaat, uhstat_daten.mutter_bildungsstaat, uhstat_daten.mutter_geburtsjahr,
+						uhstat_daten.mutter_bildungmax, uhstat_daten.vater_geburtsstaat, uhstat_daten.vater_bildungsstaat,
+						uhstat_daten.vater_geburtsjahr, uhstat_daten.vater_bildungmax
+					FROM
+						public.tbl_person pers
+						JOIN public.tbl_prestudent ps USING (person_id)
+						JOIN public.tbl_studiengang stg USING (studiengang_kz)
+						JOIN bis.tbl_uhstat1daten uhstat_daten USING (person_id)
+
+					WHERE
+						ps.bismelden
+						AND stg.melderelevant
+						AND pers.person_id IN ?
+					ORDER BY
+						pers.person_id";
 
 		return $this->_dbModel->execReadOnlyQuery(
 			$prstQry,

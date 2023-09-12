@@ -39,15 +39,18 @@ class BISAuthLib
 	 */
 	public function getToken()
 	{
+		// if token expired
 		if ($this->_tokenIsExpired())
 		{
-			$this->_authenticate();
+			// try to authenticate
+			$authRes = $this->_authenticate();
+			if (isError($authRes)) return $authRes;
 		}
 
-		if (isset($this->authentication->access_token))
-			return $this->authentication->access_token;
+		// return valid token
+		if (isset($this->authentication->access_token)) return success($this->authentication->access_token);
 
-		return null;
+		return error('Could not retrieve token');
 	}
 
 	/**
@@ -150,7 +153,10 @@ class BISAuthLib
 		}
 		else
 		{
-			return error('Authentication failed');
+			$errorStr = 'Authentication failed';
+			if (isset($response->body->error)) $errorStr .= ': '.$response->body->error;
+			if (isset($response->body->error_description)) $errorStr .= ': '.$response->body->error_description;
+			return error($errorStr);
 		}
 	}
 }

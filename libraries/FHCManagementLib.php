@@ -99,4 +99,40 @@ class FHCManagementLib
 			$params
 		);
 	}
+
+	/**
+	 * Gets Mitarbeiter person data needed for Bismeldung.
+	 * @param string $bismeldungJahr
+	 * @return object success with Mitarbeiter or error
+	 */
+	public function getMitarbeiterPersonData($bismeldungJahr)
+	{
+		$params = array($bismeldungJahr, $bismeldungJahr);
+
+		$maQry = "
+			SELECT DISTINCT ON (UID) ben.uid,
+				pers.titelpre, pers.titelpost, pers.vorname, pers.vornamen, pers.nachname, pers.gebdatum,
+				pers.geschlecht, pers.staatsbuergerschaft, pers.aktiv,
+				ma.personalnummer, ma.lektor, ma.fixangestellt, ma.standort_id, ma.ausbildungcode,
+				verw.ba1code, verw.ba2code, verw.verwendung_code, verw.vertragsstunden,
+				transform_geschlecht(pers.geschlecht, pers.gebdatum) as geschlecht_imputiert,
+				(EXISTS (SELECT 1 FROM bis.tbl_bisverwendung WHERE mitarbeiter_uid = ben.uid AND habilitation)) AS habilitiert
+			FROM
+				public.tbl_mitarbeiter ma
+				JOIN public.tbl_benutzer ben ON(ma.mitarbeiter_uid=ben.uid)
+				JOIN public.tbl_person pers USING(person_id)
+				JOIN bis.tbl_bisverwendung verw USING(mitarbeiter_uid)
+				JOIN bis.tbl_beschaeftigungsausmass ausmass USING(beschausmasscode)
+			WHERE
+				bismelden
+				AND personalnummer > 0
+				AND (beginn <= make_date(?::INTEGER, 12, 31) OR beginn is null)
+				AND (verw.ende is NULL OR verw.ende >= make_date(?::INTEGER, 1, 1))
+			ORDER BY uid, nachname, vorname";
+
+		return $this->_dbModel->execReadOnlyQuery(
+			$maQry,
+			$params
+		);
+	}
 }

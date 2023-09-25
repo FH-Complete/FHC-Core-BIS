@@ -146,7 +146,7 @@ class JQMSchedulerLib
 						FROM
 							sync.tbl_bis_uhstat1
 						WHERE
-							gemeldetamum > uhstat_daten.updateamum
+							(gemeldetamum > uhstat_daten.updateamum OR uhstat_daten.updateamum IS NULL)
 							AND uhstat1daten_id = uhstat_daten.uhstat1daten_id
 					)";
 

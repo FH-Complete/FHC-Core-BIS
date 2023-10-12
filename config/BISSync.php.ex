@@ -21,3 +21,8 @@ $config['fhc_bis_status_kurzbz'] = array(
 	'BISUHSTAT0' => array('Interessent'),
 	'BISUHSTAT1' => array('Bewerber')
 );
+
+// Only students from Studiengang with this types (defined for each job) are sent
+$config['fhc_bis_studiengangtyp'] = array(
+	'BISUHSTAT0' => array('b', 'm')
+);

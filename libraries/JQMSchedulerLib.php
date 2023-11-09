@@ -9,6 +9,7 @@ class JQMSchedulerLib
 {
 	private $_ci; // Code igniter instance
 	private $_status_kurzbz = array(); // contains prestudentstatus to retrieve for each jobtype
+	private $_studiengangtyp = array(); // contains studiengangtyp for each jobtype
 	private $_studiensemester = array(); // default Studiensemster for which data is sent
 
 	const JOB_TYPE_UHSTAT0 = 'BISUHSTAT0';
@@ -27,6 +28,7 @@ class JQMSchedulerLib
 
 		// set config items
 		$this->_status_kurzbz = $this->_ci->config->item('fhc_bis_status_kurzbz');
+		$this->_studiengangtyp = $this->_ci->config->item('fhc_bis_studiengangtyp');
 		$studiensemesterMeldezeitraum = $this->_ci->config->item('fhc_bis_studiensemester_meldezeitraum');
 
 		// get default Studiensemester from config
@@ -94,6 +96,13 @@ class JQMSchedulerLib
 							AND studiensemester_kurzbz = pss.studiensemester_kurzbz
 					)";
 
+		// if only certain Studiengang types have to be sent
+		if (isset($this->_studiengangtyp[self::JOB_TYPE_UHSTAT0]) && !isEmptyArray($this->_studiengangtyp[self::JOB_TYPE_UHSTAT0]))
+		{
+			$params[] = $this->_studiengangtyp[self::JOB_TYPE_UHSTAT0];
+			$qry .= " AND stg.typ IN ?";
+		}
+
 		$dbModel = new DB_Model();
 
 		$studToSyncResult = $dbModel->execReadOnlyQuery(
@@ -149,6 +158,13 @@ class JQMSchedulerLib
 							(gemeldetamum > uhstat_daten.updateamum OR uhstat_daten.updateamum IS NULL)
 							AND uhstat1daten_id = uhstat_daten.uhstat1daten_id
 					)";
+
+		// if only certain Studiengang types have to be sent
+		if (isset($this->_studiengangtyp[self::JOB_TYPE_UHSTAT1]) && !isEmptyArray($this->_studiengangtyp[self::JOB_TYPE_UHSTAT1]))
+		{
+			$params[] = $this->_studiengangtyp[self::JOB_TYPE_UHSTAT1];
+			$qry .= " AND stg.typ IN ?";
+		}
 
 		$dbModel = new DB_Model();
 

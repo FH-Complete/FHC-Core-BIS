@@ -18,7 +18,7 @@
 import {CoreRESTClient} from '../../../../../js/RESTClient.js';
 
 // timeout for ajax calls
-const CORE_BISMELDESTICHTAG_CMPT_TIMEOUT = 2000;
+const CORE_BISMELDESTICHTAG_CMPT_TIMEOUT = 4000;
 
 /**
  *
@@ -66,7 +66,7 @@ export const PersonalmeldungAPIs = {
 			}
 		).catch(
 			error => {
-				alert('Fehler beim Holen der Studiensemester: ' + error.message);
+				alert('Fehler beim Holen der Mitarbeiter: ' + error.message);
 			}
 		);
 	}

@@ -19,12 +19,14 @@ class Personalmeldung extends Auth_Controller
 			)
 		);
 
-		// Loads libraries
-		$this->load->library('extensions/FHC-Core-BIS/PersonalmeldungLib');
-		//$this->load->library('WidgetLib');
-
 		// Loads models
 		$this->load->model('organisation/Studiensemester_model', 'StudiensemesterModel');
+
+		// Loads libraries
+		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungLib');
+		$this->load->library('extensions/FHC-Core-BIS/FHCManagementLib');
+		//$this->load->library('WidgetLib');
+
 
 		// Loads phrases system
 		$this->loadPhrases(
@@ -74,12 +76,14 @@ class Personalmeldung extends Auth_Controller
 		// get Studiensemester
 		$studiensemester_kurzbz = $this->input->get('studiensemester_kurzbz');
 
-		if (isEmptyString($studiensemester_kurzbz)) $this->terminateWithJsonError("Studiensemester fehlt");
+		if (isEmptyString($studiensemester_kurzbz)) $this->terminateWithJsonError('Ungültiges Studiensemster');
 
-		// get Personalemldung data
+		// get Personalmeldung data
 		$personalmeldungRes = $this->personalmeldunglib->getPersonalmeldungData($studiensemester_kurzbz);
 
 		if (!hasData($personalmeldungRes)) $this->terminateWithJsonError("Keine Daten gefunden");
+
+		//var_dump(getData($personalmeldungRes));
 
 		// get XML from Vorlage
 		$xml = $this->load->view(
@@ -100,15 +104,13 @@ class Personalmeldung extends Auth_Controller
 	{
 		// load semester list
 		$semList = array();
-		$this->StudiensemesterModel->addSelect('studiensemester_kurzbz');
-		$this->StudiensemesterModel->addOrder('start', 'DESC');
-		$semRes = $this->StudiensemesterModel->load();
+		$semRes = $this->fhcmanagementlib->getAllSommersemester();
 
 		if (hasData($semRes)) $semList = getData($semRes);
 
 		// load current semester
 		$currSem = null;
-		$semRes = $this->StudiensemesterModel->getAkt();
+		$semRes = $this->fhcmanagementlib->getCurrentSommersemester();
 
 		if (hasData($semRes)) $currSem = getData($semRes)[0]->studiensemester_kurzbz;
 

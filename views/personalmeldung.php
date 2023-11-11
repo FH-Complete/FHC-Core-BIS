@@ -1,6 +1,6 @@
 <?php
 	$includesArray = array(
-		'title' => 'Bismeldestichtage',
+		'title' => 'Personalmeldung',
 		'axios027' => true,
 		'bootstrap5' => true,
 		'fontawesome6' => true,

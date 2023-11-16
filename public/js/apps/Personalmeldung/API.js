@@ -29,7 +29,7 @@ export const PersonalmeldungAPIs = {
 			'extensions/FHC-Core-BIS/Personalmeldung/getStudiensemester',
 			null,
 			{
-				timeout: CORE_BISMELDESTICHTAG_CMPT_TIMEOUT
+				timeout: 2000
 			}
 		).then(
 			result => {
@@ -55,7 +55,7 @@ export const PersonalmeldungAPIs = {
 				studiensemester_kurzbz: studiensemester_kurzbz
 			},
 			{
-				timeout: CORE_BISMELDESTICHTAG_CMPT_TIMEOUT
+				timeout: null
 			}
 		).then(
 			result => {

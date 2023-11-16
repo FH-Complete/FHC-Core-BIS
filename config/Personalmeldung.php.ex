@@ -74,7 +74,7 @@ $config['fhc_bis_verwendung_codes_non_lehre'] = array(
 );
 
 $config['fhc_bis_oe_verwendung_code_zuordnung'] = array(
-	'atw' => $config['fhc_bis_verwendung_codes']['verwaltung'],		// Administration = Verwaltung
+	'etw' => $config['fhc_bis_verwendung_codes']['verwaltung'],		// Administration = Verwaltung
 	'gmbh' => $config['fhc_bis_verwendung_codes']['verwaltung'],		// Administration = Verwaltung
 	'Reinigung' => $config['fhc_bis_verwendung_codes']['wartung'],		// Wartung und Betrieb
 	'Haustechnik' => $config['fhc_bis_verwendung_codes']['wartung'],		// Wartung und Betrieb

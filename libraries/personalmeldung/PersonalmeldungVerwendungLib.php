@@ -208,9 +208,9 @@ class PersonalmeldungVerwendungLib
 
 		// get data for Verwendung codes derived from Funktionen
 		$funktionRes = $this->_ci->fhcmanagementlib->getMitarbeiterFunktionData(
-			array_keys($funktionVerwendungCodeZuordnung), // funktionen
 			$bismeldungYear,
-			$uids
+			$uids,
+			array_keys($funktionVerwendungCodeZuordnung) // funktionen
 		);
 
 		if (isError($funktionRes)) return $funktionRes;
@@ -241,7 +241,7 @@ class PersonalmeldungVerwendungLib
 		}
 
 		// get Verwendungen derived from OE Zuordnung
-		$oeFunktionRes = $this->_ci->fhcmanagementlib->getMitarbeiterFunktionData(array(self::OE_ZUORDNUNG), $bismeldungYear, $uids);
+		$oeFunktionRes = $this->_ci->fhcmanagementlib->getMitarbeiterFunktionData($bismeldungYear, $uids, array(self::OE_ZUORDNUNG));
 
 		if (isError($oeFunktionRes)) return $oeFunktionRes;
 

@@ -23,8 +23,6 @@ const personalmeldungApp = Vue.createApp({
 	data: function() {
 		return {
 			personalmeldungTabulatorOptions: {
-				maxHeight: "100%",
-				minHeight: 50,
 				layout: 'fitDataFill',
 				columns: [
 					{title: 'PersNr', field: 'personalnummer', headerFilter: true},

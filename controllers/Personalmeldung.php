@@ -25,8 +25,6 @@ class Personalmeldung extends Auth_Controller
 		// Loads libraries
 		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungLib');
 		$this->load->library('extensions/FHC-Core-BIS/FHCManagementLib');
-		//$this->load->library('WidgetLib');
-
 
 		// Loads phrases system
 		$this->loadPhrases(
@@ -82,8 +80,6 @@ class Personalmeldung extends Auth_Controller
 		$personalmeldungRes = $this->personalmeldunglib->getPersonalmeldungData($studiensemester_kurzbz);
 
 		if (!hasData($personalmeldungRes)) $this->terminateWithJsonError("Keine Daten gefunden");
-
-		//var_dump(getData($personalmeldungRes));
 
 		// get XML from Vorlage
 		$xml = $this->load->view(

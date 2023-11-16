@@ -1,4 +1,3 @@
-
 <?php
 
 require_once APPPATH.'libraries/extensions/FHC-Core-BIS/BISErrorProducerLib.php';
@@ -120,6 +119,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		if (hasData($mitarbeiterRes))
 		{
 			$mitarbeiterArr = getData($mitarbeiterRes);
+			$uids = array_column($mitarbeiterArr, 'uid');
 
 			// get DV data for the year
 			$dvRes = $this->_ci->fhcmanagementlib->getDienstverhaeltnisData($this->_dateData['bismeldungYear']);
@@ -138,21 +138,50 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			if (isError($verwendungCodesRes)) return $verwendungCodesRes;
 			$verwendungCodes = hasData($verwendungCodesRes) ? getData($verwendungCodesRes) : array();
 
+			$verwendungCodesLehre = $this->_splitByProperty(
+				array_filter($verwendungCodes, function ($verwCode) {
+					return in_array($verwCode->verwendung_code, $this->_config['verwendung_codes_lehre']);
+				}),
+				'mitarbeiter_uid'
+			);
+
 			// get Lehreinheiten for the year
 			$swsRes = $this->_ci->fhcmanagementlib->getLehreinheitenSemesterwochenstunden
 			(
-				$this->_dateData['yearStart']->format('Y-m-d'), $this->_dateData['yearEnd']->format('Y-m-d')
+				$this->_dateData['yearStart']->format('Y-m-d'),
+				$this->_dateData['yearEnd']->format('Y-m-d'),
+				$uids
 			);
 
 			if (isError($swsRes)) return $swsRes;
-			$sws = hasData($swsRes) ? getData($swsRes) : array();
+			$sws = hasData($swsRes) ? $this->_splitByProperty(getData($swsRes), 'mitarbeiter_uid') : array();
+
+			// get all funktionen
+			$benutzerfunktionRes = $this->_ci->fhcmanagementlib->getMitarbeiterFunktionData(
+				$this->_dateData['bismeldungYear'],
+				$uids,
+				array_merge(array_keys($this->_config['funktionscodes']), $this->_config['leitungsfunktionen'])
+			);
+
+			if (isError($benutzerfunktionRes)) return $benutzerfunktionRes;
+			$benutzerfunktionen = hasData($benutzerfunktionRes) ? $this->_splitByProperty(getData($benutzerfunktionRes), 'uid') : array();
+
+			// get Semesterwochenstunden for each Studiengang
+			$swsProStgRes = $this->_ci->fhcmanagementlib->getSemesterwochenstundenGroupByStudiengang(
+				$this->_dateData['yearStart']->format('Y-m-d'),
+				$this->_dateData['yearEnd']->format('Y-m-d'),
+				$uids
+			);
+
+			if (isError($swsProStgRes)) return $swsProStgRes;
+			$swsProStg = hasData($swsProStgRes) ? $this->_splitByProperty(getData($swsProStgRes), 'mitarbeiter_uid')  : array();
 
 			//~ var_dump("THE SWS");
 			//~ var_dump("--------------------------------------------");
 			//~ var_dump($swsRes);
 
 			// Get array with splitted Verwendungen from DV data
-			$verwendungen = $this->_getVerwendungenFromDienstverhaeltnisData($dvArr, $verwendungCodes);
+			$verwendungen = $this->_splitByProperty($this->_getVerwendungenFromDienstverhaeltnisData($dvArr, $verwendungCodes), 'mitarbeiter_uid');
 
 			foreach ($mitarbeiterArr as $ma)
 			{
@@ -160,22 +189,16 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				$personObj = $this->_getPersonObj($ma);
 
 				// get Verwendungen of the Mitarbeiter
-				$verwendungenMa = array_values(array_filter($verwendungen, function ($verw) use ($ma) {
-					return $verw->mitarbeiter_uid == $ma->uid;
-				}));
+				$verwendungenMa = $verwendungen[$ma->uid] ?? array();
 
 				// get Lehre Verwendungen for the Mitarbeiter separarately
-				$lehreVerwendungCodes = array_filter($verwendungCodes, function ($verwCode) use ($ma) {
-					return $verwCode->mitarbeiter_uid == $ma->uid && in_array($verwCode->verwendung_code, $this->_config['verwendung_codes_lehre']);
-				});
+				$verwendungCodesLehreMa = $verwendungCodesLehre[$ma->uid] ?? array();
 
 				// get Mitarbeiter Semesterwochenstunden
-				$swsMa = array_filter($sws, function ($semStunden) use ($ma) {
-					return $semStunden->mitarbeiter_uid == $ma->uid;
-				});
+				$swsMa = $sws[$ma->uid] ?? array();
 
 				// distribute Lehre to Verwendungen, using the Lehre Verwendungen and the Semesterwochenstunden
-				$verwendungenMa = $this->_addLehreToVerwendungen($verwendungenMa, $lehreVerwendungCodes, $swsMa);
+				$verwendungenMa = $this->_addLehreToVerwendungen($verwendungenMa, $verwendungCodesLehreMa, $swsMa);
 
 				// add numbers for Beschäftigungsausmass and Jahresvollzeitäquivalenz
 				$verwendungenMa = $this->_addRelativesBaUndAnteiligeJVZAE($ma->uid, $verwendungenMa);
@@ -194,18 +217,18 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				// Add Verwendungen to person object
 				$personObj->verwendungen = $verwendungenMa;
 
-				// Add Funktionen to person object
-				$funktionArr = $this->_getFunktionen($ma->uid);
-				$personObj->funktionen = $funktionArr;
+				//~ // Add Funktionen to person object
+				$funktionenMa = $benutzerfunktionen[$ma->uid] ?? array();
+				$personObj->funktionen = $this->_getFunktionen($funktionenMa);
 
 				// Add Lehre to person object
-				$lehreArr = $this->_getLehre($ma->uid);
-				$personObj->lehre = $lehreArr;
+				// Alle Semesterwochenstunden, summiert nach STG und Studiensemester
+				$swsMaStg = $swsProStg[$ma->uid] ?? array();
+				$personObj->lehre = $this->_getLehre($swsMaStg);
 
 				$persons[] = $personObj;
 			}
 		}
-
 
 		return success($persons);
 	}
@@ -787,19 +810,9 @@ class PersonalmeldungLib extends BISErrorProducerLib
 	 * @param uid
 	 * @return array
 	 */
-	private function  _getFunktionen($uid)
+	private function  _getFunktionen($benutzerfunktionArr)
 	{
 		$funktionArr = array();
-		// Alle Benutzerfunktionen im BIS Meldungsjahr holen
-		$benutzerfunktionRes = $this->_ci->BenutzerfunktionModel->getBenutzerFunktionByUid(
-			$uid,
-			null,
-			$this->_dateData['yearStart']->format('Y-m-d'),
-			$this->_dateData['yearEnd']->format('Y-m-d')
-		);
-
-		$benutzerfunktionArr = hasData($benutzerfunktionRes) ? getData($benutzerfunktionRes) : array();
-
 		foreach ($benutzerfunktionArr as $bisfunktion)
 		{
 			$funktionscode = null;
@@ -893,61 +906,51 @@ class PersonalmeldungLib extends BISErrorProducerLib
 	 * @param uid
 	 * @return array
 	 */
-	private function _getLehre($uid)
+	private function _getLehre($swsProStg)
 	{
-		// Alle Semesterwochenstunden, summiert nach STG und Studiensemester
-		$swsProStgRes = $this->_ci->fhcmanagementlib->getSemesterwochenstundenGroupByStudiengang(
-			$uid,
-			$this->_dateData['yearStart']->format('Y-m-d'),
-			$this->_dateData['yearEnd']->format('Y-m-d')
-		);
 		$lehreArr = array();
 
-		if (hasData($swsProStgRes))
+		// Lehrgaenge und STG, die nicht BIS gemeldet werden, extrahieren
+		$swsProStgArr = array_filter($swsProStg, function ($obj) {
+			return
+				!in_array($obj->studiengang_kz, $this->_config['exclude_stg']) &&
+				$obj->studiengang_kz > 0 &&
+				$obj->studiengang_kz < 10000;
+		});
+
+		if (!isEmptyArray($swsProStgArr))
 		{
-			$swsProStg = getData($swsProStgRes);
-			// Lehrgaenge und STG, die nicht BIS gemeldet werden, extrahieren
-			$swsProStgArr = array_filter($swsProStg, function ($obj) {
-				return
-					!in_array($obj->studiengang_kz, $this->_config['exclude_stg']) &&
-					$obj->studiengang_kz > 0 &&
-					$obj->studiengang_kz < 10000;
-			});
-
-			if (!isEmptyArray($swsProStgArr))
+			foreach ($swsProStgArr as $swsProStg)
 			{
-				foreach ($swsProStgArr as $swsProStg)
+				$isSommersemester = substr($swsProStg->studiensemester_kurzbz, 0, 2) == 'SS';
+				$isWintersemester = substr($swsProStg->studiensemester_kurzbz, 0, 2) == 'WS';
+
+				// Lehreobjekt generieren
+				if (isEmptyArray($lehreArr) || !$this->_lehreStgExists($swsProStg->studiengang_kz, $lehreArr))
 				{
-					$isSommersemester = substr($swsProStg->studiensemester_kurzbz, 0, 2) == 'SS';
-					$isWintersemester = substr($swsProStg->studiensemester_kurzbz, 0, 2) == 'WS';
+					$lehreObj = new StdClass();
 
-					// Lehreobjekt generieren
-					if (isEmptyArray($lehreArr) || !$this->_lehreStgExists($swsProStg->studiengang_kz, $lehreArr))
+					$lehreObj->StgKz = str_pad(intval($swsProStg->studiengang_kz), 4, "0", STR_PAD_LEFT);
+					$lehreObj->SommersemesterSWS = $isSommersemester ? $swsProStg->sws : 0.00;
+					$lehreObj->WintersemesterSWS = $isWintersemester ? $swsProStg->sws : 0.00;
+
+					// Lehreobjekt dem Lehrecontainer anhaengen
+					$lehreArr[] = $lehreObj;
+				}
+				else	// Lehrecontainer mit STG schon vorhanden
+				{
+					$lehreObjArr = array_filter($lehreArr, function (&$obj) use ($swsProStg) {
+						return $obj->StgKz == $swsProStg->studiengang_kz;
+					});
+
+					// SWS ergaenzen
+					if ($isSommersemester)
 					{
-						$lehreObj = new StdClass();
-
-						$lehreObj->StgKz = str_pad(intval($swsProStg->studiengang_kz), 4, "0", STR_PAD_LEFT);
-						$lehreObj->SommersemesterSWS = $isSommersemester ? $swsProStg->sws : 0.00;
-						$lehreObj->WintersemesterSWS = $isWintersemester ? $swsProStg->sws : 0.00;
-
-						// Lehreobjekt dem Lehrecontainer anhaengen
-						$lehreArr[] = $lehreObj;
+						current($lehreObjArr)->SommersemesterSWS = $swsProStg->sws;
 					}
-					else	// Lehrecontainer mit STG schon vorhanden
+					elseif ($isWintersemester)
 					{
-						$lehreObjArr = array_filter($lehreArr, function (&$obj) use ($swsProStg) {
-							return $obj->StgKz == $swsProStg->studiengang_kz;
-						});
-
-						// SWS ergaenzen
-						if ($isSommersemester)
-						{
-							current($lehreObjArr)->SommersemesterSWS = $swsProStg->sws;
-						}
-						elseif ($isWintersemester)
-						{
-							current($lehreObjArr)->WintersemesterSWS = $swsProStg->sws;
-						}
+						current($lehreObjArr)->WintersemesterSWS = $swsProStg->sws;
 					}
 				}
 			}
@@ -1034,5 +1037,25 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Split any array by a certain property.
+	 * @param $arr
+	 * @param $property
+	 * @return array with property values as keys
+	 */
+	private function _splitByProperty($arr, $property)
+	{
+		$resultArr = array();
+
+		foreach ($arr as $item)
+		{
+			if (!isset($item->{$property})) continue;
+			if (!isset($resultArr[$item->{$property}])) $resultArr[$item->{$property}] = array();
+			$resultArr[$item->{$property}][] = $item;
+		}
+
+		return $resultArr;
 	}
 }

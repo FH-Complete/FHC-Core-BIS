@@ -168,26 +168,39 @@ class FHCManagementLib
 
 	/**
 	 * Gets Funktionen of Mitarbeiter for a year.
-	 * @param $funktion_kurzbzArr
 	 * @param $bismeldungJahr
 	 * @param $uidArr
+	 * @param $funktion_kurzbzArr
 	 * @return object success or error
 	 */
-	public function getMitarbeiterFunktionData($funktion_kurzbzArr, $bismeldungJahr, $uidArr)
+	public function getMitarbeiterFunktionData($bismeldungJahr, $uidArr = null, $funktion_kurzbzArr = null)
 	{
-		$params = array($funktion_kurzbzArr, $bismeldungJahr, $bismeldungJahr, $uidArr);
+		$params = array($bismeldungJahr, $bismeldungJahr);
 
 		$qry = "
 			SELECT
-				bf.uid, bf.oe_kurzbz, bf.funktion_kurzbz, bf.datum_von, bf.datum_bis, oe.organisationseinheittyp_kurzbz
+				bf.uid, bf.oe_kurzbz, bf.funktion_kurzbz, bf.datum_von, bf.datum_bis,
+				oe.organisationseinheittyp_kurzbz, oe.bezeichnung AS organisationseinheit_bezeichnung
 			FROM
 				public.tbl_benutzerfunktion bf
-				JOIN public.tbl_organisationseinheit oe USING (oe_kurzbz)
+				LEFT JOIN public.tbl_organisationseinheit oe USING (oe_kurzbz)
 			WHERE
-				bf.funktion_kurzbz IN ?
-				AND (bf.datum_von <= make_date(?::INTEGER, 12, 31) OR bf.datum_von is null)
-				AND (bf.datum_bis IS NULL OR bf.datum_bis >= make_date(?::INTEGER, 1, 1))
-				AND bf.uid IN ?";
+				(bf.datum_von <= make_date(?::INTEGER, 12, 31) OR bf.datum_von IS NULL)
+				AND (bf.datum_bis IS NULL OR bf.datum_bis >= make_date(?::INTEGER, 1, 1))";
+
+			if (isset($uidArr))
+			{
+				$qry .= " AND bf.uid IN ?";
+				$params[] = $uidArr;
+			}
+
+			if (isset($funktion_kurzbzArr))
+			{
+				$qry .= " AND bf.funktion_kurzbz IN ?";
+				$params[] = $funktion_kurzbzArr;
+			}
+
+			$qry .= " ORDER BY datum_bis NULLS LAST, datum_von NULLS LAST";
 
 		return $this->_dbModel->execReadOnlyQuery(
 			$qry,
@@ -328,10 +341,12 @@ class FHCManagementLib
 									OR verw.bis > bis_datum.bis_ende) THEN bis_datum.bis_ende
 							ELSE verw.bis
 						END AS ende_im_bismeldungsjahr
-				   FROM bis_datum
-				   CROSS JOIN extension.tbl_bis_verwendung verw
-				   WHERE (verw.von <= bis_datum.bis_ende OR verw.von IS NULL)
-					 AND (verw.bis >= bis_datum.bis_start OR verw.bis IS NULL)
+					FROM
+					bis_datum CROSS JOIN
+					extension.tbl_bis_verwendung verw
+					WHERE
+						(verw.von <= bis_datum.bis_ende OR verw.von IS NULL)
+						AND (verw.bis >= bis_datum.bis_start OR verw.bis IS NULL)
 				) verwendungen
 			LEFT JOIN
 			(
@@ -353,7 +368,7 @@ class FHCManagementLib
 			) ext ON ext.von::date - verwendungen.ende_im_bismeldungsjahr::date = 1
 				AND verwendungen.mitarbeiter_uid = ext.mitarbeiter_uid
 				AND verwendungen.verwendung_code = ext.verwendung_code
-				ORDER BY verwendungen.von, verwendungen.bis";
+			ORDER BY verwendungen.von, verwendungen.bis";
 
 		return $this->_dbModel->execReadOnlyQuery(
 			$qry,
@@ -368,7 +383,7 @@ class FHCManagementLib
 	 * @param $endDate
 	 * @param $uid
 	 */
-	public function getLehreinheitenSemesterwochenstunden($startDate, $endDate, $uid = null)
+	public function getLehreinheitenSemesterwochenstunden($startDate, $endDate, $uids = null)
 	{
 		$params = array($endDate, $startDate);
 		$qry = "
@@ -386,8 +401,15 @@ class FHCManagementLib
 						JOIN lehre.tbl_lehreinheit USING (lehreinheit_id)
 						JOIN public.tbl_studiensemester sem USING (studiensemester_kurzbz)
 					WHERE lema.bismelden
-					AND sem.start <= ?::date AND sem.ende >= ?::date
-				) tbl_semesterstunden
+					AND sem.start <= ?::date AND sem.ende >= ?::date";
+
+		if (isset($uids))
+		{
+			$qry .= ' AND mitarbeiter_uid IN ?';
+			$params[] = $uids;
+		}
+
+		$qry .= ") tbl_semesterstunden
 			GROUP BY mitarbeiter_uid, studiensemester_kurzbz, sem_start, sem_ende
 			ORDER BY sem_start";
 
@@ -400,17 +422,16 @@ class FHCManagementLib
 	/**
 	 * Ladet Semesterwochenstunden-Summe gruppiert nach Studiengang und Studiensemester.
 	 * Es werden die Studiensemester herangezogen, die im Zeitraum zwischen beginn und ende beginnen.
-	 * @param String $uid
 	 * @param String $beginn
 	 * @param String $ende
 	 * @return object success or error
 	 */
-	public function getSemesterwochenstundenGroupByStudiengang($uid, $beginn, $ende)
+	public function getSemesterwochenstundenGroupByStudiengang($beginn, $ende, $uids = null)
 	{
-		$params = array($uid, $beginn, $ende);
+		$params = array($beginn, $ende);
 		$qry = '
 			WITH semester_sws_tbl AS (
-				SELECT DISTINCT lehreinheit_id, studiensemester_kurzbz, lema.semesterstunden, stg.studiengang_kz
+				SELECT DISTINCT mitarbeiter_uid, lehreinheit_id, studiensemester_kurzbz, lema.semesterstunden, stg.studiengang_kz
 				FROM lehre.tbl_lehreinheitmitarbeiter lema
 					JOIN lehre.tbl_lehreinheit USING (lehreinheit_id)
 					JOIN lehre.tbl_lehrveranstaltung lv USING (lehrveranstaltung_id)
@@ -419,15 +440,25 @@ class FHCManagementLib
 					JOIN lehre.tbl_studienordnung sto USING (studienordnung_id)
 					JOIN public.tbl_studiengang stg ON stg.studiengang_kz = sto.studiengang_kz
 					JOIN public.tbl_studiensemester ss USING (studiensemester_kurzbz)
-				WHERE mitarbeiter_uid = ?
-					 AND (ss.start BETWEEN ? AND ?)
-				-- nur lehre, die bisgemeldet wird
+				WHERE
+					(ss.start BETWEEN ? AND ?)
+					-- nur lehre, die bisgemeldet wird
 					AND lema.bismelden
 					AND stg.melderelevant
-				-- keine lehreinheiten ohne semesterstunden
-				AND lema.semesterstunden != 0
+					-- keine lehreinheiten ohne semesterstunden
+					AND lema.semesterstunden != 0';
+
+
+		if (isset($uids))
+		{
+			$qry .= ' AND mitarbeiter_uid IN ?';
+			$params[] = $uids;
+		}
+
+		$qry .=	'
 			)
 			SELECT
+				mitarbeiter_uid,
 				studiengang_kz,
 				studiensemester_kurzbz,
 				sum(semesterstunden) AS summe,
@@ -435,14 +466,52 @@ class FHCManagementLib
 			FROM
 				semester_sws_tbl
 			GROUP BY
+				mitarbeiter_uid,
 				studiengang_kz,
 				studiensemester_kurzbz
 			ORDER BY
+				mitarbeiter_uid,
 				studiengang_kz;';
 
 		return $this->_dbModel->execReadOnlyQuery(
 			$qry,
 			$params
 		);
+	}
+
+	/**
+	 * Get all summer semesters.
+	 */
+	public function getAllSommersemester()
+	{
+		$qry = "
+			SELECT
+				studiensemester_kurzbz
+			FROM
+				public.tbl_studiensemester
+			WHERE
+				studiensemester_kurzbz LIKE 'SS%'
+				ORDER BY start DESC";
+
+		return $this->_dbModel->execReadOnlyQuery($qry);
+	}
+
+	/**
+	 * Get current summersemester, i.e. the one running right now or the next one if currently in wintersemester.
+	 */
+	public function getCurrentSommersemester()
+	{
+		$qry = "
+			SELECT
+				studiensemester_kurzbz
+			FROM
+				public.tbl_studiensemester
+			WHERE
+				studiensemester_kurzbz LIKE 'SS%'
+				AND ende >= NOW()
+				ORDER BY start
+				LIMIT 1";
+
+		return $this->_dbModel->execReadOnlyQuery($qry);
 	}
 }

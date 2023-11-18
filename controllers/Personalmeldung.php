@@ -27,11 +27,11 @@ class Personalmeldung extends Auth_Controller
 		$this->load->library('extensions/FHC-Core-BIS/FHCManagementLib');
 
 		// Loads phrases system
-		$this->loadPhrases(
-			array(
-				'personalmeldung'
-			)
-		);
+		//~ $this->loadPhrases(
+			//~ array(
+				//~ 'personalmeldung'
+			//~ )
+		//~ );
 	}
 
 	//------------------------------------------------------------------------------------------------------------------

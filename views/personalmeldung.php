@@ -20,7 +20,7 @@
 
 		<div id="content">
 			<header>
-				<h1 class="h2 fhc-hr"><?php echo $this->p->t('personalmeldung', 'personalmeldung') ?></h1>
+				<h1 class="h2 fhc-hr">Personalmeldung</h1>
 			</header>
 			<!-- input fields -->
 			<div class="row">
@@ -33,12 +33,12 @@
 				</div>
 				<div class="col-3">
 					<button type="button" class="btn btn-primary" @click="getMitarbeiter">
-						<?php echo $this->p->t('personalmeldung', 'mitarbeiterdatenAnzeigen') ?>
+						Mitarbeiterdaten anzeigen
 					</button>
 				</div>
 				<div class="col-3">
 					<button type="button" class="btn btn-primary" @click="downloadPersonalmeldungXml">
-						<?php echo $this->p->t('personalmeldung', 'xmlExportieren') ?>
+						XML exportieren
 					</button>
 				</div>
 			</div>

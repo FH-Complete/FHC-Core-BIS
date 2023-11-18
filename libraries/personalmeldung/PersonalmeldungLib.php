@@ -146,8 +146,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			);
 
 			// get Lehreinheiten for the year
-			$swsRes = $this->_ci->fhcmanagementlib->getLehreinheitenSemesterwochenstunden
-			(
+			$swsRes = $this->_ci->fhcmanagementlib->getLehreinheitenSemesterwochenstunden(
 				$this->_dateData['yearStart']->format('Y-m-d'),
 				$this->_dateData['yearEnd']->format('Y-m-d'),
 				$uids
@@ -196,12 +195,13 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 				// get Mitarbeiter Semesterwochenstunden
 				$swsMa = $sws[$ma->uid] ?? array();
+				$hasSws = count($swsMa) > 0;
 
 				// distribute Lehre to Verwendungen, using the Lehre Verwendungen and the Semesterwochenstunden
 				$verwendungenMa = $this->_addLehreToVerwendungen($verwendungenMa, $verwendungCodesLehreMa, $swsMa);
 
 				// add numbers for Beschäftigungsausmass and Jahresvollzeitäquivalenz
-				$verwendungenMa = $this->_addRelativesBaUndAnteiligeJVZAE($ma->uid, $verwendungenMa);
+				$verwendungenMa = $this->_addRelativesBaUndAnteiligeJVZAE($verwendungenMa, $hasSws);
 
 				//~ var_dump("AFTER ADD");
 				//~ var_dump("-------------------------------------------------------");
@@ -284,12 +284,12 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		{
 			$verwendungCode->beginn_im_bismeldungsjahr = new PersonalmeldungDate(
 				$verwendungCode->beginn_im_bismeldungsjahr,
-				 PersonalmeldungDate::START_TYPE
-			 );
+				PersonalmeldungDate::START_TYPE
+			);
 			$verwendungCode->ende_im_bismeldungsjahr = new PersonalmeldungDate(
 				$verwendungCode->ende_im_bismeldungsjahr,
-				 PersonalmeldungDate::END_TYPE
-			 );
+				PersonalmeldungDate::END_TYPE
+			);
 		}
 
 		// restructure to get start and end dates for each DV part:
@@ -398,15 +398,10 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					$verwendung->vertragsart_kurzbz = $dvPart->vertragsart_kurzbz;
 					$verwendung->dv_von = $dvPart->dv_von;
 					$verwendung->dv_bis = $dvPart->dv_bis;
-					if
-					(
-						isset($dvPart->vertragsbestandteil_beginn_im_bismeldungsjahr)
-						&& isset($dvPart->vertragsbestandteil_ende_im_bismeldungsjahr)
-					)
+					if (isset($dvPart->vertragsbestandteil_beginn_im_bismeldungsjahr) && isset($dvPart->vertragsbestandteil_ende_im_bismeldungsjahr))
 					{
 						// if verwendung falls into dvPart timespan
-						if (
-							$verwendung->von >= $dvPart->vertragsbestandteil_beginn_im_bismeldungsjahr
+						if ($verwendung->von >= $dvPart->vertragsbestandteil_beginn_im_bismeldungsjahr
 							&& $verwendung->von < $dvPart->vertragsbestandteil_ende_im_bismeldungsjahr
 						)
 						{
@@ -438,8 +433,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				foreach ($maVerwendungCodes as $verwendungCode)
 				{
 					// if verwendung falls into Verwendung code timespan
-					if (
-						$verwendung->von >= $verwendungCode->beginn_im_bismeldungsjahr
+					if ($verwendung->von >= $verwendungCode->beginn_im_bismeldungsjahr
 						&& $verwendung->bis <= $verwendungCode->ende_im_bismeldungsjahr
 						&& !in_array($verwendungCode->verwendung_code, $this->_config['verwendung_codes_lehre']) // ignore lehre for now
 					)
@@ -518,9 +512,14 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					continue;
 				}
 
-				// If Lehretime overlaps with BIS Verwendung time
-				if (
-					$lehreVerwendungCode->beginn_im_bismeldungsjahr <= $verwendung->bis
+				// no other Verwendung, "stand alone" Lehre with Vertragsstunden
+				if (is_null($verwendung->verwendung_code) && $hasVertragsstunden)
+				{
+					// set the lehre code for the verwendung, regardsless of dates
+					$verwendung->verwendung_code = $lehreVerwendungCode->verwendung_code;
+				}
+				// If Lehre date span overlaps with BIS Verwendung date span
+				elseif ($lehreVerwendungCode->beginn_im_bismeldungsjahr <= $verwendung->bis
 					&& $lehreVerwendungCode->ende_im_bismeldungsjahr >= $verwendung->von
 				)
 				{
@@ -552,18 +551,16 @@ class PersonalmeldungLib extends BISErrorProducerLib
 						unset($lehreVerwendungCode->extended_enddate);
 					}
 
-					// if no verwendung code yet: "stand alone lehre"
+					// if no verwendung code yet: "stand alone lehre" without Vertragsstunden
 					if (is_null($verwendung->verwendung_code))
 					{
 						$verwendung->verwendung_code = $lehreVerwendungCode->verwendung_code;
-						if (!$hasVertragsstunden)
-						{
-							// if no vertragsstunden, it is "externe Lehre" -> calculate based on Einzelstundenbasis
-							$verwendung->lehre_berechnungsbasis = $this->_config['vollzeit_sws_einzelstundenbasis'];
-						}
+						// "externe Lehre" -> calculate based on Einzelstundenbasis
+						$verwendung->lehre_berechnungsbasis = $this->_config['vollzeit_sws_einzelstundenbasis'];
 					}
-					else // there is already a verwendung code -> paralell lehre, add new lehre object
+					elseif (!in_array($verwendung->verwendung_code, $this->_config['verwendung_codes_lehre']))
 					{
+						// non-lehre verwendung exists -> paralell lehre, add new lehre object
 						$verwendung->lehre_berechnungsbasis = $this->_config['vollzeit_sws_inkludierte_lehre'];
 						$paralellVerwendung = clone $verwendung;
 						$paralellVerwendung->verwendung_code = $lehreVerwendungCode->verwendung_code;
@@ -579,10 +576,10 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 	/**
 	 * Calculate and add Beschäftigungsausmass and Jahresvollzeitäquivalenz for the Verwendungen of a Mitarbeiter.
-	 * @param $uid
 	 * @param $verwendungen
+	 * @param $hasAnySws
 	 */
-	private function _addRelativesBaUndAnteiligeJVZAE($uid, $verwendungen)
+	private function _addRelativesBaUndAnteiligeJVZAE($verwendungen, $hasAnySws)
 	{
 		foreach ($verwendungen as $idx => $verwendung)
 		{
@@ -651,7 +648,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			{
 				$verwendungen[$idx] = $this->_calculateLehreJVZAEAnteilig($verwendung);
 			}
-			else
+			elseif (!$hasAnySws) // fallback - "pauschale" Stunden if no Vertragsstunden and no Lehre at all
 			{
 				// Studentische HilfskrHilfskraft/sonstiges Dienstverhältnis (Werkvertrag)
 				// ---------------------------------------------------------------------------------------------------------
@@ -685,6 +682,13 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 		foreach ($verwendungen as $verwendung)
 		{
+			// ignore if no jvzae and no code and there is another Verwendung with same parameters, but different codes
+			if ((!isset($verwendung->jvzae_anteilig) || $verwendung->jvzae_anteilig == 0)
+				&& is_null($verwendung->verwendung_code)
+				&& $this->_verwendungWithVerwendungCodeExists($verwendung, $verwendungen)
+				)
+				continue;
+
 			// If first Verwendung of a type
 			if (isEmptyArray($verwendungenSum) || !$this->_verwendungExists($verwendung, $verwendungenSum))
 			{
@@ -807,10 +811,10 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 	/**
 	 * Funktionscode 1 - 6 anhand Benutzerfunktionen ermitteln
-	 * @param uid
+	 * @param $benutzerfunktionArr
 	 * @return array
 	 */
-	private function  _getFunktionen($benutzerfunktionArr)
+	private function _getFunktionen($benutzerfunktionArr)
 	{
 		$funktionArr = array();
 		foreach ($benutzerfunktionArr as $bisfunktion)
@@ -860,7 +864,8 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					$this->_ci->OrganisationseinheitModel->addSelect('organisationseinheittyp_kurzbz');
 					$organisationseinheitRes = $this->_ci->OrganisationseinheitModel->load($bisfunktion->oe_kurzbz);
 
-					$organisationseinheittyp = hasData($organisationseinheitRes) ? getData($organisationseinheitRes)[0]->organisationseinheittyp_kurzbz : null;
+					$organisationseinheittyp =
+						hasData($organisationseinheitRes) ? getData($organisationseinheitRes)[0]->organisationseinheittyp_kurzbz : null;
 
 					if (!isset($studiengang->studiengang_kz) &&
 						!in_array($organisationseinheittyp, $this->_config['exclude_leitung_organisationseinheitstypen'])) // nicht Teamleitung
@@ -999,6 +1004,26 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			if ($row_verwendung->ba1code == $verwendung->ba1code
 			 && $row_verwendung->ba2code == $verwendung->ba2code
 			 && $row_verwendung->verwendung_code == $verwendung->verwendung_code)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Checks if Verwendung array contains Verwendung with same parameters, but any Verwendung code but null.
+	 * @param $verwendung
+	 * @param $verwendung
+	 * @return true if found
+	 */
+	private function _verwendungWithVerwendungCodeExists($verwendung, $verwendungArr)
+	{
+		foreach ($verwendungArr as $row_verwendung)
+		{
+			if ($row_verwendung->ba1code == $verwendung->ba1code
+			 && $row_verwendung->ba2code == $verwendung->ba2code
+			 && !is_null($row_verwendung->verwendung_code))
 			{
 				return true;
 			}

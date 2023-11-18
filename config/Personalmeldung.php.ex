@@ -85,6 +85,7 @@ $config['fhc_bis_oe_verwendung_code_zuordnung'] = array(
 $config['fhc_bis_funktion_verwendung_code_zuordnung'] = array(
 	'laborant' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
 	'researcherjunior' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
+	'studentischehilfskr' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
 	'Leitung' => $config['fhc_bis_verwendung_codes']['management']
 );
 

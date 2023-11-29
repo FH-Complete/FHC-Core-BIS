@@ -17,16 +17,19 @@
 
 import {CoreRESTClient} from '../../../../../js/RESTClient.js';
 
+// timeout for ajax calls
+const CORE_BISMELDESTICHTAG_CMPT_TIMEOUT = 4000;
+
 /**
  *
  */
-export const PersonalmeldungAPIs = {
+export const StudiensemesterAPIs = {
 	getStudiensemester: function(successCallback) {
 		return CoreRESTClient.get(
 			'extensions/FHC-Core-BIS/Personalmeldung/getStudiensemester',
 			null,
 			{
-				timeout: 2000
+				timeout: CORE_BISMELDESTICHTAG_CMPT_TIMEOUT
 			}
 		).then(
 			result => {
@@ -42,50 +45,6 @@ export const PersonalmeldungAPIs = {
 		).catch(
 			error => {
 				alert('Fehler beim Holen der Studiensemester: ' + error.message);
-			}
-		);
-	},
-	getMitarbeiter: function(studiensemester_kurzbz, successCallback) {
-		return CoreRESTClient.get(
-			'extensions/FHC-Core-BIS/Personalmeldung/getMitarbeiter',
-			{
-				studiensemester_kurzbz: studiensemester_kurzbz
-			},
-			{
-				timeout: null
-			}
-		).then(
-			result => {
-				if (CoreRESTClient.hasData(result.data))
-				{
-					successCallback(CoreRESTClient.getData(result.data));
-				}
-			}
-		).catch(
-			error => {
-				alert('Fehler beim Holen der Mitarbeiter: ' + error.message);
-			}
-		);
-	},
-	runPlausichecks: function(studiensemester_kurzbz, successCallback) {
-		return CoreRESTClient.get(
-			'extensions/FHC-Core-BIS/Plausichecks/runChecks',
-			{
-				studiensemester_kurzbz: studiensemester_kurzbz
-			},
-			{
-				timeout: null
-			}
-		).then(
-			result => {
-				if (CoreRESTClient.hasData(result.data))
-				{
-					successCallback(CoreRESTClient.getData(result.data));
-				}
-			}
-		).catch(
-			error => {
-				alert('Fehler beim Ausführen der Plausichecks: ' + error.message);
 			}
 		);
 	}

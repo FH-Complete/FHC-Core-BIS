@@ -15,16 +15,18 @@ $config['fhc_bis_exclude_stg'] = array();
 // Semester Gewichtung für Berechnung von Jahresvollzeitaequivalenz JVZAE
 $config['fhc_bis_halbjahres_gewichtung_sws'] = 0.5;
 
-// Vertragsarten für studentischee Hilfskräfte
-$config['fhc_bis_vertragsarten_stud_hilfskraft'] = array(
-	'studentischehilfskr'
-);
 
 // Jahrespauschale für studentische Hilfskräfte (in Stunden)
-$config['fhc_bis_pauschale_studentische_hilfskraft'] = 0;
+$config['fhc_bis_pauschale_studentische_hilfskraft'] = 5.5;
 
 // Jahrespauschale fuer sonstige Dienstverhaeltnisse, zb Werkvertrag (in Stunden)
-$config['fhc_bis_pauschale_sonstiges_dienstverhaeltnis'] = 1750;
+$config['fhc_bis_pauschale_sonstiges_dienstverhaeltnis'] = 5.5;
+
+// Vertragsarten
+$config['fhc_bis_vertragsarten'] = array(
+	'studentischeHilfskraft' => 'studentischehilfskr',
+	'werkvertrag' => 'werkvertrag'
+);
 
 // Vollzeit Arbeitsstunden
 $config['fhc_bis_funktionscodes'] = array(

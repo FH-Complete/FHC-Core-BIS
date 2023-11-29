@@ -58,13 +58,31 @@ class PersonalmeldungDateLib
 		$dateData['daysInYear'] = $dateData['yearEnd']->diff($dateData['yearStart'])->days + 1;
 		$dateData['weeksInYear'] = $dateData['daysInYear'] / 7;
 
+		// set winter- and summersemester data
+		$dateData['winterSemesterImMeldungsjahr'] = null;
+		$dateData['sommerSemesterImMeldungsjahr'] = null;
+		$dateData['semesterStartDates'] = array();
+		$dateData['semesterEndDates'] = array();
+
 		$winterSemesterRes = $ci->StudiensemesterModel->getPreviousFrom($dateData['studiensemester_kurzbz']);
 		if (isError($winterSemesterRes)) return $winterSemesterRes;
-		$dateData['winterSemesterImMeldungsjahr'] = hasData($winterSemesterRes)? getData($winterSemesterRes)[0]->studiensemester_kurzbz : null;
+		if (hasData($winterSemesterRes))
+		{
+			$winterSemesterData = getData($winterSemesterRes)[0];
+			$dateData['winterSemesterImMeldungsjahr'] = $winterSemesterData->studiensemester_kurzbz;
+			$dateData['semesterStartDates'][$winterSemesterData->studiensemester_kurzbz] = new DateTime($winterSemesterData->start);
+			$dateData['semesterEndDates'][$winterSemesterData->studiensemester_kurzbz] = new DateTime($winterSemesterData->ende);
+		}
 
 		$sommerSemesterRes = $ci->StudiensemesterModel->getPreviousFrom($dateData['winterSemesterImMeldungsjahr']);
 		if (isError($sommerSemesterRes)) return $sommerSemesterRes;
-		$dateData['sommerSemesterImMeldungsjahr'] = hasData($sommerSemesterRes)? getData($sommerSemesterRes)[0]->studiensemester_kurzbz : null;
+		if (hasData($sommerSemesterRes))
+		{
+			$sommerSemesterData = getData($sommerSemesterRes)[0];
+			$dateData['sommerSemesterImMeldungsjahr'] = $sommerSemesterData->studiensemester_kurzbz;
+			$dateData['semesterStartDates'][$sommerSemesterData->studiensemester_kurzbz] = new DateTime($sommerSemesterData->start);
+			$dateData['semesterEndDates'][$sommerSemesterData->studiensemester_kurzbz] = new DateTime($sommerSemesterData->ende);
+		}
 
 		return success($dateData);
 	}

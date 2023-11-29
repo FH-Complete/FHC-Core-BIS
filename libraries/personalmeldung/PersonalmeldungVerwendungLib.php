@@ -29,9 +29,6 @@ class PersonalmeldungVerwendungLib
 		$this->_ci->load->library('extensions/FHC-Core-BIS/FHCManagementLib');
 		$this->_ci->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDateLib');
 
-		// load helpers
-		$this->_ci->load->helper('extensions/FHC-Core-BIS/hlp_personalmeldung_helper');
-
 		// load configs
 		$this->_ci->config->load('extensions/FHC-Core-BIS/Personalmeldung');
 
@@ -425,17 +422,31 @@ class PersonalmeldungVerwendungLib
 		$foundVerw = false;
 		foreach ($verwendungArr as $idx => $verw)
 		{
-			// if not Lehre, has same Verwendungs code, and follows directly after another code...
-			if (
-				!in_array($verw->verwendung_code, $this->_ci->config->item('fhc_bis_verwendung_codes_lehre'))
-				&& $verw->verwendung_code == $verwendung->verwendung_code
-				&& $verwendung->von->diff($verw->bis)->days == 1
-			)
+			if ($verw->verwendung_code == $verwendung->verwendung_code)
 			{
-				// ...Verwendung is continued, to date of previous Verwendung is extended
-				$verwendungArr[$idx]->bis = $verwendung->bis;
-				$foundVerw = true;
-				break;
+				// if not Lehre, has same Verwendungs code, and follows directly after another code...
+				if (
+					!in_array($verw->verwendung_code, $this->_ci->config->item('fhc_bis_verwendung_codes_lehre'))
+					&& $verwendung->von->diff($verw->bis)->days == 1
+				)
+				{
+					// ...Verwendung is continued, to date of previous Verwendung is extended
+					$verwendungArr[$idx]->bis = $verwendung->bis;
+					$foundVerw = true;
+					break;
+				}
+				// if it is "lehre gap" between two semesters, add days of gap to first Lehre Verwendung
+				elseif (
+					in_array($verw->verwendung_code, $this->_ci->config->item('fhc_bis_verwendung_codes_lehre'))
+					&& in_array($verwendung->verwendung_code, $this->_ci->config->item('fhc_bis_verwendung_codes_lehre'))
+					&& in_array($verw->bis, $this->_dateData['semesterEndDates'])
+					&& in_array($verwendung->von, $this->_dateData['semesterStartDates'])
+					&& $verw->bis < $verwendung->von
+				)
+				{
+					$newBis = clone $verwendung->von;
+					$verwendungArr[$idx]->bis = $newBis->modify('-1 day');
+				}
 			}
 		}
 

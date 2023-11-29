@@ -42,7 +42,7 @@ class Personalmeldung extends Auth_Controller
 	 */
 	public function index()
 	{
-		$this->load->view('extensions/FHC-Core-BIS/personalmeldung.php');
+		$this->load->view('extensions/FHC-Core-BIS/personalmeldung');
 	}
 
 	/**

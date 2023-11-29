@@ -19,7 +19,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		'vollzeit_sws_inkludierte_lehre' => null,
 		'exclude_stg' => array(),
 		'halbjahres_gewichtung_sws' => null,
-		'vertragsarten_stud_hilfskraft' => array(),
+		'vertragsarten' => array(),
 		'pauschale_studentische_hilfskraft' => null,
 		'pauschale_sonstiges_dienstverhaeltnis' => null,
 		'funktionscodes' => array(),
@@ -52,9 +52,6 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		$this->_ci->load->model('person/Benutzerfunktion_model', 'BenutzerfunktionModel');
 		$this->_ci->load->model('organisation/Studiengang_model', 'StudiengangModel');
 		$this->_ci->load->model('organisation/Organisationseinheit_model', 'OrganisationseinheitModel');
-
-		// load helpers
-		$this->_ci->load->helper('extensions/FHC-Core-BIS/hlp_personalmeldung_helper');
 
 		$this->_dbModel = new DB_Model(); // get db
 
@@ -173,7 +170,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			);
 
 			if (isError($swsProStgRes)) return $swsProStgRes;
-			$swsProStg = hasData($swsProStgRes) ? $this->_splitByProperty(getData($swsProStgRes), 'mitarbeiter_uid')  : array();
+			$swsProStg = hasData($swsProStgRes) ? $this->_splitByProperty(getData($swsProStgRes), 'mitarbeiter_uid') : array();
 
 			//~ var_dump("THE SWS");
 			//~ var_dump("--------------------------------------------");
@@ -231,6 +228,37 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		}
 
 		return success($persons);
+	}
+
+	/**
+	 * Get Semesterwochenstunden data for a year.
+	 * @param $yearStart
+	 * @param $yearEnd
+	 * @return object success with sws or error
+	 */
+	public function getSwsData($yearStart, $yearEnd)
+	{
+		$swsData = array();
+
+		// get Semesterwochenstunden for each Studiengang
+		$swsProStgRes = $this->_ci->fhcmanagementlib->getSemesterwochenstundenGroupByStudiengang(
+			$yearStart,
+			$yearEnd
+		);
+
+		if (isError($swsProStgRes)) return $swsProStgResRes;
+
+		if (hasData($swsProStgRes))
+		{
+			$swsProStg = $this->_splitByProperty(getData($swsProStgRes), 'mitarbeiter_uid');
+
+			foreach ($swsProStg as $sws)
+			{
+				$swsData = array_merge($swsData, $this->_getLehre($sws));
+			}
+		}
+
+		return success($swsData);
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -443,11 +471,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					}
 				}
 
-				// add Verwendung, if it is not just a gap between semesters ("lecture-free time")
-				if (!($this->_isLehreGapBetweenSemesters($verwendung, $maVerwendungCodes)))
-				{
-					$verwendungen[] = $verwendung;
-				}
+				$verwendungen[] = $verwendung;
 			}
 		}
 
@@ -587,7 +611,9 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				isset($verwendung->wochenstunden) && is_numeric($verwendung->wochenstunden) && $verwendung->wochenstunden > 0;
 			$isKarenziertVz = $verwendung->karenz;// && !$hasVertragsstunden;
 			$isLehre = in_array($verwendung->verwendung_code, $this->_config['verwendung_codes_lehre']);
-			$hasLehreSws = isset($verwendung->sws);
+			$hasLehreSws = isset($verwendung->sws); //  && $verwendung->sws > 0
+			$isStudentischeHilfskraft = $verwendung->vertragsart_kurzbz == $this->_config['vertragsarten']['studentischeHilfskraft'];
+			$isWerkvertrag = $verwendung->vertragsart_kurzbz == $this->_config['vertragsarten']['werkvertrag'];
 
 			$verwendung->has_vertragsstunden = $hasVertragsstunden;
 
@@ -644,15 +670,16 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					}
 				}
 			}
-			elseif ($hasLehreSws) // freier Dienstvertrag, with Lehre - calculate based on sws
+			// freier Dienstvertrag, with lehre - calculate based on sws
+			elseif ($hasLehreSws && in_array($verwendung->verwendung_code, $this->_config['verwendung_codes_lehre']))
 			{
 				$verwendungen[$idx] = $this->_calculateLehreJVZAEAnteilig($verwendung);
 			}
-			elseif (!$hasAnySws) // fallback - "pauschale" Stunden if no Vertragsstunden and no Lehre at all
+			// fallback - "pauschale" Stunden if no Vertragsstunden and no Lehre at all
+			elseif (!$hasAnySws || $isStudentischeHilfskraft || $isWerkvertrag)
 			{
 				// Studentische HilfskrHilfskraft/sonstiges Dienstverhältnis (Werkvertrag)
 				// ---------------------------------------------------------------------------------------------------------
-				$isStudentischeHilfskraft = in_array($verwendung->vertragsart_kurzbz, $this->_config['vertragsarten_stud_hilfskraft']);
 
 				// Pauschale pro Jahr und Person (in Stunden), different for Stud. Hilfskraft and Werkvertrag
 				$pauschaleInStunden = $isStudentischeHilfskraft
@@ -664,7 +691,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 				// Relatives Beschaeftigungsausmass / Anteilige JVZAE ermitteln
 				$verwendung->beschaeftigungsausmass_relativ = $pauschaleInStunden / $vollzeitArbeitsstundenimJahr;
-				$verwendung->jvzae_anteilig = $pauschaleInStunden * $verwendung->gewichtung / $vollzeitArbeitsstundenimJahr;
+				$verwendung->jvzae_anteilig = $pauschaleInStunden / $vollzeitArbeitsstundenimJahr;
 			}
 		}
 
@@ -970,26 +997,26 @@ class PersonalmeldungLib extends BISErrorProducerLib
 	 * @param $verwendungCodeArr the other Verwendungen, to determine if the checked Verwendung is between them
 	 * @return bool is gap or not
 	 */
-	private function _isLehreGapBetweenSemesters($verwendung, $verwendungCodeArr)
-	{
-		// No Verwendung code should be assigned
-		if (!is_null($verwendung->verwendung_code)) return false;
+	//~ private function _isLehreGapBetweenSemesters($verwendung, $verwendungCodeArr)
+	//~ {
+		//~ // No Verwendung code should be assigned
+		//~ if (!is_null($verwendung->verwendung_code)) return false;
 
-		// gap must be between two other Verwendungen (start v - ende ov1 = 1 and start ov2 - ende v = 1, ov being "other verwendung")
-		$startFound = false;
-		$endFound = false;
+		//~ // gap must be between two other Verwendungen (start v - ende ov1 = 1 and start ov2 - ende v = 1, ov being "other verwendung")
+		//~ $startFound = false;
+		//~ $endFound = false;
 
-		foreach ($verwendungCodeArr as $verwendungCode)
-		{
-			if ($verwendungCode->verwendung_code == $this->_config['verwendung_codes']['lehre'])
-			{
-				if ($verwendung->von->diff($verwendungCode->ende_im_bismeldungsjahr)->days == 1) $startFound = true;
-				if ($verwendungCode->beginn_im_bismeldungsjahr->diff($verwendung->bis)->days == 1) $endFound = true;
-			}
-		}
+		//~ foreach ($verwendungCodeArr as $verwendungCode)
+		//~ {
+			//~ if ($verwendungCode->verwendung_code == $this->_config['verwendung_codes']['lehre'])
+			//~ {
+				//~ if ($verwendung->von->diff($verwendungCode->ende_im_bismeldungsjahr)->days == 1) $startFound = true;
+				//~ if ($verwendungCode->beginn_im_bismeldungsjahr->diff($verwendung->bis)->days == 1) $endFound = true;
+			//~ }
+		//~ }
 
-		return $startFound && $endFound;
-	}
+		//~ return $startFound && $endFound;
+	//~ }
 
 	/**
 	 * Prueft ob in Verwendung_arr bereits eine Kombination mit selben ba1code, ba2code und verwendungcode

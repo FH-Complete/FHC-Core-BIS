@@ -24,5 +24,6 @@ GRANT SELECT ON TABLE extension.tbl_bis_vertragsart_beschaeftigungsart1 TO web;
 
 INSERT INTO extension.tbl_bis_vertragsart_beschaeftigungsart1 (vertragsart_kurzbz, ba1code) VALUES
 ('echterdv', 3),
-('freierdv', 7)
+('freierdv', 7),
+('werkvertrag', 5)
 ON CONFLICT (vertragsart_kurzbz) DO NOTHING;

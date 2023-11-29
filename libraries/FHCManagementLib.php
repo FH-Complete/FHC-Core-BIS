@@ -158,6 +158,7 @@ class FHCManagementLib
 				AND personalnummer > 0
 				AND (dv.von <= bis_datum.bis_ende OR dv.von is null)
 				AND (dv.bis IS NULL OR dv.bis >= bis_datum.bis_start)
+				-- AND mitarbeiter_uid = 'zehetbau'
 			ORDER BY uid, nachname, vorname";
 
 		return $this->_dbModel->execReadOnlyQuery(
@@ -302,6 +303,7 @@ class FHCManagementLib
 				AND ma.personalnummer > 0
 				AND (dv.von <= bis_datum.bis_ende OR dv.von IS NULL)
 				AND (dv.bis >= bis_datum.bis_start OR dv.bis IS NULL)
+				-- AND ma.mitarbeiter_uid = 'zehetbau'
 			ORDER BY dv.von, dv.bis, vtbs.von, vtbs.bis, dv.mitarbeiter_uid";
 
 		return $this->_dbModel->execReadOnlyQuery(
@@ -323,9 +325,11 @@ class FHCManagementLib
 			WITH bis_datum AS
 			  (SELECT make_date(?::INTEGER, 1, 1) AS bis_start,
 					  make_date(?::INTEGER, 12, 31) AS bis_ende)
-			SELECT verwendungen.*,
-				   ext.bis AS extended_enddate
+			SELECT
+				verwendungen.*,
+				ext.bis AS extended_enddate
 			FROM
+				bis_datum CROSS JOIN
 				(
 					SELECT verw.mitarbeiter_uid,
 						verw.verwendung_code,
@@ -348,26 +352,27 @@ class FHCManagementLib
 						(verw.von <= bis_datum.bis_ende OR verw.von IS NULL)
 						AND (verw.bis >= bis_datum.bis_start OR verw.bis IS NULL)
 				) verwendungen
-			LEFT JOIN
-			(
-				SELECT
-					mitarbeiter_uid, verwendung_code, von, bis
-				FROM
-					extension.tbl_bis_verwendung vverw
-				WHERE NOT EXISTS
+				LEFT JOIN
 				(
-					-- extend date if there is no DV in next year, but Verwendung
-					SELECT 1
+					SELECT
+						mitarbeiter_uid, verwendung_code, von, bis
 					FROM
-						hr.tbl_dienstverhaeltnis dv
-					WHERE
-						mitarbeiter_uid = vverw.mitarbeiter_uid
-						AND (vverw.von >= dv.von OR dv.von IS NULL)
-						AND (vverw.bis <= dv.bis OR dv.bis IS NULL)
-				)
-			) ext ON ext.von::date - verwendungen.ende_im_bismeldungsjahr::date = 1
-				AND verwendungen.mitarbeiter_uid = ext.mitarbeiter_uid
-				AND verwendungen.verwendung_code = ext.verwendung_code
+						extension.tbl_bis_verwendung vverw
+					WHERE NOT EXISTS
+					(
+						-- extend date if there is no DV in next year, but Verwendung
+						SELECT 1
+						FROM
+							hr.tbl_dienstverhaeltnis dv
+						WHERE
+							mitarbeiter_uid = vverw.mitarbeiter_uid
+							AND (vverw.von <= dv.bis OR dv.bis IS NULL)
+							AND (vverw.bis >= dv.von OR dv.von IS NULL)
+					)
+				) ext ON
+					ext.von::date - verwendungen.ende_im_bismeldungsjahr::date = 1
+					AND verwendungen.mitarbeiter_uid = ext.mitarbeiter_uid
+					AND verwendungen.verwendung_code = ext.verwendung_code
 			ORDER BY verwendungen.von, verwendungen.bis";
 
 		return $this->_dbModel->execReadOnlyQuery(

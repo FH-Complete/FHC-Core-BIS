@@ -3,9 +3,9 @@
 if (!defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
- * Adds jobs to queue.
+ * Personalmeldung job
  */
-class Personalmeldung extends JOB_Controller
+class Personalmeldung extends FHC_Controller
 {
 	/**
 	 * Controller initialization
@@ -14,7 +14,7 @@ class Personalmeldung extends JOB_Controller
 	{
 		parent::__construct();
 
-		// Loads JQMSchedulerLib
+		// Load libraries
 		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungVerwendungLib');
 	}
 

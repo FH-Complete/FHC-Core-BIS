@@ -158,7 +158,7 @@ class FHCManagementLib
 				AND personalnummer > 0
 				AND (dv.von <= bis_datum.bis_ende OR dv.von is null)
 				AND (dv.bis IS NULL OR dv.bis >= bis_datum.bis_start)
-				-- AND mitarbeiter_uid = 'zehetbau'
+				-- AND mitarbeiter_uid = 'uid'
 			ORDER BY uid, nachname, vorname";
 
 		return $this->_dbModel->execReadOnlyQuery(
@@ -208,6 +208,52 @@ class FHCManagementLib
 			$params
 		);
 	}
+
+		/**
+		 * Get Dienstverhältnisse for a year and for certain Vertragsarten
+		 * @param $bismeldungJahr
+		 * @param $vertragsarten
+		 * @return object success or error
+		 */
+		public function getDienstverhaeltnisse($bismeldungJahr, $vertragsarten)
+		{
+			$params = array($bismeldungJahr, $bismeldungJahr, $vertragsarten);
+
+			$qry = "
+				WITH bis_datum AS (
+					SELECT
+						make_date(?::INTEGER, 1, 1) AS bis_start,
+						make_date(?::INTEGER, 12, 31) AS bis_ende
+				)
+				SELECT
+					dv.mitarbeiter_uid, dv.dienstverhaeltnis_id, dv.von AS dv_von, dv.bis AS dv_bis, dv.vertragsart_kurzbz,
+					CASE
+						WHEN (dv.von IS NULL OR dv.von < bis_datum.bis_start)
+						THEN bis_datum.bis_start
+						ELSE dv.von
+					END AS beginn_im_bismeldungsjahr,
+					CASE
+						WHEN (dv.bis IS NULL OR dv.bis > bis_datum.bis_ende)
+						THEN bis_datum.bis_ende
+						ELSE dv.bis
+					END AS ende_im_bismeldungsjahr
+				FROM
+					bis_datum
+					CROSS JOIN public.tbl_mitarbeiter ma
+					JOIN hr.tbl_dienstverhaeltnis dv USING (mitarbeiter_uid)
+				WHERE
+					ma.bismelden
+					AND ma.personalnummer > 0
+					AND dv.vertragsart_kurzbz IN ?
+					AND (dv.von <= bis_datum.bis_ende OR dv.von IS NULL)
+					AND (dv.bis >= bis_datum.bis_start OR dv.bis IS NULL)
+				ORDER BY dv.von, dv.bis";
+
+			return $this->_dbModel->execReadOnlyQuery(
+				$qry,
+				$params
+			);
+		}
 
 	/**
 	 * Gets Dienstverhältnis data needed for Bismeldung. Note: there can be multiple records for each DV.
@@ -303,7 +349,7 @@ class FHCManagementLib
 				AND ma.personalnummer > 0
 				AND (dv.von <= bis_datum.bis_ende OR dv.von IS NULL)
 				AND (dv.bis >= bis_datum.bis_start OR dv.bis IS NULL)
-				-- AND ma.mitarbeiter_uid = 'zehetbau'
+				-- AND ma.mitarbeiter_uid = 'uid'
 			ORDER BY dv.von, dv.bis, vtbs.von, vtbs.bis, dv.mitarbeiter_uid";
 
 		return $this->_dbModel->execReadOnlyQuery(
@@ -346,8 +392,8 @@ class FHCManagementLib
 							ELSE verw.bis
 						END AS ende_im_bismeldungsjahr
 					FROM
-					bis_datum CROSS JOIN
-					extension.tbl_bis_verwendung verw
+						bis_datum CROSS JOIN
+						extension.tbl_bis_verwendung verw
 					WHERE
 						(verw.von <= bis_datum.bis_ende OR verw.von IS NULL)
 						AND (verw.bis >= bis_datum.bis_start OR verw.bis IS NULL)

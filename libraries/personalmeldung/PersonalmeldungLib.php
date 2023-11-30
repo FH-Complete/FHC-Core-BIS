@@ -491,7 +491,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		// for each Lehre object
 		foreach ($lehreVerwendungCodes as $lehreVerwendungCode)
 		{
-			$lehreVerwendungCode->sws = 0;
+			$lehreVerwendungCode->sws = null;
 			$lehreVerwendungCode->studiensemester_kurzbz = null;
 			$verwCodeStart = new DateTime($lehreVerwendungCode->von);
 			$verwCodeEnd = new DateTime($lehreVerwendungCode->bis);

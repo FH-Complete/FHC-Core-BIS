@@ -157,10 +157,17 @@ class PersonalmeldungVerwendungLib
 	{
 		$verwendungCodes = array();
 
+		// get config Verwendung codes
 		$verwendungCodesList = $this->_ci->config->item('fhc_bis_verwendung_codes');
 
 		// get Verwendungen OE mappings
 		$oeVerwendungCodes = $this->_ci->config->item('fhc_bis_oe_verwendung_code_zuordnung');
+
+		// get Verwendungen vertragstyp mappings
+		$vertragstypVerwendungCodes = $this->_ci->config->item('fhc_bis_vertragstyp_verwendung_code_zuordnung');
+
+		// get exceptions for Zuordnung of Oe to Vewendung code (if certain Vertragstyp, Verwendung of OE should not be assigned)
+		$oeVerwendungCodesVertragsartExceptions = $this->_ci->config->item('fhc_bis_oe_verwendung_code_zuordnung_vertragstyp_exceptions');
 
 		// retrieve children for each OE
 		foreach ($oeVerwendungCodes as $oe_kurzbz => $verwendungCode)
@@ -200,6 +207,13 @@ class PersonalmeldungVerwendungLib
 			$uids[] = $ma->uid;
 		}
 
+		// get Dienstverhältnisse with Vertragsarten
+		$dvRes = $this->_ci->fhcmanagementlib->getDienstverhaeltnisse($this->_dateData['bismeldungYear'], array_keys($vertragstypVerwendungCodes));
+
+		if (isError($dvRes)) return $dvRes;
+
+		$dvData = hasData($dvRes) ? getData($dvRes) : array();
+
 		// get funktionen for the uids
 		$funktionVerwendungCodeZuordnung = $this->_ci->config->item('fhc_bis_funktion_verwendung_code_zuordnung');
 
@@ -216,7 +230,7 @@ class PersonalmeldungVerwendungLib
 		{
 			foreach (getData($funktionRes) as $funktion)
 			{
-				// not add Leitungsfunktion if certain oes (e.g. team)
+				// not add Leitungsfunktion for certain oes (e.g. team)
 				if (
 					in_array($funktion->funktion_kurzbz, $this->_ci->config->item('fhc_bis_leitungsfunktionen'))
 					&& in_array(
@@ -248,8 +262,27 @@ class PersonalmeldungVerwendungLib
 			{
 				foreach ($this->_verwendung_oe_kurzbz_with_children as $oe_kurzbz => $children)
 				{
+					// skip if oe has a "verwendungsart exception",
+					// i.e. its Verwendungscode of the oe shouldn't be added if it's a certain contract type
+
 					if (in_array($oeFunktion->oe_kurzbz, $children))
 					{
+						if (isset($oeVerwendungCodesVertragsartExceptions[$oe_kurzbz]))
+						{
+							$vertragsart_kurzbz = $oeVerwendungCodesVertragsartExceptions[$oe_kurzbz];
+
+							if (
+								$this->_findDienstverhaeltnisObj(
+									$dvData,
+									$oeFunktion->uid,
+									$vertragsart_kurzbz,
+									$oeFunktion->datum_von,
+									$oeFunktion->datum_bis
+								)
+							)
+							continue;
+						}
+
 						$verwCodeObj = new StdClass();
 						$verwCodeObj->mitarbeiter_uid = $oeFunktion->uid;
 						$verwCodeObj->verwendung_code = $oeVerwendungCodes[$oe_kurzbz];
@@ -282,6 +315,27 @@ class PersonalmeldungVerwendungLib
 				$lehreObj->von = $le->sem_start;
 				$lehreObj->bis = $le->sem_ende;
 				$verwendungCodes[] = $lehreObj;
+			}
+		}
+
+		// get Verwendungen derived from Vertragstyp
+		foreach ($dvData as $dv)
+		{
+			if (
+				!$this->_findVerwendungCodeObj(
+					$verwendungCodes,
+					$dv->mitarbeiter_uid,
+					$dv->beginn_im_bismeldungsjahr,
+					$dv->ende_im_bismeldungsjahr
+				)
+			)
+			{
+				$verwCodeObj = new StdClass();
+				$verwCodeObj->mitarbeiter_uid = $dv->mitarbeiter_uid;
+				$verwCodeObj->verwendung_code = $vertragstypVerwendungCodes[$dv->vertragsart_kurzbz];
+				$verwCodeObj->von = $dv->beginn_im_bismeldungsjahr;
+				$verwCodeObj->bis = $dv->ende_im_bismeldungsjahr;
+				$verwendungCodes[] = $verwCodeObj;
 			}
 		}
 
@@ -518,5 +572,54 @@ class PersonalmeldungVerwendungLib
 		}
 
 		return $verwendungActionArr;
+	}
+
+	/**
+	 * Find Verwendung code between two dates.
+	 * @param $verwendungCodeObjArr
+	 * @param $mitarbeiter_uid
+	 * @param $von
+	 * @param $bis
+	 * @return bool found or not
+	 */
+	private function _findVerwendungCodeObj($verwendungCodeObjArr, $mitarbeiter_uid, $von, $bis)
+	{
+		foreach ($verwendungCodeObjArr as $verwendungCodeObj)
+		{
+			if (
+				$verwendungCodeObj->mitarbeiter_uid == $mitarbeiter_uid
+				&& $verwendungCodeObj->von <= $bis
+				&& $verwendungCodeObj->bis >= $von
+			)
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Find Dienstverhältnis containing a certain date span.
+	 * @param $dvArr
+	 * @param $mitarbeiter_uid
+	 * @param $vertragsart_kurzbz
+	 * @param $von start of date span
+	 * @param $bis end of date span
+	 * @return object success or error
+	 */
+	private function _findDienstverhaeltnisObj($dvArr, $mitarbeiter_uid, $vertragsart_kurzbz, $von, $bis)
+	{
+		$von = is_null($von) || $von < $this->_dateData['yearStart'] ? $this->_dateData['yearStart'] : $von;
+		$bis = is_null($bis) || $bis > $this->_dateData['yearEnd'] ? $this->_dateData['yearEnd'] : $bis;
+
+		foreach ($dvArr as $dv)
+		{
+			if (
+				$dv->mitarbeiter_uid == $mitarbeiter_uid
+				&& in_array($dv->vertragsart_kurzbz, $vertragsart_kurzbz)
+				&& $von >= new DateTime($dv->beginn_im_bismeldungsjahr)
+				&& $bis <= new DateTime($dv->ende_im_bismeldungsjahr)
+			)
+			return true;
+		}
+		return false;
 	}
 }

@@ -407,13 +407,13 @@ class PersonalmeldungVerwendungLib
 					&& (is_null($verwendungCode->bis) || $newVerwendung->bis <= new DateTime($verwendungCode->bis))
 				)
 				{
-					foreach ($codeConfigArrays as $configIdx => $codeConfigArray)
+					foreach ($codeConfigArrays as $prioType => $codeConfigArray)
 					{
 						// get priority of new Verwendung
-						$newIdx = array_search($verwendungCode->verwendung_code, $codeConfigArray);
+						$prio = array_search($verwendungCode->verwendung_code, $codeConfigArray);
 
-						if (is_numeric($newIdx))
-							$prioCodes[$configIdx][$newIdx] = $verwendungCode->verwendung_code;
+						if (is_numeric($prio))
+							$prioCodes[$prioType][$prio] = $verwendungCode->verwendung_code;
 						else
 							$nonPrioCodes[] = $verwendungCode->verwendung_code;
 					}
@@ -427,7 +427,7 @@ class PersonalmeldungVerwendungLib
 				ksort($codes);
 				$code = reset($codes);
 
-				// if there is already a verwendung from other verwendung groups
+				// if there is already a verwendung from other verwendung priority group
 				if (isset($newVerwendung->verwendung_code) && $code != $newVerwendung->verwendung_code)
 				{
 					// add the paralell Verwendung
@@ -491,20 +491,22 @@ class PersonalmeldungVerwendungLib
 				}
 				// if it is "lehre gap" between two semesters, add days of gap to first Lehre Verwendung
 				elseif (
-					in_array($verw->verwendung_code, $this->_ci->config->item('fhc_bis_verwendung_codes_lehre'))
+					$idx == count($verwendungArr) - 1 // previous lehre should be last element
+					&& in_array($verw->verwendung_code, $this->_ci->config->item('fhc_bis_verwendung_codes_lehre')) // both codes should be lehre
 					&& in_array($verwendung->verwendung_code, $this->_ci->config->item('fhc_bis_verwendung_codes_lehre'))
-					&& in_array($verw->bis, $this->_dateData['semesterEndDates'])
+					&& in_array($verw->bis, $this->_dateData['semesterEndDates']) // existing is end of semester, newly added is start of semester
 					&& in_array($verwendung->von, $this->_dateData['semesterStartDates'])
 					&& $verw->bis < $verwendung->von
 				)
 				{
+					// "extend" bis date of previous Verwendung
 					$newBis = clone $verwendung->von;
 					$verwendungArr[$idx]->bis = $newBis->modify('-1 day');
 				}
 			}
 		}
 
-		// if not previous Verwendung found, just add the new Verwendung
+		// if no previous Verwendung was merged, just add the new Verwendung
 		if (!$foundVerw) $verwendungArr[] = $verwendung;
 	}
 

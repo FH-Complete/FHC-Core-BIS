@@ -5,7 +5,7 @@ if (!defined('BASEPATH')) exit('No direct script access allowed');
 /**
  * Personalmeldung job
  */
-class Personalmeldung extends FHC_Controller
+class Personalmeldung extends JOB_Controller
 {
 	/**
 	 * Controller initialization

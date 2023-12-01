@@ -18,6 +18,7 @@
 import {CoreFilterCmpt} from '../../../../../js/components/filter/Filter.js';
 import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
 import {PersonalmeldungAPIs} from './API.js';
+import studiensemester from '../components/Studiensemester.js';
 
 const personalmeldungApp = Vue.createApp({
 	data: function() {
@@ -169,37 +170,23 @@ const personalmeldungApp = Vue.createApp({
 					}
 				]
 			},
-			semList: null, // all Studiensemester for dropdown
-			currSem: null, // selected Studiensemester
+			studiensemester_kurzbz: null,
+			verwendungenSaved: false
 		};
 	},
 	components: {
 		CoreNavigationCmpt,
 		CoreFilterCmpt,
 		PersonalmeldungAPIs,
-	},
-	created() {
-		this.getStudiensemester();
+		studiensemester
 	},
 	methods: {
-		/**
-		 * get Studiensemester
-		 */
-		getStudiensemester: function() {
-			PersonalmeldungAPIs.getStudiensemester(
-				(data) => {
-					// set the Studiensemester data
-					this.semList = data.semList;
-					this.currSem = data.currSem;
-				}
-			);
-		},
 		/**
 		 * get Mitarbeiter
 		 */
 		getMitarbeiter: function() {
 			PersonalmeldungAPIs.getMitarbeiter(
-				this.currSem,
+				this.studiensemester_kurzbz,
 				(data) => {
 					// set the employee data
 					this.$refs.personalmeldungTable.tabulator.setData(data);
@@ -207,12 +194,72 @@ const personalmeldungApp = Vue.createApp({
 			);
 		},
 		/**
+		 * save ("refresh") Verwendungen
+		 */
+		saveVerwendungen: function() {
+			PersonalmeldungAPIs.saveVerwendungen(
+				this.studiensemester_kurzbz,
+				(data) => {
+					this.verwendungenSaved = true;
+					setTimeout(() => this.verwendungenSaved = false, 2000)
+				}
+			);
+		},
+		/**
 		 * Download XML by changing url
 		 */
 		downloadPersonalmeldungXml: function() {
-			window.location = 'Personalmeldung/downloadPersonalmeldungXml?studiensemester_kurzbz='+encodeURIComponent(this.currSem);
+			window.location = 'Personalmeldung/downloadPersonalmeldungXml?studiensemester_kurzbz='+encodeURIComponent(this.studiensemester_kurzbz);
+		},
+		/**
+		 * Set Studiensemester
+		 */
+		getSemester: function(studiensemester_kurzbz) {
+			this.studiensemester_kurzbz = studiensemester_kurzbz;
 		}
-	}
+	},
+	template: `
+		<!-- Navigation component -->
+		<core-navigation-cmpt></core-navigation-cmpt>
+
+		<div id="content">
+			<header>
+				<h1 class="h2 fhc-hr">Personalmeldung Plausichecks</h1>
+			</header>
+			<!-- input fields -->
+			<div class="row">
+				<div class="col-6">
+					<studiensemester @passSemester="getSemester"></studiensemester>
+				</div>
+				<div class="col-6 text-center">
+					<button type="button" class="btn btn-primary me-2" @click="getMitarbeiter">
+						Mitarbeiterdaten anzeigen
+					</button>
+					<button type="button" class="btn btn-primary me-2" @click="downloadPersonalmeldungXml">
+						XML exportieren
+					</button>
+					<button type="button" class="btn btn-outline-secondary me-2 float-end" @click="saveVerwendungen">
+						Verwendungen aktualisieren
+					</button>
+				</div>
+			</div>
+			<br />
+			<div class="alert alert-success" v-show="verwendungenSaved">
+				Verwendungen erfolgreich aktualisiert
+			</div>
+			<!-- Filter component -->
+			<div class="row">
+				<div class="col">
+					<core-filter-cmpt
+						ref="personalmeldungTable"
+						:side-menu="false"
+						:tabulator-options="personalmeldungTabulatorOptions"
+						:table-only="true">
+					</core-filter-cmpt>
+				</div>
+			</div>
+			</div>
+		</div>`
 });
 
 personalmeldungApp.mount('#main');

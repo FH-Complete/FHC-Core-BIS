@@ -26,8 +26,6 @@ export default {
 			);
 		},
 		onSemesterChange: function() {
-			console.log("passing");
-			//console.log(this.currSem);
 			this.$emit('passSemester', this.currSem);
 		}
 	},

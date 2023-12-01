@@ -44,7 +44,6 @@ const plausichecksApp = Vue.createApp({
 				this.studiensemester_kurzbz,
 				(data) => {
 					// set the issue data
-					console.log(data);
 					this.issues = data;
 				}
 			);

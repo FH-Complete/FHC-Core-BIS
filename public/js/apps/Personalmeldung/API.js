@@ -21,30 +21,6 @@ import {CoreRESTClient} from '../../../../../js/RESTClient.js';
  *
  */
 export const PersonalmeldungAPIs = {
-	getStudiensemester: function(successCallback) {
-		return CoreRESTClient.get(
-			'extensions/FHC-Core-BIS/Personalmeldung/getStudiensemester',
-			null,
-			{
-				timeout: 2000
-			}
-		).then(
-			result => {
-				if (CoreRESTClient.hasData(result.data))
-				{
-					successCallback(CoreRESTClient.getData(result.data));
-				}
-				else
-				{
-					alert('Keine Studiensemester Daten vorhanden');
-				}
-			}
-		).catch(
-			error => {
-				alert('Fehler beim Holen der Studiensemester: ' + error.message);
-			}
-		);
-	},
 	getMitarbeiter: function(studiensemester_kurzbz, successCallback) {
 		return CoreRESTClient.get(
 			'extensions/FHC-Core-BIS/Personalmeldung/getMitarbeiter',
@@ -86,6 +62,28 @@ export const PersonalmeldungAPIs = {
 		).catch(
 			error => {
 				alert('Fehler beim Ausführen der Plausichecks: ' + error.message);
+			}
+		);
+	},
+	saveVerwendungen: function(studiensemester_kurzbz, successCallback) {
+		return CoreRESTClient.get(
+			'extensions/FHC-Core-BIS/Personalmeldung/saveVerwendungen',
+			{
+				studiensemester_kurzbz: studiensemester_kurzbz
+			},
+			{
+				timeout: null
+			}
+		).then(
+			result => {
+				if (CoreRESTClient.hasData(result.data))
+				{
+					successCallback(CoreRESTClient.getData(result.data));
+				}
+			}
+		).catch(
+			error => {
+				alert('Fehler beim Aktualisieren der Verwendungen: ' + error.message);
 			}
 		);
 	}

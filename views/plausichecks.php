@@ -7,7 +7,6 @@
 		'vue3' => true,
 		'filtercomponent' => true,
 		'navigationcomponent' => true,
-		//'tabulator5' => true,
 		'customJSModules' => array(
 			'public/extensions/FHC-Core-BIS/js/apps/Personalmeldung/Plausichecks.js'
 		)

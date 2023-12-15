@@ -232,7 +232,7 @@ class PersonalmeldungVerwendungLib
 			{
 				// not add Leitungsfunktion for certain oes (e.g. team)
 				if (
-					in_array($funktion->funktion_kurzbz, $this->_ci->config->item('fhc_bis_leitungsfunktionen'))
+					array_key_exists($funktion->funktion_kurzbz, $this->_ci->config->item('fhc_bis_leitungsfunktionen'))
 					&& in_array(
 						$funktion->organisationseinheittyp_kurzbz,
 						$this->_ci->config->item('fhc_bis_exclude_leitung_organisationseinheitstypen')

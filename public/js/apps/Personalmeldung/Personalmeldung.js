@@ -17,12 +17,25 @@
 
 import {CoreFilterCmpt} from '../../../../../js/components/filter/Filter.js';
 import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
+import FhcLoader from '../../../../../js/components/Loader.js';
 import {PersonalmeldungAPIs} from './API.js';
 import studiensemester from '../components/Studiensemester.js';
+import personalmeldungSums from '../components/PersonalmeldungSums.js';
 
 const personalmeldungApp = Vue.createApp({
+	components: {
+		CoreFilterCmpt,
+		CoreNavigationCmpt,
+		FhcLoader,
+		PersonalmeldungAPIs,
+		studiensemester,
+		personalmeldungSums
+	},
 	data: function() {
 		return {
+			studiensemester_kurzbz: null,
+			personalmeldungSums: null,
+			verwendungenSaved: false,
 			personalmeldungTabulatorOptions: {
 				layout: 'fitDataFill',
 				columns: [
@@ -169,27 +182,26 @@ const personalmeldungApp = Vue.createApp({
 						}
 					}
 				]
-			},
-			studiensemester_kurzbz: null,
-			verwendungenSaved: false
+			}
 		};
-	},
-	components: {
-		CoreNavigationCmpt,
-		CoreFilterCmpt,
-		PersonalmeldungAPIs,
-		studiensemester
 	},
 	methods: {
 		/**
 		 * get Mitarbeiter
 		 */
 		getMitarbeiter: function() {
+			// show loading
+			this.$refs.loader.show();
 			PersonalmeldungAPIs.getMitarbeiter(
 				this.studiensemester_kurzbz,
 				(data) => {
 					// set the employee data
-					this.$refs.personalmeldungTable.tabulator.setData(data);
+					this.$refs.personalmeldungTable.tabulator.setData(data.mitarbeiter);
+					// set employee sum data
+					this.personalmeldungSums = data.personalmeldungSums;
+					console.log(this.personalmeldungSums);
+					// hide loading
+					this.$refs.loader.hide();
 				}
 			);
 		},
@@ -197,11 +209,17 @@ const personalmeldungApp = Vue.createApp({
 		 * save ("refresh") Verwendungen
 		 */
 		saveVerwendungen: function() {
+			// show loading
+			this.$refs.loader.show();
 			PersonalmeldungAPIs.saveVerwendungen(
 				this.studiensemester_kurzbz,
 				(data) => {
+					// display success alert
 					this.verwendungenSaved = true;
+					// remove success alert after short time
 					setTimeout(() => this.verwendungenSaved = false, 2000)
+					// hide loading
+					this.$refs.loader.hide();
 				}
 			);
 		},
@@ -214,7 +232,7 @@ const personalmeldungApp = Vue.createApp({
 		/**
 		 * Set Studiensemester
 		 */
-		getSemester: function(studiensemester_kurzbz) {
+		setSemester: function(studiensemester_kurzbz) {
 			this.studiensemester_kurzbz = studiensemester_kurzbz;
 		}
 	},
@@ -229,7 +247,7 @@ const personalmeldungApp = Vue.createApp({
 			<!-- input fields -->
 			<div class="row">
 				<div class="col-6">
-					<studiensemester @passSemester="getSemester"></studiensemester>
+					<studiensemester @passSemester="setSemester"></studiensemester>
 				</div>
 				<div class="col-6 text-center">
 					<button type="button" class="btn btn-primary me-2" @click="getMitarbeiter">
@@ -247,6 +265,8 @@ const personalmeldungApp = Vue.createApp({
 			<div class="alert alert-success" v-show="verwendungenSaved">
 				Verwendungen erfolgreich aktualisiert
 			</div>
+			<br />
+			<personalmeldungSums :personalmeldungSums="personalmeldungSums"></personalmeldungSums>
 			<!-- Filter component -->
 			<div class="row">
 				<div class="col">
@@ -258,7 +278,7 @@ const personalmeldungApp = Vue.createApp({
 					</core-filter-cmpt>
 				</div>
 			</div>
-			</div>
+			<fhc-loader ref="loader"></fhc-loader>
 		</div>`
 });
 

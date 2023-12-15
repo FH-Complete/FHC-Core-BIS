@@ -22,8 +22,10 @@ $config['fhc_bis_pauschale_studentische_hilfskraft'] = 5.5;
 // Jahrespauschale fuer sonstige Dienstverhaeltnisse, zb Werkvertrag (in Stunden)
 $config['fhc_bis_pauschale_sonstiges_dienstverhaeltnis'] = 5.5;
 
-// Vertragsarten
+// Vertragsarten für studentische Hilfskräfte
 $config['fhc_bis_vertragsarten'] = array(
+	'echterDienstvertrag' => 'echterdv',
+	'freierDienstvertrag' => 'freierdv',
 	'studentischeHilfskraft' => 'studentischehilfskr',
 	'werkvertrag' => 'werkvertrag'
 );
@@ -37,10 +39,12 @@ $config['fhc_bis_funktionscodes'] = array(
 	'kollegium' => 4			// Mitglied des Kollegiums
 );
 
-// Liste der Leitungsfunktionen (Code 6)
+// Liste der Leitungsfunktionen (Code 5, 6)
 $config['fhc_bis_leitungsfunktionen'] = array(
-	'Leitung'
+	'Leitung' => 6
 );
+
+$config['fhc_bis_studiengangsleitungfunktion'] = 5;
 
 // Organisationseinheitstypen bei denen KEINE Leiter gemeldet werden (Code 7)
 $config['fhc_bis_exclude_leitung_organisationseinheitstypen'] = array(
@@ -83,6 +87,18 @@ $config['fhc_bis_oe_verwendung_code_zuordnung'] = array(
 	'Bibliothek' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'],
 	'Auslandsbuero' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung']
 );
+
+// if Verwendungscode of the oe shouldn't be added if it's a certain contract type
+$config['fhc_bis_oe_verwendung_code_zuordnung_vertragstyp_exceptions'] = array(
+	'gmbh' => array($config['fhc_bis_vertragsarten']['freierDienstvertrag'])
+);
+
+$config['fhc_bis_vertragstyp_verwendung_code_zuordnung'] = array(
+	'freierdv' => $config['fhc_bis_verwendung_codes']['lehre'],
+	'werkvertrag' => $config['fhc_bis_verwendung_codes']['lehre'],
+	'studentischehilfskr' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit']
+);
+
 
 $config['fhc_bis_funktion_verwendung_code_zuordnung'] = array(
 	'laborant' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],

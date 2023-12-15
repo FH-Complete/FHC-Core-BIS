@@ -65,7 +65,25 @@ class Personalmeldung extends Auth_Controller
 		$studiensemester_kurzbz = $this->input->get('studiensemester_kurzbz');
 		if (isEmptyString($studiensemester_kurzbz)) $this->terminateWithJsonError('Ungültiges Studiensemester');
 
-		$this->outputJson($this->personalmeldunglib->getMitarbeiterData($studiensemester_kurzbz));
+		$mitarbeiter = array();
+		$personalmeldungSums = array();
+
+		$mitarbeiterRes = $this->personalmeldunglib->getMitarbeiterData($studiensemester_kurzbz);
+
+		if (isError($mitarbeiterRes)) $this->terminateWithJsonError(getError($mitarbeiterRes));
+
+		if (hasData($mitarbeiterRes))
+		{
+			$mitarbeiter = getData($mitarbeiterRes);
+			$personalmeldungSums = $this->personalmeldunglib->getPersonalmeldungSums($mitarbeiter);
+		}
+
+		$this->outputJsonSuccess(
+			array(
+				'mitarbeiter' => $mitarbeiter,
+				'personalmeldungSums' => $personalmeldungSums
+			)
+		);
 	}
 
 	/**

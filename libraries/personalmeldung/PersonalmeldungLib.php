@@ -24,6 +24,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		'pauschale_sonstiges_dienstverhaeltnis' => null,
 		'funktionscodes' => array(),
 		'leitungsfunktionen' => array(),
+		'studiengangsleitungfunktion' => null,
 		'exclude_leitung_organisationseinheitstypen' => array(),
 		'beschaeftigungsart2_codes' => array(),
 		'verwendung_codes' => array(),
@@ -156,7 +157,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			$benutzerfunktionRes = $this->_ci->fhcmanagementlib->getMitarbeiterFunktionData(
 				$this->_dateData['bismeldungYear'],
 				$uids,
-				array_merge(array_keys($this->_config['funktionscodes']), $this->_config['leitungsfunktionen'])
+				array_keys(array_merge($this->_config['funktionscodes'], $this->_config['leitungsfunktionen']))
 			);
 
 			if (isError($benutzerfunktionRes)) return $benutzerfunktionRes;
@@ -228,6 +229,96 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		}
 
 		return success($persons);
+	}
+
+
+	/**
+	 * Get Personalmeldung sums from Mitarbeiter.
+	 * @param $mitarbeiter
+	 */
+	public function getPersonalmeldungSums($mitarbeiter)
+	{
+		$configVerwendungCodes = $this->_config['verwendung_codes'];
+		$studiengangsleitungfunktion = array('StgLeitung' => $this->_config['studiengangsleitungfunktion']);
+		$configFunktionCodes = array_merge(
+			$this->_config['funktionscodes'],
+			$this->_config['leitungsfunktionen'],
+			$studiengangsleitungfunktion
+		);
+
+		$identifierForUnknown = 'unknown';
+
+		$verwendungSums = array(
+			$identifierForUnknown => array(
+				'name' => 'unbekannt',
+				'count' => 0,
+				'vzae' => 0,
+				'jvzae' => 0
+			)
+		);
+		$lehreSums = array(
+			'WintersemesterSWS' => 0,
+			'SommersemesterSWS' => 0
+		);
+		$funktionSums = array_fill_keys(array_values($configFunktionCodes), null);
+
+		foreach ($configVerwendungCodes as $confVerwendungName => $confVerwendungCode)
+		{
+			$verwendungSums[$confVerwendungCode] = array(
+				'name' => $confVerwendungName,
+				'count' => 0,
+				'vzae' => 0,
+				'jvzae' => 0
+			);
+		}
+
+		foreach ($mitarbeiter as $ma)
+		{
+			// Verwendung sums
+			foreach ($ma->verwendungen as $verwendung)
+			{
+				$verwendung_code = $verwendung->verwendung_code;
+				if (!isset($verwendungSums[$verwendung_code])) $verwendung_code = $identifierForUnknown;
+
+				$verwendungSums[$verwendung_code]['count']++;
+				$verwendungSums[$verwendung_code]['vzae'] += $verwendung->vzae;
+				$verwendungSums[$verwendung_code]['jvzae'] += $verwendung->jvzae;
+			}
+
+			// change vzae to 2 decimals
+			foreach ($verwendungSums as $verwendung_code => $object)
+			{
+				$verwendungSums[$verwendung_code]['vzae'] = number_format((float)$object['vzae'], 2);
+				$verwendungSums[$verwendung_code]['jvzae'] = number_format((float)$object['jvzae'], 2);
+			}
+
+			// Lehre sums
+			foreach ($ma->lehre as $lehre)
+			{
+				$lehreSums['WintersemesterSWS'] += $lehre->WintersemesterSWS;
+				$lehreSums['SommersemesterSWS'] += $lehre->SommersemesterSWS;
+			}
+
+			// Funktionen sums
+			foreach ($ma->funktionen as $funktion)
+			{
+				if (!isset($funktionSums[$funktion->funktionscode]))
+				{
+					$funktionCount = new StdClass();
+					$name = array_search($funktion->funktionscode, $configFunktionCodes);
+					$funktionCount->name = array_search($funktion->funktionscode, $configFunktionCodes);
+					$funktionCount->count = 0;
+					$funktionSums[$funktion->funktionscode] = $funktionCount;
+				}
+				$funktionSums[$funktion->funktionscode]->count++;
+			}
+		}
+
+		return array(
+			'verwendungSums' => $verwendungSums,
+			'lehreSums' => $lehreSums,
+			'funktionSums' => $funktionSums
+		);
 	}
 
 	/**
@@ -879,12 +970,12 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					$funktionscode = $this->_config['funktionscodes'][$bisfunktion->funktion_kurzbz];
 				}
 
-				if (in_array($bisfunktion->funktion_kurzbz, $this->_config['leitungsfunktionen']))	// Leitung
+				if (array_key_exists($bisfunktion->funktion_kurzbz, $this->_config['leitungsfunktionen']))	// Leitung
 				{
 					// FunktionsCode 5 : STG-Leitung
 					if (isset($studiengang->studiengang_kz))
 					{
-						$funktionscode = 5;
+						$funktionscode = $this->_config['studiengangsleitungfunktion'];
 					}
 
 					// FunktionsCode 6 : Leitung Organisationseinheit der postsekundaeren Bildungseinrichtung
@@ -897,7 +988,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					if (!isset($studiengang->studiengang_kz) &&
 						!in_array($organisationseinheittyp, $this->_config['exclude_leitung_organisationseinheitstypen'])) // nicht Teamleitung
 					{
-						$funktionscode = 6;
+						$funktionscode = $this->_config['leitungsfunktionen'][$bisfunktion->funktion_kurzbz];;
 					}
 				}
 			}
@@ -920,10 +1011,10 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				// Funktionsobjekt dem Funktionscontainer anhaengen
 				$funktionArr[] = $funktionObj;
 			}
-			elseif ($funktionscode == 5)		// Funktionscontainer vorhanden und Funktionscode 5
+			elseif ($funktionscode == $this->_config['studiengangsleitungfunktion'])		// Funktionscontainer vorhanden und Funktionscode 5
 			{
 				$funktionObjArr = array_filter($funktionArr, function (&$obj) {
-					return $obj->funktionscode == 5;
+					return $obj->funktionscode == $this->_config['studiengangsleitungfunktion'];
 				});
 
 				$funktionObjArr[0]->studiengang[] = $studiengang_kz_padded;	// STG ergaenzen

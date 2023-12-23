@@ -50,7 +50,7 @@ class MitarbeiterUngueltigesVzae extends PlausiChecker
 				if (!isEmptyArray($errorTexts))
 				{
 					$results[] = array(
-						'fehlertext_params' => array('mitarbeiter_uid' => $dataObj->mitarbeiter_uid, 'fehler_texte' => implode(', ', $errorTexts))
+						'fehlertext_params' => array('mitarbeiter_uid' => $ma->uid, 'fehler_texte' => implode(', ', $errorTexts))
 					);
 				}
 			}

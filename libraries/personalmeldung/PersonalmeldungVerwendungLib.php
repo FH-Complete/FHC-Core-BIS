@@ -23,7 +23,7 @@ class PersonalmeldungVerwendungLib
 		$this->_ci->load->model('organisation/Organisationseinheit_model', 'OrganisationseinheitModel');
 		$this->_ci->load->model('organisation/Studiensemester_model', 'StudiensemesterModel');
 		$this->_ci->load->model('person/Benutzerfunktion_model', 'BenutzerfunktionModel');
-		$this->_ci->load->model('extensions/FHC-Core-BIS/Verwendung_model', 'VerwendungModel');
+		$this->_ci->load->model('extensions/FHC-Core-BIS/BisVerwendung_model', 'BisVerwendungModel');
 
 		// load libraries
 		$this->_ci->load->library('extensions/FHC-Core-BIS/FHCManagementLib');
@@ -59,7 +59,7 @@ class PersonalmeldungVerwendungLib
 		$newVerwendungen = hasData($verwendungRes) ? getData($verwendungRes) : array();
 
 		// load already saved Verwendungen
-		$exVerwendungenRes = $this->_ci->VerwendungModel->getByYear($bismeldungYear);
+		$exVerwendungenRes = $this->_ci->BisVerwendungModel->getByYear($bismeldungYear);
 
 		if (isError($exVerwendungenRes)) return $exVerwendungenRes;
 
@@ -86,7 +86,7 @@ class PersonalmeldungVerwendungLib
 			// execute order 66
 			foreach ($verwendungActionArr['delete'] as $bis_verwendung_id)
 			{
-				$deleteRes = $this->_ci->VerwendungModel->delete(array('bis_verwendung_id' => $bis_verwendung_id));
+				$deleteRes = $this->_ci->BisVerwendungModel->delete(array('bis_verwendung_id' => $bis_verwendung_id));
 
 				if (isError($deleteRes)) $error = $deleteRes;
 			}
@@ -94,7 +94,7 @@ class PersonalmeldungVerwendungLib
 			// insert new clones
 			foreach ($verwendungActionArr['insert'] as $verw)
 			{
-				$insertRes = $this->_ci->VerwendungModel->insert(
+				$insertRes = $this->_ci->BisVerwendungModel->insert(
 					array(
 						'verwendung_code' => $verw->verwendung_code,
 						'mitarbeiter_uid' => $verw->mitarbeiter_uid,
@@ -105,7 +105,6 @@ class PersonalmeldungVerwendungLib
 
 				if (isError($insertRes)) $error = $insertRes;
 			}
-
 		}
 		// Transaction complete!
 		$this->_ci->db->trans_complete();
@@ -150,7 +149,7 @@ class PersonalmeldungVerwendungLib
 	}
 
 	/**
-	 * Gets all Verwendung codes for a year, gethering them from different sources (funktion, lehre...).
+	 * Gets all Verwendung codes for a year, gathering them from different sources (funktion, lehre...).
 	 * @param $bismeldungYear
 	 */
 	private function _getVerwendungCodes($bismeldungYear)
@@ -231,8 +230,7 @@ class PersonalmeldungVerwendungLib
 			foreach (getData($funktionRes) as $funktion)
 			{
 				// not add Leitungsfunktion for certain oes (e.g. team)
-				if (
-					array_key_exists($funktion->funktion_kurzbz, $this->_ci->config->item('fhc_bis_leitungsfunktionen'))
+				if (array_key_exists($funktion->funktion_kurzbz, $this->_ci->config->item('fhc_bis_leitungsfunktionen'))
 					&& in_array(
 						$funktion->organisationseinheittyp_kurzbz,
 						$this->_ci->config->item('fhc_bis_exclude_leitung_organisationseinheitstypen')
@@ -271,15 +269,13 @@ class PersonalmeldungVerwendungLib
 						{
 							$vertragsart_kurzbz = $oeVerwendungCodesVertragsartExceptions[$oe_kurzbz];
 
-							if (
-								$this->_findDienstverhaeltnisObj(
-									$dvData,
-									$oeFunktion->uid,
-									$vertragsart_kurzbz,
-									$oeFunktion->datum_von,
-									$oeFunktion->datum_bis
-								)
-							)
+							if ($this->_findDienstverhaeltnisObj(
+								$dvData,
+								$oeFunktion->uid,
+								$vertragsart_kurzbz,
+								$oeFunktion->datum_von,
+								$oeFunktion->datum_bis
+							))
 							continue;
 						}
 
@@ -296,9 +292,9 @@ class PersonalmeldungVerwendungLib
 		}
 
 		// get lehre Verwendungen
-		$lehreRes = $this->_ci->fhcmanagementlib->getLehreinheitenSemesterwochenstunden
-		(
-			$this->_dateData['yearStart']->format('Y-m-d'), $this->_dateData['yearEnd']->format('Y-m-d')
+		$lehreRes = $this->_ci->fhcmanagementlib->getLehreinheitenSemesterwochenstunden(
+			$this->_dateData['yearStart']->format('Y-m-d'),
+			$this->_dateData['yearEnd']->format('Y-m-d')
 		);
 
 		if (isError($lehreRes)) return $lehreRes;
@@ -321,14 +317,12 @@ class PersonalmeldungVerwendungLib
 		// get Verwendungen derived from Vertragstyp
 		foreach ($dvData as $dv)
 		{
-			if (
-				!$this->_findVerwendungCodeObj(
-					$verwendungCodes,
-					$dv->mitarbeiter_uid,
-					$dv->beginn_im_bismeldungsjahr,
-					$dv->ende_im_bismeldungsjahr
-				)
-			)
+			if (!$this->_findVerwendungCodeObj(
+				$verwendungCodes,
+				$dv->mitarbeiter_uid,
+				$dv->beginn_im_bismeldungsjahr,
+				$dv->ende_im_bismeldungsjahr
+			))
 			{
 				$verwCodeObj = new StdClass();
 				$verwCodeObj->mitarbeiter_uid = $dv->mitarbeiter_uid;
@@ -374,7 +368,8 @@ class PersonalmeldungVerwendungLib
 			$dateFrom = new PersonalmeldungDate($verwendungCode->von, PersonalmeldungDate::START_TYPE);
 			$dateTo = new PersonalmeldungDate($verwendungCode->bis, PersonalmeldungDate::END_TYPE);
 
-			$verwendungCodeDates[] = is_null($verwendungCode->von) || $dateFrom < $this->_dateData['yearStart'] ? $this->_dateData['yearStart'] : $dateFrom;
+			$verwendungCodeDates[] =
+				is_null($verwendungCode->von) || $dateFrom < $this->_dateData['yearStart'] ? $this->_dateData['yearStart'] : $dateFrom;
 			$verwendungCodeDates[] = is_null($verwendungCode->bis) || $dateTo > $this->_dateData['yearEnd'] ? $this->_dateData['yearEnd'] : $dateTo;
 		}
 
@@ -402,10 +397,8 @@ class PersonalmeldungVerwendungLib
 			foreach ($verwendungCodes as $verwendungCode)
 			{
 				// if date span falls into a Verwendung code span
-				if (
-					(is_null($verwendungCode->von) || $newVerwendung->von >= new DateTime($verwendungCode->von))
-					&& (is_null($verwendungCode->bis) || $newVerwendung->bis <= new DateTime($verwendungCode->bis))
-				)
+				if ((is_null($verwendungCode->von) || $newVerwendung->von >= new DateTime($verwendungCode->von))
+					&& (is_null($verwendungCode->bis) || $newVerwendung->bis <= new DateTime($verwendungCode->bis)))
 				{
 					foreach ($codeConfigArrays as $prioType => $codeConfigArray)
 					{
@@ -479,10 +472,8 @@ class PersonalmeldungVerwendungLib
 			if ($verw->verwendung_code == $verwendung->verwendung_code)
 			{
 				// if not Lehre, has same Verwendungs code, and follows directly after another code...
-				if (
-					!in_array($verw->verwendung_code, $this->_ci->config->item('fhc_bis_verwendung_codes_lehre'))
-					&& $verwendung->von->diff($verw->bis)->days == 1
-				)
+				if (!in_array($verw->verwendung_code, $this->_ci->config->item('fhc_bis_verwendung_codes_lehre'))
+					&& $verwendung->von->diff($verw->bis)->days == 1)
 				{
 					// ...Verwendung is continued, to date of previous Verwendung is extended
 					$verwendungArr[$idx]->bis = $verwendung->bis;
@@ -490,8 +481,7 @@ class PersonalmeldungVerwendungLib
 					break;
 				}
 				// if it is "lehre gap" between two semesters, add days of gap to first Lehre Verwendung
-				elseif (
-					$idx == count($verwendungArr) - 1 // previous lehre should be last element
+				elseif ($idx == count($verwendungArr) - 1 // previous lehre should be last element
 					&& in_array($verw->verwendung_code, $this->_ci->config->item('fhc_bis_verwendung_codes_lehre')) // both codes should be lehre
 					&& in_array($verwendung->verwendung_code, $this->_ci->config->item('fhc_bis_verwendung_codes_lehre'))
 					&& in_array($verw->bis, $this->_dateData['semesterEndDates']) // existing is end of semester, newly added is start of semester
@@ -528,7 +518,7 @@ class PersonalmeldungVerwendungLib
 		if (in_array($funktion_kurzbz, $wanderfunktionen))
 		{
 			// if Wanderfunktion: check if already "traveled" to "new" code, i.e. there is already a Verwendung with the new code
-			$verwendungRes = $this->_ci->VerwendungModel->loadWhere(array('verwendung_code' => $verwendung_code, 'mitarbeiter_uid' => $uid));
+			$verwendungRes = $this->_ci->BisVerwendungModel->loadWhere(array('verwendung_code' => $verwendung_code, 'mitarbeiter_uid' => $uid));
 
 			// if not yet "traveled", use the old code
 			if (!hasData($verwendungRes)) $verwendung_code = $wanderfunktionen[$funktion_kurzbz];
@@ -545,9 +535,12 @@ class PersonalmeldungVerwendungLib
 	 */
 	private function _getVerwendungActions($uidVerwendungen, $uidExVerwendungen)
 	{
+		$nonLockedUidExVerwendungen = array_filter($uidExVerwendungen, function ($exVerwendung) {
+			return !$exVerwendung->gesperrt;
+		});
 		$verwendungActionArr = array(
 			'insert' => array(),
-			'delete' => array_column($uidExVerwendungen, 'bis_verwendung_id') // by default, delete all existing
+			'delete' => array_column($nonLockedUidExVerwendungen, 'bis_verwendung_id') // by default, delete all existing
 		);
 
 		foreach ($uidVerwendungen as $verw)
@@ -556,17 +549,39 @@ class PersonalmeldungVerwendungLib
 
 			foreach ($uidExVerwendungen as $exVerw)
 			{
-				if ($verw->verwendung_code == $exVerw->verwendung_code)
-				{
-					// Verwendung already saved
-					if ($verw->von == new DateTime($exVerw->von) && $verw->bis == new DateTime($exVerw->bis) && $verw->mitarbeiter_uid == $exVerw->mitarbeiter_uid)
-					{
-						// no need to add it
-						$found = true;
+				$exVon = new DateTime($exVerw->von);
+				$exBis = new DateTime($exVerw->bis);
 
-						// no need to delete it
-						unset($verwendungActionArr['delete'][array_search($exVerw->bis_verwendung_id, $verwendungActionArr['delete'])]);
-					}
+				// Verwendung already saved
+				$alreadySaved =
+					$verw->verwendung_code == $exVerw->verwendung_code
+					&& $verw->von == $exVon
+					&& $verw->bis == $exBis
+					&& $verw->mitarbeiter_uid == $exVerw->mitarbeiter_uid;
+
+				// There is a paralell Verwendung which is gesperrt
+				$verwendungenNonLehreConfig = $this->_ci->config->item('fhc_bis_verwendung_codes_non_lehre');
+				$verwendungenLehreConfig = $this->_ci->config->item('fhc_bis_verwendung_codes_lehre');
+
+				// get paralell codes
+				$isParalell =
+					(in_array($verw->verwendung_code, $verwendungenLehreConfig) && in_array($exVerw->verwendung_code, $verwendungenLehreConfig))
+					|| (in_array($verw->verwendung_code, $verwendungenNonLehreConfig) && in_array($exVerw->verwendung_code, $verwendungenNonLehreConfig));
+
+				$isGesperrt =
+					$verw->mitarbeiter_uid == $exVerw->mitarbeiter_uid
+					&& $verw->von <= $exBis
+					&& $verw->bis >= $exVon
+					&& $exVerw->gesperrt
+					&& $isParalell;
+
+				if ($alreadySaved || $isGesperrt)
+				{
+					// no need to add it
+					$found = true;
+
+					// no need to delete it
+					unset($verwendungActionArr['delete'][array_search($exVerw->bis_verwendung_id, $verwendungActionArr['delete'])]);
 				}
 			}
 			// verwendung not found-> new insert
@@ -588,11 +603,9 @@ class PersonalmeldungVerwendungLib
 	{
 		foreach ($verwendungCodeObjArr as $verwendungCodeObj)
 		{
-			if (
-				$verwendungCodeObj->mitarbeiter_uid == $mitarbeiter_uid
+			if ($verwendungCodeObj->mitarbeiter_uid == $mitarbeiter_uid
 				&& $verwendungCodeObj->von <= $bis
-				&& $verwendungCodeObj->bis >= $von
-			)
+				&& $verwendungCodeObj->bis >= $von)
 			return true;
 		}
 		return false;
@@ -614,12 +627,10 @@ class PersonalmeldungVerwendungLib
 
 		foreach ($dvArr as $dv)
 		{
-			if (
-				$dv->mitarbeiter_uid == $mitarbeiter_uid
+			if ($dv->mitarbeiter_uid == $mitarbeiter_uid
 				&& in_array($dv->vertragsart_kurzbz, $vertragsart_kurzbz)
 				&& $von >= new DateTime($dv->beginn_im_bismeldungsjahr)
-				&& $bis <= new DateTime($dv->ende_im_bismeldungsjahr)
-			)
+				&& $bis <= new DateTime($dv->ende_im_bismeldungsjahr))
 			return true;
 		}
 		return false;

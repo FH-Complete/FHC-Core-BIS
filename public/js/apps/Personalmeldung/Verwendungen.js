@@ -15,12 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {Personalmeldung} from '../../components/Personalmeldung/Personalmeldung.js';
+import {Verwendungen} from '../../components/Personalmeldung/Verwendungen.js';
 
-const personalmeldungApp = Vue.createApp({
+const verwendungenApp = Vue.createApp({
 	components: {
-		Personalmeldung
+		Verwendungen
 	},
 });
 
-personalmeldungApp.mount('#main');
+verwendungenApp.use(primevue.config.default,{zIndex: {overlay: 9999}}).mount('#main');

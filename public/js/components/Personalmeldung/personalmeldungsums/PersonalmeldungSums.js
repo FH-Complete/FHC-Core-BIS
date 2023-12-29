@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2022 fhcomplete.org
+ * Copyright (C) 2023 fhcomplete.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,10 +58,10 @@ export default {
 				lehreSumTotal += Number.isNaN(sum) ? 0 : sum;
 			}
 			return {
-				verwendungen: verwendungCountTotal.toFixed(2),
+				verwendungen: verwendungCountTotal,
 				vzae: vzaeSumTotal.toFixed(2),
 				jvzae: jvzaeSumTotal.toFixed(2),
-				funktionen: funktionCountTotal.toFixed(2),
+				funktionen: funktionCountTotal,
 				lehre: lehreSumTotal.toFixed(2),
 			}
 		}

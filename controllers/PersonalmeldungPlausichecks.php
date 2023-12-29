@@ -2,7 +2,7 @@
 
 if (! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Plausichecks extends Auth_Controller
+class PersonalmeldungPlausichecks extends Auth_Controller
 {
 	const GENERIC_ISSUE_OCCURED_TEXT = 'Issue aufgetreten';
 
@@ -42,7 +42,6 @@ class Plausichecks extends Auth_Controller
 	 */
 	public function index()
 	{
-		//$filterData = $this->_getFilterData();
 		$this->load->view('extensions/FHC-Core-BIS/plausichecks');
 	}
 

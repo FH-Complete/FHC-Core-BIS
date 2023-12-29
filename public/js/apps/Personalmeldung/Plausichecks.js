@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2022 fhcomplete.org
+ * Copyright (C) 2023 fhcomplete.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,87 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
-import {PersonalmeldungAPIs} from './API.js';
-import studiensemester from '../components/Studiensemester.js';
+import {Plausichecks} from '../../components/Personalmeldung/Plausichecks.js';
 
-const plausichecksApp = Vue.createApp({
-	data: function() {
-		return {
-			studiensemester_kurzbz: null,
-			issues: []
-		};
-	},
+const plausicheckApp = Vue.createApp({
 	components: {
-		CoreNavigationCmpt,
-		PersonalmeldungAPIs,
-		studiensemester
+		Plausichecks
 	},
-	created() {
-
-	},
-	methods: {
-		/**
-		 * get Mitarbeiter
-		 */
-		startPlausichecks: function() {
-			console.log("STARTING");
-			PersonalmeldungAPIs.runPlausichecks(
-				this.studiensemester_kurzbz,
-				(data) => {
-					// set the issue data
-					this.issues = data;
-				}
-			);
-		},
-		getSemester: function(studiensemester_kurzbz) {
-			this.studiensemester_kurzbz = studiensemester_kurzbz;
-		}
-	},
-	template: `
-		<!-- Navigation component -->
-		<core-navigation-cmpt></core-navigation-cmpt>
-
-		<div id="content">
-			<header>
-				<h1 class="h2 fhc-hr">Personalmeldung Plausichecks</h1>
-			</header>
-			<!-- input fields -->
-			<div class="row">
-				<div class="col-10">
-					<studiensemester @passSemester="getSemester"></studiensemester>
-				</div>
-				<div class="col-2 text-right">
-					<button type="button" class="btn btn-primary" @click="startPlausichecks">
-						Starten
-					</button>
-				</div>
-			</div>
-			<br />
-			<div class="row">
-				<div class="col-10">
-					<div class="well">
-						<div class="card bg-light">
-							<div class="card-body">
-								<div v-for="(issue, fehler_kurzbz) in issues">
-									<b>Prüfe {{fehler_kurzbz}}...</b>
-									<span v-for="issuedata in issue.data" :class="{'text-danger': issuedata.type == 'error'}">
-										<br />
-										{{issuedata.fehlertext}}
-									</span>
-									<span v-if="issue.data.length == 0" class="text-success">
-										<br />
-										Keine Fehler gefunden
-									</span>
-									<br />
-									<br />
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>`
 });
 
-plausichecksApp.mount('#main');
+plausicheckApp.mount('#main');

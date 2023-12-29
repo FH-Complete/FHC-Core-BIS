@@ -248,6 +248,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 		$identifierForUnknown = 'unknown';
 
+		// prefill Verwendung sums
 		$verwendungSums = array(
 			$identifierForUnknown => array(
 				'name' => 'unbekannt',
@@ -256,11 +257,23 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				'jvzae' => 0
 			)
 		);
+
+		// prefill Lehre sums
 		$lehreSums = array(
 			'WintersemesterSWS' => 0,
 			'SommersemesterSWS' => 0
 		);
-		$funktionSums = array_fill_keys(array_values($configFunktionCodes), null);
+
+		// prefill Funktion sums
+		$funktionSums = array();
+		foreach ($configFunktionCodes as $funktionName => $funktionCode)
+		{
+			$funktionCount = new StdClass();
+			$funktionCount->name = $funktionName;
+			$funktionCount->count = 0;
+
+			$funktionSums[$funktionCode] = $funktionCount;
+		}
 
 		foreach ($configVerwendungCodes as $confVerwendungName => $confVerwendungCode)
 		{
@@ -281,15 +294,8 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				if (!isset($verwendungSums[$verwendung_code])) $verwendung_code = $identifierForUnknown;
 
 				$verwendungSums[$verwendung_code]['count']++;
-				$verwendungSums[$verwendung_code]['vzae'] += $verwendung->vzae;
+				if ($verwendung->vzae > 0) $verwendungSums[$verwendung_code]['vzae'] += $verwendung->vzae;
 				$verwendungSums[$verwendung_code]['jvzae'] += $verwendung->jvzae;
-			}
-
-			// change vzae to 2 decimals
-			foreach ($verwendungSums as $verwendung_code => $object)
-			{
-				$verwendungSums[$verwendung_code]['vzae'] = number_format((float)$object['vzae'], 2);
-				$verwendungSums[$verwendung_code]['jvzae'] = number_format((float)$object['jvzae'], 2);
 			}
 
 			// Lehre sums
@@ -312,6 +318,13 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				}
 				$funktionSums[$funktion->funktionscode]->count++;
 			}
+		}
+
+		// change vzae to 2 decimals
+		foreach ($verwendungSums as $verwendung_code => $object)
+		{
+			$verwendungSums[$verwendung_code]['vzae'] = number_format((float)$object['vzae'], 2, '.', '');
+			$verwendungSums[$verwendung_code]['jvzae'] = number_format((float)$object['jvzae'], 2, '.', '');
 		}
 
 		return array(

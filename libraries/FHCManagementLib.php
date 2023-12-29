@@ -154,12 +154,46 @@ class FHCManagementLib
 				JOIN public.tbl_person pers USING(person_id)
 				JOIN hr.tbl_dienstverhaeltnis dv USING(mitarbeiter_uid)
 			WHERE
-				bismelden
-				AND personalnummer > 0
+				ma.bismelden
+				AND ma.personalnummer > 0
 				AND (dv.von <= bis_datum.bis_ende OR dv.von is null)
 				AND (dv.bis IS NULL OR dv.bis >= bis_datum.bis_start)
 				-- AND mitarbeiter_uid = 'uid'
 			ORDER BY uid, nachname, vorname";
+
+		return $this->_dbModel->execReadOnlyQuery(
+			$qry,
+			$params
+		);
+	}
+	/**
+	 * Gets Mitarbeiter person data needed for Bismeldung.
+	 * @param string $bismeldungJahr
+	 * @return object success with Mitarbeiter or error
+	 */
+	public function getMitarbeiterUids($studiensemester_kurzbz, $mitarbeiter_uid_searchtext)
+	{
+		$params = array($studiensemester_kurzbz, $studiensemester_kurzbz);
+
+		$qry = "
+			SELECT
+				DISTINCT ma.mitarbeiter_uid, pers.vorname, pers.nachname
+			FROM
+				public.tbl_mitarbeiter ma
+				JOIN public.tbl_benutzer ben ON ma.mitarbeiter_uid = ben.uid
+				JOIN public.tbl_person pers USING (person_id)
+				JOIN hr.tbl_dienstverhaeltnis dv USING(mitarbeiter_uid)
+			WHERE
+				ma.bismelden
+				AND ma.personalnummer > 0
+				AND (dv.von <= make_date(substring(? from 3 for 4)::INTEGER - 1, 12, 31) OR dv.von is null)
+				AND (dv.bis IS NULL OR dv.bis >= make_date(substring(? from 3 for 4)::INTEGER - 1, 1, 1))
+				AND (
+					ma.mitarbeiter_uid ILIKE '%".$this->_dbModel->escapeLike($mitarbeiter_uid_searchtext)."%'
+					OR pers.vorname ILIKE '%".$this->_dbModel->escapeLike($mitarbeiter_uid_searchtext)."%'
+					OR pers.nachname ILIKE '%".$this->_dbModel->escapeLike($mitarbeiter_uid_searchtext)."%'
+				)
+			ORDER BY mitarbeiter_uid";
 
 		return $this->_dbModel->execReadOnlyQuery(
 			$qry,
@@ -189,19 +223,19 @@ class FHCManagementLib
 				(bf.datum_von <= make_date(?::INTEGER, 12, 31) OR bf.datum_von IS NULL)
 				AND (bf.datum_bis IS NULL OR bf.datum_bis >= make_date(?::INTEGER, 1, 1))";
 
-			if (isset($uidArr))
-			{
-				$qry .= " AND bf.uid IN ?";
-				$params[] = $uidArr;
-			}
+		if (isset($uidArr))
+		{
+			$qry .= " AND bf.uid IN ?";
+			$params[] = $uidArr;
+		}
 
-			if (isset($funktion_kurzbzArr))
-			{
-				$qry .= " AND bf.funktion_kurzbz IN ?";
-				$params[] = $funktion_kurzbzArr;
-			}
+		if (isset($funktion_kurzbzArr))
+		{
+			$qry .= " AND bf.funktion_kurzbz IN ?";
+			$params[] = $funktion_kurzbzArr;
+		}
 
-			$qry .= " ORDER BY datum_bis NULLS LAST, datum_von NULLS LAST";
+		$qry .= " ORDER BY datum_bis NULLS LAST, datum_von NULLS LAST";
 
 		return $this->_dbModel->execReadOnlyQuery(
 			$qry,
@@ -209,51 +243,51 @@ class FHCManagementLib
 		);
 	}
 
-		/**
-		 * Get Dienstverhältnisse for a year and for certain Vertragsarten
-		 * @param $bismeldungJahr
-		 * @param $vertragsarten
-		 * @return object success or error
-		 */
-		public function getDienstverhaeltnisse($bismeldungJahr, $vertragsarten)
-		{
-			$params = array($bismeldungJahr, $bismeldungJahr, $vertragsarten);
+	/**
+	 * Get Dienstverhältnisse for a year and for certain Vertragsarten
+	 * @param $bismeldungJahr
+	 * @param $vertragsarten
+	 * @return object success or error
+	 */
+	public function getDienstverhaeltnisse($bismeldungJahr, $vertragsarten)
+	{
+		$params = array($bismeldungJahr, $bismeldungJahr, $vertragsarten);
 
-			$qry = "
-				WITH bis_datum AS (
-					SELECT
-						make_date(?::INTEGER, 1, 1) AS bis_start,
-						make_date(?::INTEGER, 12, 31) AS bis_ende
-				)
+		$qry = "
+			WITH bis_datum AS (
 				SELECT
-					dv.mitarbeiter_uid, dv.dienstverhaeltnis_id, dv.von AS dv_von, dv.bis AS dv_bis, dv.vertragsart_kurzbz,
-					CASE
-						WHEN (dv.von IS NULL OR dv.von < bis_datum.bis_start)
-						THEN bis_datum.bis_start
-						ELSE dv.von
-					END AS beginn_im_bismeldungsjahr,
-					CASE
-						WHEN (dv.bis IS NULL OR dv.bis > bis_datum.bis_ende)
-						THEN bis_datum.bis_ende
-						ELSE dv.bis
-					END AS ende_im_bismeldungsjahr
-				FROM
-					bis_datum
-					CROSS JOIN public.tbl_mitarbeiter ma
-					JOIN hr.tbl_dienstverhaeltnis dv USING (mitarbeiter_uid)
-				WHERE
-					ma.bismelden
-					AND ma.personalnummer > 0
-					AND dv.vertragsart_kurzbz IN ?
-					AND (dv.von <= bis_datum.bis_ende OR dv.von IS NULL)
-					AND (dv.bis >= bis_datum.bis_start OR dv.bis IS NULL)
-				ORDER BY dv.von, dv.bis";
+					make_date(?::INTEGER, 1, 1) AS bis_start,
+					make_date(?::INTEGER, 12, 31) AS bis_ende
+			)
+			SELECT
+				dv.mitarbeiter_uid, dv.dienstverhaeltnis_id, dv.von AS dv_von, dv.bis AS dv_bis, dv.vertragsart_kurzbz,
+				CASE
+					WHEN (dv.von IS NULL OR dv.von < bis_datum.bis_start)
+					THEN bis_datum.bis_start
+					ELSE dv.von
+				END AS beginn_im_bismeldungsjahr,
+				CASE
+					WHEN (dv.bis IS NULL OR dv.bis > bis_datum.bis_ende)
+					THEN bis_datum.bis_ende
+					ELSE dv.bis
+				END AS ende_im_bismeldungsjahr
+			FROM
+				bis_datum
+				CROSS JOIN public.tbl_mitarbeiter ma
+				JOIN hr.tbl_dienstverhaeltnis dv USING (mitarbeiter_uid)
+			WHERE
+				ma.bismelden
+				AND ma.personalnummer > 0
+				AND dv.vertragsart_kurzbz IN ?
+				AND (dv.von <= bis_datum.bis_ende OR dv.von IS NULL)
+				AND (dv.bis >= bis_datum.bis_start OR dv.bis IS NULL)
+			ORDER BY dv.von, dv.bis";
 
-			return $this->_dbModel->execReadOnlyQuery(
-				$qry,
-				$params
-			);
-		}
+		return $this->_dbModel->execReadOnlyQuery(
+			$qry,
+			$params
+		);
+	}
 
 	/**
 	 * Gets Dienstverhältnis data needed for Bismeldung. Note: there can be multiple records for each DV.
@@ -372,6 +406,7 @@ class FHCManagementLib
 			  (SELECT make_date(?::INTEGER, 1, 1) AS bis_start,
 					  make_date(?::INTEGER, 12, 31) AS bis_ende)
 			SELECT
+				DISTINCT ON (verwendungen.von, verwendungen.bis, verwendungen.mitarbeiter_uid, verwendungen.verwendung_code)
 				verwendungen.*,
 				ext.bis AS extended_enddate
 			FROM
@@ -419,7 +454,7 @@ class FHCManagementLib
 					ext.von::date - verwendungen.ende_im_bismeldungsjahr::date = 1
 					AND verwendungen.mitarbeiter_uid = ext.mitarbeiter_uid
 					AND verwendungen.verwendung_code = ext.verwendung_code
-			ORDER BY verwendungen.von, verwendungen.bis";
+			ORDER BY verwendungen.von, verwendungen.bis, verwendungen.mitarbeiter_uid, verwendungen.verwendung_code";
 
 		return $this->_dbModel->execReadOnlyQuery(
 			$qry,
@@ -523,6 +558,58 @@ class FHCManagementLib
 			ORDER BY
 				mitarbeiter_uid,
 				studiengang_kz;';
+
+		return $this->_dbModel->execReadOnlyQuery(
+			$qry,
+			$params
+		);
+	}
+
+	/**
+	 * Get all possible Verwendung codes.
+	 * @param $excluded_verwendung_codes - except those codes
+	 * @return object success or error
+	 */
+	public function getVerwendungList($excluded_verwendung_codes)
+	{
+		$params = array($excluded_verwendung_codes);
+
+		$qry = "
+			SELECT
+				verwendung_code, verwendungbez
+			FROM
+				bis.tbl_verwendung
+			WHERE
+				verwendung_code NOT IN ?
+			ORDER BY
+				verwendung_code";
+
+		return $this->_dbModel->execReadOnlyQuery($qry, $params);
+	}
+
+	/**
+	 * Get certain Verwendung codes.
+	 * @param $mitarbeiter_uid
+	 * @param $verwendung_codes
+	 * @param $von
+	 * @param $bis
+	 * @return object success or error
+	 */
+	public function getVerwendungCodes($mitarbeiter_uid, $verwendung_codes, $von, $bis)
+	{
+		$params = array($mitarbeiter_uid, $verwendung_codes, $bis, $bis, $von, $von);
+
+		$qry = "
+			SELECT
+				bis_verwendung_id, verwendung_code
+			FROM
+				extension.tbl_bis_verwendung verw
+			WHERE
+				mitarbeiter_uid = ?
+				AND verwendung_code IN ?
+				AND (verw.von <= ? OR verw.von IS NULL OR ? IS NULL)
+				AND (verw.bis >= ? OR verw.bis IS NULL OR ? IS NULL)
+			ORDER BY bis_verwendung_id";
 
 		return $this->_dbModel->execReadOnlyQuery(
 			$qry,

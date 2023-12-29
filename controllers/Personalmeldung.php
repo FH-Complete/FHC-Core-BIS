@@ -47,8 +47,8 @@ class Personalmeldung extends Auth_Controller
 		$this->load->view('extensions/FHC-Core-BIS/personalmeldung');
 	}
 
-	/**
-	 *Gets Studiensemester
+	/*
+	 * Gets Studiensemester
 	 * @return object JSON success or error
 	 */
 	public function getStudiensemester()

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2022 fhcomplete.org
+ * Copyright (C) 2023 fhcomplete.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,10 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {CoreRESTClient} from '../../../../../js/RESTClient.js';
+import {CoreRESTClient} from '../../../../../../js/RESTClient.js';
 
 // timeout for ajax calls
-const CORE_BISMELDESTICHTAG_CMPT_TIMEOUT = 4000;
+const STUDIENSEMESTER_TIMEOUT = 4000;
 
 /**
  *
@@ -29,7 +29,7 @@ export const StudiensemesterAPIs = {
 			'extensions/FHC-Core-BIS/Personalmeldung/getStudiensemester',
 			null,
 			{
-				timeout: CORE_BISMELDESTICHTAG_CMPT_TIMEOUT
+				timeout: STUDIENSEMESTER_TIMEOUT
 			}
 		).then(
 			result => {

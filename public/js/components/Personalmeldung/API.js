@@ -23,6 +23,9 @@ const PERSONALMELDUNG_TIMEOUT = 4000;
  *
  */
 export const PersonalmeldungAPIs = {
+
+	/**------------------------------------------- PERSONALMELDUNG -------------------------------------------**/
+
 	getMitarbeiter: function(studiensemester_kurzbz, successCallback) {
 		return CoreRESTClient.get(
 			'extensions/FHC-Core-BIS/Personalmeldung/getMitarbeiter',
@@ -67,6 +70,9 @@ export const PersonalmeldungAPIs = {
 			}
 		);
 	},
+
+	/**------------------------------------------- VERWENDUNGEN -------------------------------------------**/
+
 	saveVerwendungen: function(studiensemester_kurzbz, successCallback) {
 		return CoreRESTClient.get(
 			'extensions/FHC-Core-BIS/Personalmeldung/saveVerwendungen',
@@ -250,6 +256,125 @@ export const PersonalmeldungAPIs = {
 		).catch(
 			error => {
 				alert('Fehler beim Holen der Verwendung Liste: ' + error.message);
+			}
+		);
+	},
+
+/**------------------------------------------- HAUPTBERUF -------------------------------------------**/
+
+	getHauptberufe: function(studiensemester_kurzbz, successCallback) {
+		return CoreRESTClient.get(
+			'extensions/FHC-Core-BIS/PersonalmeldungHauptberuf/getHauptberufe',
+			{
+				studiensemester_kurzbz: studiensemester_kurzbz
+			},
+			{
+				timeout: PERSONALMELDUNG_TIMEOUT
+			}
+		).then(
+			result => {
+				if (CoreRESTClient.hasData(result.data))
+				{
+					successCallback(CoreRESTClient.getData(result.data));
+				}
+			}
+		).catch(
+			error => {
+				alert('Fehler beim Holen der Hauptberufe: ' + error.message);
+			}
+		);
+	},
+	addHauptberuf: function(data, successCallback, errorCallback) {
+		return CoreRESTClient.post(
+			'extensions/FHC-Core-BIS/PersonalmeldungHauptberuf/addHauptberuf',
+			data,
+			{
+				timeout: PERSONALMELDUNG_TIMEOUT
+			}
+		).then(
+			result => {
+				if (CoreRESTClient.isError(result.data))
+				{
+					errorCallback(result.data.retval);
+				}
+				else if (CoreRESTClient.hasData(result.data))
+				{
+					successCallback(CoreRESTClient.getData(result.data));
+				}
+			}
+		).catch(
+			error => {
+				alert('Fehler beim Aktualisieren der Verwendung: ' + error.message);
+			}
+		);
+	},
+	updateHauptberuf: function(data, successCallback, errorCallback) {
+		return CoreRESTClient.post(
+			'extensions/FHC-Core-BIS/PersonalmeldungHauptberuf/updateHauptberuf',
+			data,
+			{
+				timeout: PERSONALMELDUNG_TIMEOUT
+			}
+		).then(
+			result => {
+				if (CoreRESTClient.isError(result.data))
+				{
+					errorCallback(result.data.retval);
+				}
+				else if (CoreRESTClient.hasData(result.data))
+				{
+					successCallback(CoreRESTClient.getData(result.data));
+				}
+			}
+		).catch(
+			error => {
+				alert('Fehler beim Aktualisieren des Hauptberufs: ' + error.message);
+			}
+		);
+	},
+	deleteHauptberuf: function(bis_hauptberuf_id, successCallback, errorCallback) {
+		return CoreRESTClient.post(
+			'extensions/FHC-Core-BIS/PersonalmeldungHauptberuf/deleteHauptberuf',
+			{
+				bis_hauptberuf_id: bis_hauptberuf_id
+			},
+			{
+				timeout: PERSONALMELDUNG_TIMEOUT
+			}
+		).then(
+			result => {
+				if (CoreRESTClient.isError(result.data))
+				{
+					errorCallback(result.data.retval);
+				}
+				else if (CoreRESTClient.hasData(result.data))
+				{
+					successCallback(CoreRESTClient.getData(result.data));
+				}
+			}
+		).catch(
+			error => {
+				alert('Fehler beim Löschen der Verwendung: ' + error.message);
+			}
+		);
+	},
+	getHauptberufcodeList: function(successCallback) {
+		return CoreRESTClient.get(
+			'extensions/FHC-Core-BIS/PersonalmeldungHauptberuf/getHauptberufcodeList',
+			null,
+			{
+				timeout: PERSONALMELDUNG_TIMEOUT
+			}
+		).then(
+			result => {
+				if (CoreRESTClient.hasData(result.data))
+				{
+					successCallback(CoreRESTClient.getData(result.data));
+				}
+			}
+		).catch(
+			error => {
+				alert('Fehler beim Holen der Hauptberufcode Liste: ' + error.message);
 			}
 		);
 	}

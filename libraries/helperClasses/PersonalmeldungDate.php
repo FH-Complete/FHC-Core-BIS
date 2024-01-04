@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Represents a date as used in Personalmeldung.
+ * Is a normal date, but additionally has type (start date or end date)
+ */
 class PersonalmeldungDate extends DateTime
 {
 	const START_TYPE = 's';
@@ -13,6 +17,11 @@ class PersonalmeldungDate extends DateTime
 		$this->startEndType = $startEndType;
 	}
 
+	/**
+	 * Compares this date with another date.
+	 * @param $personalmeldungDate date to compare this date with
+	 * @return int -1 if this date is smaller, 1 if greater, 0 if equal
+	 */
 	public function compare(PersonalmeldungDate $personalmeldungDate)
 	{
 		if ($this < $personalmeldungDate) return -1;

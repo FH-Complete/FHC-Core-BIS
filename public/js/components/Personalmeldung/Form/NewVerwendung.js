@@ -1,4 +1,5 @@
 import {PersonalmeldungAPIs} from '../API.js';
+import uids from '../personalmeldunguids/Uids.js';
 
 export const NewVerwendungForm = {
 	emits: [
@@ -6,7 +7,7 @@ export const NewVerwendungForm = {
 	],
 	components: {
 		PersonalmeldungAPIs,
-		AutoComplete: primevue.autocomplete,
+		uids,
 		"datepicker": VueDatePicker
 	},
 	props: {
@@ -14,18 +15,11 @@ export const NewVerwendungForm = {
 	},
 	data() {
 		return {
-			verwendung: {}, // the added Verwendung
-			mitarbeiterUids: [], // uids for autocomplete
-			mitarbeiterUidObj: null, // currently selected uid object
+			verwendung: {
+				verwendung_code: 1
+			}, // the added Verwendung
 			verwendungList: [], // Verwendung list for dropdown
 			errorText: null
-		}
-	},
-	computed: {
-		fullVerwendung() {
-			// add mitarbeiter uid to Verwendung, uid is provided by autocomplete
-			this.verwendung.mitarbeiter_uid = this.mitarbeiterUidObj.mitarbeiter_uid;
-			return this.verwendung;
 		}
 	},
 	methods: {
@@ -51,7 +45,7 @@ export const NewVerwendungForm = {
 		},
 		add() {
 			PersonalmeldungAPIs.addVerwendung(
-				this.fullVerwendung,
+				this.verwendung,
 				(data) => {
 					this.$emit('verwendungAdded');
 					this.reset();
@@ -61,9 +55,14 @@ export const NewVerwendungForm = {
 				}
 			);
 		},
+		setMitarbeiterUid(mitarbeiter_uid) {
+			this.verwendung.mitarbeiter_uid = mitarbeiter_uid;
+		},
 		reset() {
-			this.mitarbeiterUidObj = null;
-			this.verwendung = {};
+			this.verwendung = {
+				verwendung_code: 1
+			};
+			this.$refs.uids.reset();
 			this.resetError();
 		},
 		resetError() {
@@ -78,65 +77,55 @@ export const NewVerwendungForm = {
 		</div>
 		<br />
 		<form ref="newVerwendungForm" class="row gy-3">
-			<div class="form-group row">
-				<div class="col-6">
-					<label class="form-label" for="mitarbeiter_uid">Uid</label>
-					<auto-complete
-						class="w-100"
-						v-model="mitarbeiterUidObj"
-						dropdown
-						dropdown-current
-						forceSelection
-						optionLabel="bezeichnung"
-						:suggestions="mitarbeiterUids"
-						@complete="getMitarbeiterUids">
-					</auto-complete>
-				</div>
-				<div class="col-6">
-					<label class="form-label" for="verwendung_code">Verwendung</label>
-					<select
-						class="form-select"
-						name="verwendung_code"
-						id="verwendung_code"
-						required
-						v-model="verwendung.verwendung_code">
-						<option v-for="verw in verwendungList" :key="index" :value="verw.verwendung_code">
-							{{verw.verwendung_code}} - {{verw.verwendungbez}}
-						</option>
-					</select>
-				</div>
+			<div class="col-6">
+				<uids
+					ref="uids"
+					:studiensemester_kurzbz="studiensemester_kurzbz"
+					@passUid="setMitarbeiterUid">
+				</uids>
 			</div>
-			<div class="form-group row">
-				<div class="col-6">
-					<label class="form-label" for="von">Von</label>
-					<datepicker
-						v-model="verwendung.von"
-						v-bind:enable-time-picker="false"
-						v-bind:placeholder="'TT.MM.YY'"
-						v-bind:text-input="true"
-						v-bind:auto-apply="true"
-						name="von"
-						id="von"
-						locale="de"
-						format="dd.MM.yyyy"
-						model-type="yyyy-MM-dd">
-					</datepicker>
-				</div>
-				<div class="col-6">
-					<label class="form-label" for="bis">Bis</label>
-					<datepicker
-						v-model="verwendung.bis"
-						v-bind:enable-time-picker="false"
-						v-bind:placeholder="'TT.MM.YY; leer lassen für unbeschränkt'"
-						v-bind:text-input="true"
-						v-bind:auto-apply="true"
-						name="bis"
-						id="bis"
-						locale="de"
-						format="dd.MM.yyyy"
-						model-type="yyyy-MM-dd">
-					</datepicker>
-				</div>
+			<div class="col-6">
+				<label class="form-label" for="verwendung_code">Verwendung</label>
+				<select
+					class="form-select"
+					name="verwendung_code"
+					id="verwendung_code"
+					required
+					v-model="verwendung.verwendung_code">
+					<option v-for="verw in verwendungList" :key="index" :value="verw.verwendung_code">
+						{{verw.verwendung_code}} - {{verw.verwendungbez}}
+					</option>
+				</select>
+			</div>
+			<div class="col-6">
+				<label class="form-label" for="von">Von</label>
+				<datepicker
+					v-model="verwendung.von"
+					v-bind:enable-time-picker="false"
+					v-bind:placeholder="'TT.MM.YY'"
+					v-bind:text-input="true"
+					v-bind:auto-apply="true"
+					name="von"
+					id="von"
+					locale="de"
+					format="dd.MM.yyyy"
+					model-type="yyyy-MM-dd">
+				</datepicker>
+			</div>
+			<div class="col-6">
+				<label class="form-label" for="bis">Bis</label>
+				<datepicker
+					v-model="verwendung.bis"
+					v-bind:enable-time-picker="false"
+					v-bind:placeholder="'TT.MM.YY; leer lassen für unbeschränkt'"
+					v-bind:text-input="true"
+					v-bind:auto-apply="true"
+					name="bis"
+					id="bis"
+					locale="de"
+					format="dd.MM.yyyy"
+					model-type="yyyy-MM-dd">
+				</datepicker>
 			</div>
 		</form>
 	</div>

@@ -20,34 +20,42 @@ import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Naviga
 import FhcLoader from '../../../../../js/components/Loader.js';
 import {PersonalmeldungAPIs} from './API.js';
 import studiensemester from './studiensemester/Studiensemester.js';
-import NewVerwendungModal from "./Modals/NewVerwendungModal.js";
-import UpdateVerwendungModal from "./Modals/UpdateVerwendungModal.js";
+import HauptberufModal from "./Modals/HauptberufModal.js";
 import PersonalmeldungDates from "../../mixins/PersonalmeldungDates.js";
 
-export const Verwendungen = {
+export const Hauptberuf = {
 	components: {
 		CoreFilterCmpt,
 		CoreNavigationCmpt,
 		FhcLoader,
 		PersonalmeldungAPIs,
 		studiensemester,
-		NewVerwendungModal,
-		UpdateVerwendungModal
+		HauptberufModal
 	},
 	mixins: [PersonalmeldungDates],
 	data: function() {
 		return {
 			studiensemester_kurzbz: null,
-			verwendungenTabulatorOptions: {
-				index: 'bis_verwendung_id',
+			hauptberufTabulatorOptions: {
+				index: 'bis_hauptberuf_id',
 				maxHeight: "100%",
 				minHeight: 50,
 				layout: 'fitColumns',
 				columns: [
-					{title: 'ID', field: 'bis_verwendung_id', headerFilter: true, visible: false},
+					{title: 'ID', field: 'bis_hauptberuf_id', headerFilter: true, visible: false},
 					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true},
-					{title: 'Verwendung Code', field: 'verwendung_code', headerFilter: true},
-					{title: 'Verwendung Bezeichnung', field: 'verwendungbez', headerFilter: true},
+					{title: 'Hauptberuflich', field: 'hauptberuflich', headerFilter: true,
+						formatter: (cell) => {
+							return cell.getValue() ? 'Ja' : 'Nein';
+						},
+						headerFilterFunc: (headerValue, rowValue) => {
+							if (rowValue === true) return "ja".includes(headerValue.toLowerCase());
+							if (rowValue === false) return "nein".includes(headerValue.toLowerCase());
+							return false;
+						}
+					},
+					{title: 'Hauptberuf Code', field: 'hauptberufcode', headerFilter: true},
+					{title: 'Hauptberuf Bezeichnung', field: 'bezeichnung', headerFilter: true},
 					{title: 'Von', field: 'von', headerFilter: true, formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
@@ -56,10 +64,6 @@ export const Verwendungen = {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Gesperrt', field: 'gesperrt', headerFilter: true, mutator: (value) => {
-							return value ? 'Ja' : 'Nein';
-						}}
-					,
 					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false},
 					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false},
 					{
@@ -67,8 +71,6 @@ export const Verwendungen = {
 						field: 'actions',
 						hozAlign: 'center',
 						formatter: (cell) => {
-							let gesperrt = cell.getRow().getData().gesperrt;
-
 							let container = document.createElement('div');
 							container.className = "d-flex gap-2";
 
@@ -76,18 +78,15 @@ export const Verwendungen = {
 							let button = document.createElement('button');
 							button.className = 'btn btn-outline-secondary';
 							button.innerHTML = '<i class="fa fa-edit"></i>';
-							button.addEventListener('click', (event) => this.openUpdateModal(cell.getRow().getData()));
+							button.addEventListener('click', (event) => this.openModal(cell.getRow().getData()));
 							container.append(button);
 
 							// add delete button for manually added entries
-							if (gesperrt == "Ja")
-							{
-								button = document.createElement('button');
-								button.className = 'btn btn-outline-secondary';
-								button.innerHTML = '<i class="fa fa-xmark"></i>';
-								button.addEventListener('click', () => this.deleteVerwendung(cell.getRow().getIndex()));
-								container.append(button);
-							}
+							button = document.createElement('button');
+							button.className = 'btn btn-outline-secondary';
+							button.innerHTML = '<i class="fa fa-xmark"></i>';
+							button.addEventListener('click', () => this.deleteHauptberuf(cell.getRow().getIndex()));
+							container.append(button);
 
 							return container;
 						}
@@ -101,60 +100,40 @@ export const Verwendungen = {
 	},
 	methods: {
 		setTabulatorEvents() {
-			// row click event (showing verwendung details)
-			this.$refs.verwendungTable.tabulator.on("rowClick", (e, row) => {
+			// row click event (showing Hauptberuf details)
+			this.$refs.hauptberufTable.tabulator.on("rowClick", (e, row) => {
 
 				// exclude other clicked elements like buttons, icons...
 				if (e.target.nodeName != 'DIV') return;
 
 				// open modal for editing
-				this.openUpdateModal(row.getData());
+				this.openModal(row.getData());
 			});
 		},
-		openNewModal() {
-			this.$refs.newVerwendungModal.openVerwendungModal();
+		openModal(data) {
+			this.$refs.hauptberufModal.openHauptberufModal(data);
 		},
-		openUpdateModal(data) {
-			this.$refs.updateVerwendungModal.openVerwendungModal(data);
-		},
-		/**
-		 * get Verwendungen
-		 */
-		getVerwendungen() {
+		getHauptberufe() {
 			// show loading
 			this.$refs.loader.show();
-			PersonalmeldungAPIs.getVerwendungen(
+			PersonalmeldungAPIs.getHauptberufe(
 				this.studiensemester_kurzbz,
 				(data) => {
 					// set the employee data
-					this.$refs.verwendungTable.tabulator.setData(data.verwendungen);
+					this.$refs.hauptberufTable.tabulator.setData(data.hauptberufe);
 					// hide loading
 					this.$refs.loader.hide();
 				}
 			);
 		},
-		deleteVerwendung(bis_verwendung_id) {
-			PersonalmeldungAPIs.deleteVerwendung(
-				bis_verwendung_id,
+		deleteHauptberuf(bis_hauptberuf_id) {
+			PersonalmeldungAPIs.deleteHauptberuf(
+				bis_hauptberuf_id,
 				(data) => {
-					this.getVerwendungen();
+					this.getHauptberufe();
 				},
 				(error) => {
 					alert(error);
-				}
-			);
-		},
-		/**
-		 * save ("refresh") Verwendungen
-		 */
-		saveVerwendungen: function() {
-			// show loading
-			this.$refs.loader.show();
-			PersonalmeldungAPIs.saveVerwendungen(
-				this.studiensemester_kurzbz,
-				(data) => {
-					this.$refs.loader.hide();
-					this.getVerwendungen();
 				}
 			);
 		},
@@ -163,16 +142,12 @@ export const Verwendungen = {
 		 */
 		setSemester(studiensemester_kurzbz) {
 			this.studiensemester_kurzbz = studiensemester_kurzbz;
-			// get Verwendungen after semester has been set
-			//this.getVerwendungen();
+			// get Hauptberufe after semester has been set
+			this.getHauptberufe();
 		},
-		handleVerwendungAdded() {
-			this.$refs.newVerwendungModal.hide();
-			this.getVerwendungen();
-		},
-		handleVerwendungUpdated() {
-			this.$refs.updateVerwendungModal.hide();
-			this.getVerwendungen();
+		handleHauptberufSaved() {
+			this.$refs.hauptberufModal.hide();
+			this.getHauptberufe();
 		}
 	},
 	template: `
@@ -181,24 +156,12 @@ export const Verwendungen = {
 
 		<div id="content">
 			<header>
-				<h1 class="h2 fhc-hr">Personalmeldung Verwendungen</h1>
+				<h1 class="h2 fhc-hr">Personalmeldung Hauptberufe</h1>
 			</header>
 			<!-- input fields -->
 			<div class="row">
-				<div class="col-7">
+				<div class="col-12">
 					<studiensemester @passSemester="setSemester"></studiensemester>
-				</div>
-				<div class="col-5">
-					<span class="text-left">
-						<button type="button" class="btn btn-primary me-2" @click="getVerwendungen">
-							Anzeigen
-						</button>
-					</span>
-					<span class="text-end">
-						<button type="button" class="btn btn-outline-secondary me-2 float-end" @click="saveVerwendungen">
-							Verwendungen neu generieren
-						</button>
-					</span>
 				</div>
 			</div>
 			<br />
@@ -206,30 +169,24 @@ export const Verwendungen = {
 			<div class="row">
 				<div class="col">
 					<core-filter-cmpt
-						ref="verwendungTable"
+						ref="hauptberufTable"
 						:side-menu="false"
-						:tabulator-options="verwendungenTabulatorOptions"
+						:tabulator-options="hauptberufTabulatorOptions"
 						:table-only="true"
-						:new-btn-label="'Verwendung'"
+						:new-btn-label="'Hauptberuf'"
 						:new-btn-show="true"
-						@click:new="openNewModal">
+						@click:new="openModal">
 					</core-filter-cmpt>
 				</div>
 			</div>
-			<!-- Verwendung modal component -->
-			<new-verwendung-modal
+			<!-- Hauptberuf modal component -->
+			<hauptberuf-modal
 				class="fade"
-				ref="newVerwendungModal"
+				ref="hauptberufModal"
 				dialog-class="modal-xl"
 				:studiensemester_kurzbz="studiensemester_kurzbz"
-				@verwendung-added="handleVerwendungAdded">
-			</new-verwendung-modal>
-			<update-verwendung-modal
-				class="fade"
-				ref="updateVerwendungModal"
-				dialog-class="modal-xl"
-				@verwendung-updated="handleVerwendungUpdated">
-			</update-verwendung-modal>
+				@hauptberuf-saved="handleHauptberufSaved">
+			</hauptberuf-modal>
 			<fhc-loader ref="loader"></fhc-loader>
 		</div>`
 };

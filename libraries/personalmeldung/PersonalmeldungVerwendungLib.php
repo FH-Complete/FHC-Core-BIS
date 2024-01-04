@@ -23,7 +23,7 @@ class PersonalmeldungVerwendungLib
 		$this->_ci->load->model('organisation/Organisationseinheit_model', 'OrganisationseinheitModel');
 		$this->_ci->load->model('organisation/Studiensemester_model', 'StudiensemesterModel');
 		$this->_ci->load->model('person/Benutzerfunktion_model', 'BenutzerfunktionModel');
-		$this->_ci->load->model('extensions/FHC-Core-BIS/BisVerwendung_model', 'BisVerwendungModel');
+		$this->_ci->load->model('extensions/FHC-Core-BIS/personalmeldung/BisVerwendung_model', 'BisVerwendungModel');
 
 		// load libraries
 		$this->_ci->load->library('extensions/FHC-Core-BIS/FHCManagementLib');

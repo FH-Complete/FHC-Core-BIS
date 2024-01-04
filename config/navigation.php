@@ -26,5 +26,11 @@ $config['navigation_menu']['extensions/FHC-Core-BIS/*'] = array(
 		'description' => 'BIS-Personalmeldung Verwendungen',
 		'icon' => 'list',
 		'requiredPermissions' => 'admin:r'
+	),
+	'Hauptberufe verwalten' => array(
+		'link' => site_url('extensions/FHC-Core-BIS/PersonalmeldungHauptberuf'),
+		'description' => 'BIS-Personalmeldung Hauptberufe',
+		'icon' => 'list',
+		'requiredPermissions' => 'admin:r'
 	)
 );

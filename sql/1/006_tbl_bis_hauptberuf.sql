@@ -1,10 +1,14 @@
 CREATE TABLE IF NOT EXISTS extension.tbl_bis_hauptberuf (
 	bis_hauptberuf_id bigint NOT NULL,
 	mitarbeiter_uid varchar(32) NOT NULL,
-	hauptberuflich boolean NOT NULL,
+	hauptberuflich boolean NOT NULL DEFAULT TRUE,
 	hauptberufcode integer,
 	von date,
-	bis date
+	bis date,
+	insertamum timestamp default NOW(),
+	insertvon varchar(32),
+	updateamum timestamp,
+	updatevon varchar(32)
 );
 
 COMMENT ON TABLE extension.tbl_bis_hauptberuf IS 'Table to save Hauptberuf for Mitarbeiter';

@@ -32,7 +32,7 @@ export default {
 			this.$emit('verwendungUpdated');
 		},
 		openVerwendungModal(data) {
-			this.verwendung = data;
+			this.verwendung = JSON.parse(JSON.stringify(data)); // deep copy;;
 			// Prefill form with Verwendungen
 			this.$refs.verwendungFormCmpt.prefill(data.verwendung_code);
 			this.$refs.modalContainer.show();

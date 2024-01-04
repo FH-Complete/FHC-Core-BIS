@@ -245,19 +245,23 @@ export const Personalmeldung = {
 			</header>
 			<!-- input fields -->
 			<div class="row">
-				<div class="col-6">
+				<div class="col-4">
 					<studiensemester @passSemester="setSemester"></studiensemester>
 				</div>
-				<div class="col-6 text-center">
-					<button type="button" class="btn btn-primary me-2" @click="getMitarbeiter">
-						Mitarbeiterdaten anzeigen
-					</button>
-					<button type="button" class="btn btn-primary me-2" @click="downloadPersonalmeldungXml">
-						XML exportieren
-					</button>
-					<button type="button" class="btn btn-outline-secondary me-2 float-end" @click="saveVerwendungen">
-						Verwendungen aktualisieren
-					</button>
+				<div class="col-8">
+					<span class="text-left">
+						<button type="button" class="btn btn-primary me-2" @click="getMitarbeiter">
+							Mitarbeiterdaten anzeigen
+						</button>
+					</span>
+					<span class="text-end">
+						<button type="button" class="btn btn-primary me-2" @click="downloadPersonalmeldungXml">
+							XML exportieren
+						</button>
+						<button type="button" class="btn btn-outline-secondary me-2 float-end" @click="saveVerwendungen">
+							Verwendungen neu generieren
+						</button>
+					</span>
 				</div>
 			</div>
 			<br />

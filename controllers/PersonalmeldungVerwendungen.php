@@ -15,7 +15,6 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 		parent::__construct(
 			array(
 				'index' => 'admin:r',
-				'getStudiensemester' => 'admin:r',
 				'getVerwendungen' => 'admin:r',
 				'getMitarbeiterUids' => 'admin:r',
 				'getVerwendungList' => 'admin:r',
@@ -29,7 +28,7 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 		// Loads models
 		$this->load->model('organisation/Studiensemester_model', 'StudiensemesterModel');
 		$this->load->model('codex/Verwendung_model', 'VerwendungModel');
-		$this->load->model('extensions/FHC-Core-BIS/BisVerwendung_model', 'BisVerwendungModel');
+		$this->load->model('extensions/FHC-Core-BIS/personalmeldung/BisVerwendung_model', 'BisVerwendungModel');
 
 		// Loads libraries
 		//$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungLib');
@@ -185,7 +184,7 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 			$von = new DateTime($data['von']);
 			$bis = new DateTime($data['bis']);
 
-			if ($von >= $bis ) $this->terminateWithJsonError('Von Datum größer als Bis Datum');
+			if ($von >= $bis) $this->terminateWithJsonError('Von Datum größer als Bis Datum');
 		}
 
 		$bis = isset($data['bis']) ? $data['bis'] : null;

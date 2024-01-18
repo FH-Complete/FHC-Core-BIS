@@ -515,7 +515,7 @@ class PersonalmeldungVerwendungLib
 		$wanderfunktionen = $this->_ci->config->item('fhc_bis_wanderfunktionen');
 
 		$verwendung_code = $funktionVerwendungCodes[$funktion_kurzbz];
-		if (in_array($funktion_kurzbz, $wanderfunktionen))
+		if (array_key_exists($funktion_kurzbz, $wanderfunktionen))
 		{
 			// if Wanderfunktion: check if already "traveled" to "new" code, i.e. there is already a Verwendung with the new code
 			$verwendungRes = $this->_ci->BisVerwendungModel->loadWhere(array('verwendung_code' => $verwendung_code, 'mitarbeiter_uid' => $uid));

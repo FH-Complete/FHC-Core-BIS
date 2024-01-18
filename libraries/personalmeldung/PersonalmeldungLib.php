@@ -173,10 +173,6 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			if (isError($swsProStgRes)) return $swsProStgRes;
 			$swsProStg = hasData($swsProStgRes) ? $this->_splitByProperty(getData($swsProStgRes), 'mitarbeiter_uid') : array();
 
-			//~ var_dump("THE SWS");
-			//~ var_dump("--------------------------------------------");
-			//~ var_dump($swsRes);
-
 			// Get array with splitted Verwendungen from DV data
 			$verwendungen = $this->_splitByProperty($this->_getVerwendungenFromDienstverhaeltnisData($dvArr, $verwendungCodes), 'mitarbeiter_uid');
 
@@ -592,7 +588,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 	{
 		$paralellLehreVerwendungen = array();
 
-		// for each Lehre object
+		// for each Lehre object of the Mitarbeiter
 		foreach ($lehreVerwendungCodes as $lehreVerwendungCode)
 		{
 			$lehreVerwendungCode->sws = null;
@@ -628,28 +624,25 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				$lehreVerwendungCode->nonDistributedDays[] = $day;
 			}
 
+			// for each Verwendung of the Mitarbeiter
 			foreach ($verwendungen as $verwendung)
 			{
 				$hasVertragsstunden =
 					isset($verwendung->wochenstunden) && is_numeric($verwendung->wochenstunden) && $verwendung->wochenstunden > 0;
-
-				// if karenz, just set the code and skip
-				if ($verwendung->karenz)
-				{
-					if (is_null($verwendung->verwendung_code)) $verwendung->verwendung_code = $lehreVerwendungCode->verwendung_code;
-					continue;
-				}
-
-				// no other Verwendung, "stand alone" Lehre with Vertragsstunden
-				if (is_null($verwendung->verwendung_code) && $hasVertragsstunden)
-				{
-					// set the lehre code for the verwendung, regardsless of dates
-					$verwendung->verwendung_code = $lehreVerwendungCode->verwendung_code;
-				}
+				$isLehre = in_array($verwendung->verwendung_code, $this->_config['verwendung_codes_lehre']);
 				// If Lehre date span overlaps with BIS Verwendung date span
-				elseif ($lehreVerwendungCode->beginn_im_bismeldungsjahr <= $verwendung->bis
-					&& $lehreVerwendungCode->ende_im_bismeldungsjahr >= $verwendung->von
-				)
+				$overlapping = $lehreVerwendungCode->beginn_im_bismeldungsjahr <= $verwendung->bis
+					&& $lehreVerwendungCode->ende_im_bismeldungsjahr >= $verwendung->von;
+
+
+				// if karenz or no other Verwendung, "stand alone" Lehre with Vertragsstunden
+				if ($verwendung->karenz || ($hasVertragsstunden && (is_null($verwendung->verwendung_code) || $isLehre)))
+				{
+					if ($overlapping) $verwendung->verwendung_code = $lehreVerwendungCode->verwendung_code;
+					// set the lehre code for the verwendung, regardless of dates
+					elseif (is_null($verwendung->verwendung_code)) $verwendung->verwendung_code = $this->_config['verwendung_codes']['lehre'];
+				}
+				elseif ($overlapping)
 				{
 					// add sws data to Verwendung (can be Lehre or non-Lehre Verwendung)
 					$verwendung->sws = $lehreVerwendungCode->sws;
@@ -686,7 +679,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 						// "externe Lehre" -> calculate based on Einzelstundenbasis
 						$verwendung->lehre_berechnungsbasis = $this->_config['vollzeit_sws_einzelstundenbasis'];
 					}
-					elseif (!in_array($verwendung->verwendung_code, $this->_config['verwendung_codes_lehre']))
+					elseif (!$isLehre)
 					{
 						// non-lehre verwendung exists -> paralell lehre, add new lehre object
 						$verwendung->lehre_berechnungsbasis = $this->_config['vollzeit_sws_inkludierte_lehre'];
@@ -731,6 +724,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 			if ($hasVertragsstunden) //echter Dienstvertrag
 			{
+				//~ var_dump("VERTRAGSSTUNDEN");
 				// not more Wochenstunden than Vollzeitstunden
 				if ($verwendung->wochenstunden > $this->_config['vollzeit_arbeitsstunden'])
 					$verwendung->wochenstunden = $this->_config['vollzeit_arbeitsstunden'];
@@ -749,12 +743,14 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 					if ($isLehre)
 					{
+					//~ var_dump("VERTRAGSSTUNDEN IS LEHRE");
 						// if it's lehre and there is a paralell non-lehre Verwendung for the lehre (i.e. lehre_berechnungsbasis is set),
-						// calculate parameters for lehre and replace old verwendung
+						// replace old verwendung with calculated lehre
 						if (isset($lehreJvzaeAnteilig->lehre_berechnungsbasis)) $verwendungen[$idx] = $lehreJvzaeAnteilig;
 					}
 					else // non-lehre, subtract the paralell Lehre Verwendung
 					{
+					//~ var_dump("VERTRAGSSTUNDEN NON LEHRE, SUBTRACT PARALLEL LEHRE");
 						/**
 						 * Relativen Beschaeftigungsausmass der BIS-Verwendung berichtigen
 						 * (durch Abzug des eben erstellten relativen Beschaeftigungsausmass fuer Lehrtaetigkeiten)
@@ -777,11 +773,13 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			// freier Dienstvertrag, with lehre - calculate based on sws
 			elseif ($hasLehreSws && in_array($verwendung->verwendung_code, $this->_config['verwendung_codes_lehre']))
 			{
+				//~ var_dump("FREIER DV");
 				$verwendungen[$idx] = $this->_calculateLehreJVZAEAnteilig($verwendung);
 			}
 			// fallback - "pauschale" Stunden if no Vertragsstunden and no Lehre at all
 			elseif (!$hasAnySws || $isStudentischeHilfskraft || $isWerkvertrag)
 			{
+				//~ var_dump("SONSTIGES:");
 				// Studentische HilfskrHilfskraft/sonstiges Dienstverhältnis (Werkvertrag)
 				// ---------------------------------------------------------------------------------------------------------
 
@@ -789,6 +787,8 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				$pauschaleInStunden = $isStudentischeHilfskraft
 					? $this->_config['pauschale_studentische_hilfskraft']
 					: $this->_config['pauschale_sonstiges_dienstverhaeltnis'];
+				//~ var_dump("STUD HILFSKRAFT:");
+				//~ var_dump($isStudentischeHilfskraft);
 
 				// Kalkulatorische Umrechnung der Jahrespauschale
 				$vollzeitArbeitsstundenimJahr = $this->_config['vollzeit_arbeitsstunden'] * $this->_dateData['weeksInYear'];
@@ -1001,7 +1001,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					if (!isset($studiengang->studiengang_kz) &&
 						!in_array($organisationseinheittyp, $this->_config['exclude_leitung_organisationseinheitstypen'])) // nicht Teamleitung
 					{
-						$funktionscode = $this->_config['leitungsfunktionen'][$bisfunktion->funktion_kurzbz];;
+						$funktionscode = $this->_config['leitungsfunktionen'][$bisfunktion->funktion_kurzbz];
 					}
 				}
 			}

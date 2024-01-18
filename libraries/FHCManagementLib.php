@@ -140,7 +140,7 @@ class FHCManagementLib
 				) hauptberufe
 				GROUP BY mitarbeiter_uid, hauptberuflich, hauptberufcode
 			)
-			SELECT DISTINCT ON (UID) ben.uid,
+			SELECT DISTINCT ON (ben.uid) ben.uid,
 				pers.titelpre, pers.titelpost, pers.vorname, pers.vornamen, pers.nachname, pers.gebdatum,
 				pers.geschlecht, pers.staatsbuergerschaft, pers.aktiv,
 				ma.personalnummer, ma.lektor, ma.fixangestellt, ma.habilitation, ma.standort_id, ma.ausbildungcode,
@@ -156,10 +156,10 @@ class FHCManagementLib
 			WHERE
 				ma.bismelden
 				AND ma.personalnummer > 0
-				AND (dv.von <= bis_datum.bis_ende OR dv.von is null)
+				AND (dv.von <= bis_datum.bis_ende OR dv.von IS NULL)
 				AND (dv.bis IS NULL OR dv.bis >= bis_datum.bis_start)
-				-- AND mitarbeiter_uid = 'uid'
-			ORDER BY uid, nachname, vorname";
+				-- AND ma.mitarbeiter_uid = 'uid'
+			ORDER BY ben.uid, pers.nachname, pers.vorname";
 
 		return $this->_dbModel->execReadOnlyQuery(
 			$qry,

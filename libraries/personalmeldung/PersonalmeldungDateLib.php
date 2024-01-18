@@ -134,6 +134,29 @@ class PersonalmeldungDateLib
 		return $preparedDates;
 	}
 
+	/**
+	 * Get Studiensemester data (Sommersemester data).
+	 * @return array with semester data
+	 */
+	public function getStudiensemesterData()
+	{
+		$this->_ci->load->library('extensions/FHC-Core-BIS/FHCManagementLib');
+
+		// load semester list
+		$semList = array();
+		$semRes = $this->_ci->fhcmanagementlib->getAllSommersemester();
+
+		if (hasData($semRes)) $semList = getData($semRes);
+
+		// load current semester
+		$currSem = null;
+		$semRes = $this->_ci->fhcmanagementlib->getCurrentSommersemester();
+
+		if (hasData($semRes)) $currSem = getData($semRes)[0]->studiensemester_kurzbz;
+
+		return array('semList' => $semList, 'currSem' => $currSem);
+	}
+
 	// --------------------------------------------------------------------------------------------
 	// Private methods
 

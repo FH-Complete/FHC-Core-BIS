@@ -530,7 +530,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					{
 						// if verwendung falls into dvPart timespan
 						if ($verwendung->von >= $dvPart->vertragsbestandteil_beginn_im_bismeldungsjahr
-							&& $verwendung->von < $dvPart->vertragsbestandteil_ende_im_bismeldungsjahr
+							&& $verwendung->von <= $dvPart->vertragsbestandteil_ende_im_bismeldungsjahr
 						)
 						{
 							// set vertragsbestandteil properties

@@ -39,7 +39,9 @@ export const Personalmeldung = {
 			personalmeldungTabulatorOptions: {
 				layout: 'fitDataFill',
 				columns: [
-					{title: 'PersNr', field: 'personalnummer', headerFilter: true},
+					{title: 'PersNr', field: 'personalnummer', headerFilter: true,
+						formatter: function(cell) {return cell.getValue().replace(/^0+/, '');}
+					},
 					{title: 'Uid', field: 'uid', headerFilter: true},
 					{title: 'Vorname', field: 'vorname', headerFilter: true},
 					{title: 'Nachname', field: 'nachname', headerFilter: true},
@@ -147,9 +149,6 @@ export const Personalmeldung = {
 							let html = ''+
 								'<table class="table table-bordered">'+
 									'<tr>'+
-										'<th>'+
-											'Lehre'+
-										'</th>'+
 										'<th>'+
 											'StgKz'+
 										'</th>'+

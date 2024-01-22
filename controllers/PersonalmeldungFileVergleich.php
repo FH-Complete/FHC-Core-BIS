@@ -35,7 +35,7 @@ class PersonalmeldungFileVergleich extends Auth_Controller
 	 */
 	public function index()
 	{
-		$this->load->view('extensions/FHC-Core-BIS/filevergleich', $this->personalmeldungdatelib->getStudiensemesterData());
+		$this->load->view('extensions/FHC-Core-BIS/filevergleich', $this->personalmeldungdataprovisionlib->getStudiensemesterData());
 	}
 
 	/**

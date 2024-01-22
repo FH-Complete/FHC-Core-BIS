@@ -30,7 +30,6 @@ class PersonalmeldungHauptberuf extends Auth_Controller
 
 		// Loads libraries
 		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDateLib');
-		$this->load->library('extensions/FHC-Core-BIS/FHCManagementLib');
 
 		// Loads config
 		$this->config->load('extensions/FHC-Core-BIS/Personalmeldung');

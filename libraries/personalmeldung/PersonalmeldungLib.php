@@ -44,7 +44,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		$this->_ci =& get_instance(); // get code igniter instance
 
 		// load libraries
-		$this->_ci->load->library('extensions/FHC-Core-BIS/FHCManagementLib');
+		$this->_ci->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDataProvisionLib');
 		$this->_ci->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDateLib');
 
 		// load models
@@ -109,7 +109,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		if (isError($dateDataRes)) return $dateDataRes;
 
 		// get all Mitarbeiter data for a year
-		$mitarbeiterRes = $this->_ci->fhcmanagementlib->getMitarbeiterPersonData($this->_dateData['bismeldungYear']);
+		$mitarbeiterRes = $this->_ci->personalmeldungdataprovisionlib->getMitarbeiterPersonData($this->_dateData['bismeldungYear']);
 
 		if (isError($mitarbeiterRes)) return $mitarbeiterRes;
 
@@ -120,7 +120,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			$uids = array_column($mitarbeiterArr, 'uid');
 
 			// get DV data for the year
-			$dvRes = $this->_ci->fhcmanagementlib->getDienstverhaeltnisData($this->_dateData['bismeldungYear']);
+			$dvRes = $this->_ci->personalmeldungdataprovisionlib->getDienstverhaeltnisData($this->_dateData['bismeldungYear']);
 
 			//~ var_dump("ALLE DIENSTVERHÄLTNISSE");
 			//~ var_dump("-----------------------------------------------------");
@@ -131,7 +131,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			$dvArr = hasData($dvRes) ? getData($dvRes) : array();
 
 			// get all Verwendungs code for the year
-			$verwendungCodesRes = $this->_ci->fhcmanagementlib->getVerwendungCodeData($this->_dateData['bismeldungYear']);
+			$verwendungCodesRes = $this->_ci->personalmeldungdataprovisionlib->getVerwendungCodeData($this->_dateData['bismeldungYear']);
 
 			if (isError($verwendungCodesRes)) return $verwendungCodesRes;
 			$verwendungCodes = hasData($verwendungCodesRes) ? getData($verwendungCodesRes) : array();
@@ -144,7 +144,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			);
 
 			// get Lehreinheiten for the year
-			$swsRes = $this->_ci->fhcmanagementlib->getLehreinheitenSemesterwochenstunden(
+			$swsRes = $this->_ci->personalmeldungdataprovisionlib->getLehreinheitenSemesterwochenstunden(
 				$this->_dateData['yearStart']->format('Y-m-d'),
 				$this->_dateData['yearEnd']->format('Y-m-d'),
 				$uids
@@ -154,7 +154,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			$sws = hasData($swsRes) ? $this->_splitByProperty(getData($swsRes), 'mitarbeiter_uid') : array();
 
 			// get all funktionen
-			$benutzerfunktionRes = $this->_ci->fhcmanagementlib->getMitarbeiterFunktionData(
+			$benutzerfunktionRes = $this->_ci->personalmeldungdataprovisionlib->getMitarbeiterFunktionData(
 				$this->_dateData['bismeldungYear'],
 				$uids,
 				array_keys(array_merge($this->_config['funktionscodes'], $this->_config['leitungsfunktionen']))
@@ -164,7 +164,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			$benutzerfunktionen = hasData($benutzerfunktionRes) ? $this->_splitByProperty(getData($benutzerfunktionRes), 'uid') : array();
 
 			// get Semesterwochenstunden for each Studiengang
-			$swsProStgRes = $this->_ci->fhcmanagementlib->getSemesterwochenstundenGroupByStudiengang(
+			$swsProStgRes = $this->_ci->personalmeldungdataprovisionlib->getSemesterwochenstundenGroupByStudiengang(
 				$this->_dateData['yearStart']->format('Y-m-d'),
 				$this->_dateData['yearEnd']->format('Y-m-d'),
 				$uids
@@ -341,7 +341,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		$swsData = array();
 
 		// get Semesterwochenstunden for each Studiengang
-		$swsProStgRes = $this->_ci->fhcmanagementlib->getSemesterwochenstundenGroupByStudiengang(
+		$swsProStgRes = $this->_ci->personalmeldungdataprovisionlib->getSemesterwochenstundenGroupByStudiengang(
 			$yearStart,
 			$yearEnd
 		);

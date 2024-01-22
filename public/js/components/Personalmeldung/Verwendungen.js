@@ -153,7 +153,6 @@ export const Verwendungen = {
 			PersonalmeldungAPIs.saveVerwendungen(
 				this.studiensemester_kurzbz,
 				(data) => {
-					this.$refs.loader.hide();
 					this.getVerwendungen();
 				}
 			);

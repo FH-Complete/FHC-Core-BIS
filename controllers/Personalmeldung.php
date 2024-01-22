@@ -27,7 +27,7 @@ class Personalmeldung extends Auth_Controller
 		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDateLib');
 		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungLib');
 		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungVerwendungLib');
-		$this->load->library('extensions/FHC-Core-BIS/FHCManagementLib');
+		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDataProvisionLib');
 
 		// Loads phrases system
 		//~ $this->loadPhrases(
@@ -54,7 +54,7 @@ class Personalmeldung extends Auth_Controller
 	 */
 	public function getStudiensemester()
 	{
-		$this->outputJsonSuccess($this->personalmeldungdatelib->getStudiensemesterData());
+		$this->outputJsonSuccess($this->personalmeldungdataprovisionlib->getStudiensemesterData());
 	}
 
 	/**

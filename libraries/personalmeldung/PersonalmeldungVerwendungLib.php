@@ -26,7 +26,7 @@ class PersonalmeldungVerwendungLib
 		$this->_ci->load->model('extensions/FHC-Core-BIS/personalmeldung/BisVerwendung_model', 'BisVerwendungModel');
 
 		// load libraries
-		$this->_ci->load->library('extensions/FHC-Core-BIS/FHCManagementLib');
+		$this->_ci->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDataProvisionLib');
 		$this->_ci->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDateLib');
 
 		// load configs
@@ -192,7 +192,7 @@ class PersonalmeldungVerwendungLib
 		});
 
 		// get all Mitarbeiter with their oes for given Bismeldung year
-		$mitarbeiterRes = $this->_ci->fhcmanagementlib->getMitarbeiterPersonData($bismeldungYear);
+		$mitarbeiterRes = $this->_ci->personalmeldungdataprovisionlib->getMitarbeiterPersonData($bismeldungYear);
 
 		if (isError($mitarbeiterRes)) return $mitarbeiterRes;
 
@@ -207,7 +207,10 @@ class PersonalmeldungVerwendungLib
 		}
 
 		// get Dienstverhältnisse with Vertragsarten
-		$dvRes = $this->_ci->fhcmanagementlib->getDienstverhaeltnisse($this->_dateData['bismeldungYear'], array_keys($vertragstypVerwendungCodes));
+		$dvRes = $this->_ci->personalmeldungdataprovisionlib->getDienstverhaeltnisse(
+			$this->_dateData['bismeldungYear'],
+			array_keys($vertragstypVerwendungCodes)
+		);
 
 		if (isError($dvRes)) return $dvRes;
 
@@ -217,7 +220,7 @@ class PersonalmeldungVerwendungLib
 		$funktionVerwendungCodeZuordnung = $this->_ci->config->item('fhc_bis_funktion_verwendung_code_zuordnung');
 
 		// get data for Verwendung codes derived from Funktionen
-		$funktionRes = $this->_ci->fhcmanagementlib->getMitarbeiterFunktionData(
+		$funktionRes = $this->_ci->personalmeldungdataprovisionlib->getMitarbeiterFunktionData(
 			$bismeldungYear,
 			$uids,
 			array_keys($funktionVerwendungCodeZuordnung) // funktionen
@@ -250,7 +253,7 @@ class PersonalmeldungVerwendungLib
 		}
 
 		// get Verwendungen derived from OE Zuordnung
-		$oeFunktionRes = $this->_ci->fhcmanagementlib->getMitarbeiterFunktionData($bismeldungYear, $uids, array(self::OE_ZUORDNUNG));
+		$oeFunktionRes = $this->_ci->personalmeldungdataprovisionlib->getMitarbeiterFunktionData($bismeldungYear, $uids, array(self::OE_ZUORDNUNG));
 
 		if (isError($oeFunktionRes)) return $oeFunktionRes;
 
@@ -292,7 +295,7 @@ class PersonalmeldungVerwendungLib
 		}
 
 		// get lehre Verwendungen
-		$lehreRes = $this->_ci->fhcmanagementlib->getLehreinheitenSemesterwochenstunden(
+		$lehreRes = $this->_ci->personalmeldungdataprovisionlib->getLehreinheitenSemesterwochenstunden(
 			$this->_dateData['yearStart']->format('Y-m-d'),
 			$this->_dateData['yearEnd']->format('Y-m-d')
 		);

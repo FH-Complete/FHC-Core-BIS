@@ -69,7 +69,7 @@ export default {
 	template: `
 			<div class="row" v-if="this.personalmeldungSums != null">
 				<div class="col">
-					<table class="table table-bordered">
+					<table class="table table-bordered table-sm">
 						<thead>
 							<tr>
 								<th colspan="4" class="text-center">Verwendungen</th>
@@ -100,7 +100,7 @@ export default {
 					</table>
 				</div>
 				<div class="col">
-					<table class="table table-bordered">
+					<table class="table table-bordered table-sm">
 						<thead>
 							<tr>
 								<th colspan="2" class="text-center">Funktionen</th>
@@ -125,7 +125,7 @@ export default {
 					</table>
 				</div>
 				<div class="col">
-					<table class="table table-bordered">
+					<table class="table table-bordered table-sm">
 						<thead>
 							<tr>
 								<th colspan="2" class="text-center">Lehre</th>

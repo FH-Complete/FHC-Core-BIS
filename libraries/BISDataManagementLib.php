@@ -32,7 +32,7 @@ class BISDataManagementLib extends BISErrorProducerLib
 		$this->_ci =& get_instance(); // get code igniter instance
 
 		// load libraries
-		$this->_ci->load->library('extensions/FHC-Core-BIS/FHCManagementLib');
+		$this->_ci->load->library('extensions/FHC-Core-BIS/BISDataProvisionLib');
 		$this->_ci->load->library('extensions/FHC-Core-BIS/JQMSchedulerLib');
 
 		// load models
@@ -63,7 +63,7 @@ class BISDataManagementLib extends BISErrorProducerLib
 		$status_kurzbz = $this->_ci->config->item('fhc_bis_status_kurzbz')[JQMSchedulerLib::JOB_TYPE_UHSTAT0];
 
 		// get student data for UHSTAT0
-		$studentRes = $this->_ci->fhcmanagementlib->getUHSTAT0StudentData($studiensemester_kurzbz, $prestudent_id_arr, $status_kurzbz);
+		$studentRes = $this->_ci->bisdataprovisionlib->getUHSTAT0StudentData($studiensemester_kurzbz, $prestudent_id_arr, $status_kurzbz);
 
 		if (isError($studentRes))
 		{
@@ -160,7 +160,7 @@ class BISDataManagementLib extends BISErrorProducerLib
 	public function sendUHSTAT1($person_id_arr)
 	{
 		// get person data for UHSTAT1
-		$personRes = $this->_ci->fhcmanagementlib->getUHSTAT1PersonData($person_id_arr);
+		$personRes = $this->_ci->bisdataprovisionlib->getUHSTAT1PersonData($person_id_arr);
 
 		if (isError($personRes))
 		{

@@ -31,10 +31,8 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 		$this->load->model('extensions/FHC-Core-BIS/personalmeldung/BisVerwendung_model', 'BisVerwendungModel');
 
 		// Loads libraries
-		//$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungLib');
 		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDateLib');
-		//$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungVerwendungLib');
-		$this->load->library('extensions/FHC-Core-BIS/FHCManagementLib');
+		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDataProvisionLib');
 
 		// Loads config
 		$this->config->load('extensions/FHC-Core-BIS/Personalmeldung');
@@ -103,7 +101,7 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 		$mitarbeiter_uid_searchtext = $this->input->get('mitarbeiter_uid_searchtext');
 		if (!isset($mitarbeiter_uid_searchtext)) $this->terminateWithJsonError('Ungültiger Suchtext');
 
-		$mitarbeiterRes = $this->fhcmanagementlib->getMitarbeiterUids($studiensemester_kurzbz, $mitarbeiter_uid_searchtext);
+		$mitarbeiterRes = $this->personalmeldungdataprovisionlib->getMitarbeiterUids($studiensemester_kurzbz, $mitarbeiter_uid_searchtext);
 
 		if (isError($mitarbeiterRes)) $this->terminateWithJsonError(getError($mitarbeiterRes));
 
@@ -135,7 +133,7 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 		$verwendungList = array();
 
 		// exclude all the codes which cannot be paralell to given code
-		$verwendungListRes = $this->fhcmanagementlib->getVerwendungList($excludedVewendungCodes);
+		$verwendungListRes = $this->personalmeldungdataprovisionlib->getVerwendungList($excludedVewendungCodes);
 
 		if (isError($verwendungListRes)) $this->terminateWithJsonError(getError($verwendungListRes));
 
@@ -296,6 +294,6 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 		if (in_array($verwendung_code, $verwendungenLehreConfig)) $paralellVerwendungCodes = $verwendungenLehreConfig;
 		if (in_array($verwendung_code, $verwendungenNonLehreConfig)) $paralellVerwendungCodes = $verwendungenNonLehreConfig;
 
-		return $this->fhcmanagementlib->getVerwendungCodes($mitarbeiter_uid, $paralellVerwendungCodes, $von, $bis);
+		return $this->personalmeldungdataprovisionlib->getVerwendungCodes($mitarbeiter_uid, $paralellVerwendungCodes, $von, $bis);
 	}
 }

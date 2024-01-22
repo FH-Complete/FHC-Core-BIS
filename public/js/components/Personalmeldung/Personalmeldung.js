@@ -55,7 +55,7 @@ export const Personalmeldung = {
 						formatter: function(cell, formatterParams, onRendered) {
 							let verwendungen = cell.getValue();
 							let html = ''+
-								'<table class="table table-bordered">'+
+								'<table class="table table-bordered table-sm">'+
 									'<tr>'+
 										'<th>'+
 											'Verwendung'+
@@ -104,7 +104,7 @@ export const Personalmeldung = {
 						formatter: function(cell, formatterParams, onRendered) {
 							let funktionen = cell.getValue();
 							let html = ''+
-								'<table class="table table-bordered">'+
+								'<table class="table table-bordered table-sm">'+
 									'<tr>'+
 										'<th>'+
 											'Funktion'+
@@ -147,7 +147,7 @@ export const Personalmeldung = {
 						formatter: function(cell, formatterParams, onRendered) {
 							let lehre = cell.getValue();
 							let html = ''+
-								'<table class="table table-bordered">'+
+								'<table class="table table-bordered table-sm">'+
 									'<tr>'+
 										'<th>'+
 											'StgKz'+

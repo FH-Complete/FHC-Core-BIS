@@ -29,6 +29,7 @@ class JQMSchedulerLib
 		// set config items
 		$this->_status_kurzbz = $this->_ci->config->item('fhc_bis_status_kurzbz');
 		$this->_studiengangtyp = $this->_ci->config->item('fhc_bis_studiengangtyp');
+		$this->_terminated_student_status_kurzbz = $this->_ci->config->item('fhc_dvuh_terminated_student_status_kurzbz');
 		$studiensemesterMeldezeitraum = $this->_ci->config->item('fhc_bis_studiensemester_meldezeitraum');
 
 		// get default Studiensemester from config
@@ -103,6 +104,20 @@ class JQMSchedulerLib
 			$qry .= " AND stg.typ IN ?";
 		}
 
+		if (isset($this->_terminated_student_status_kurzbz))
+		{
+			$qry .= "
+				AND NOT EXISTS (
+					SELECT 1
+					FROM
+						public.tbl_prestudentstatus
+					WHERE
+						prestudent_id = ps.prestudent_id
+						AND status_kurzbz IN ?
+				)";
+			$params[] = $this->_terminated_student_status_kurzbz;
+		}
+
 		$dbModel = new DB_Model();
 
 		$studToSyncResult = $dbModel->execReadOnlyQuery(
@@ -164,6 +179,20 @@ class JQMSchedulerLib
 		{
 			$params[] = $this->_studiengangtyp[self::JOB_TYPE_UHSTAT1];
 			$qry .= " AND stg.typ IN ?";
+		}
+
+		if (isset($this->_terminated_student_status_kurzbz))
+		{
+			$qry .= "
+				AND NOT EXISTS (
+					SELECT 1
+					FROM
+						public.tbl_prestudentstatus
+					WHERE
+						prestudent_id = ps.prestudent_id
+						AND status_kurzbz IN ?
+				)";
+			$params[] = $this->_terminated_student_status_kurzbz;
 		}
 
 		$dbModel = new DB_Model();

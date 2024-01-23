@@ -26,3 +26,6 @@ $config['fhc_bis_status_kurzbz'] = array(
 $config['fhc_bis_studiengangtyp'] = array(
 	'BISUHSTAT0' => array('b', 'm')
 );
+
+// All status_kurzbz which a student who terminated studies can have
+$config['fhc_dvuh_terminated_student_status_kurzbz'] = array('Abgewiesener', 'Abbrecher');

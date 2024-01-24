@@ -88,6 +88,25 @@ class JQMSchedulerLib
 							rtp.person_id = ps.person_id
 							AND rt.studiensemester_kurzbz = pss.studiensemester_kurzbz
 					)
+					AND ( /* uhstat1 data has already been sent */
+						EXISTS (
+							SELECT 1
+							FROM
+								sync.tbl_bis_uhstat1
+							JOIN
+								bis.tbl_uhstat1daten USING (uhstat1daten_id)
+							WHERE
+								person_id = ps.person_id
+						)
+						OR EXISTS (
+							SELECT 1
+							FROM
+								public.tbl_dokumentprestudent
+							WHERE
+								prestudent_id = ps.prestudent_id
+								AND dokument_kurzbz = 'Statisti'
+						)
+					)
 					AND NOT EXISTS ( /* has not been sent to BIS yet*/
 						SELECT 1
 						FROM

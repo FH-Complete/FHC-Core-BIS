@@ -10,6 +10,7 @@ require_once APPPATH.'libraries/issues/plausichecks/PlausiChecker.php';
 class MitarbeiterUngueltigesVzae extends PlausiChecker
 {
 	private $_vzae_boundaries = array(-1, 100);
+	private $_jvzae_boundaries = array(0, 125);
 
 	public function executePlausiCheck($params)
 	{
@@ -43,8 +44,8 @@ class MitarbeiterUngueltigesVzae extends PlausiChecker
 					if ($verwendung->vzae < $this->_vzae_boundaries[0]) $errorTexts[] = 'VZAE ist zu klein, Vertragsstunden prüfen';
 					elseif ($verwendung->vzae > $this->_vzae_boundaries[1]) $errorTexts[] = 'VZAE ist zu gross, Vertragsstunden prüfen';
 
-					if ($verwendung->jvzae < $this->_vzae_boundaries[0]) $errorTexts[] = 'JVZAE ist zu klein, Vertragsstunden prüfen';
-					elseif ($verwendung->jvzae > $this->_vzae_boundaries[1]) $errorTexts[] = 'JVZAE ist zu gross, Vertragsstunden prüfen';
+					if ($verwendung->jvzae < $this->_jvzae_boundaries[0]) $errorTexts[] = 'JVZAE ist zu klein, Vertragsstunden prüfen';
+					elseif ($verwendung->jvzae > $this->_jvzae_boundaries[1]) $errorTexts[] = 'JVZAE ist zu gross, Vertragsstunden prüfen';
 				}
 
 				if (!isEmptyArray($errorTexts))

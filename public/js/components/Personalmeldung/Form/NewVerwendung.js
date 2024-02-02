@@ -102,7 +102,7 @@ export const NewVerwendungForm = {
 				<datepicker
 					v-model="verwendung.von"
 					v-bind:enable-time-picker="false"
-					v-bind:placeholder="'TT.MM.YY'"
+					v-bind:placeholder="'TT.MM.YYYY'"
 					v-bind:text-input="true"
 					v-bind:auto-apply="true"
 					name="von"
@@ -117,7 +117,7 @@ export const NewVerwendungForm = {
 				<datepicker
 					v-model="verwendung.bis"
 					v-bind:enable-time-picker="false"
-					v-bind:placeholder="'TT.MM.YY; leer lassen für unbeschränkt'"
+					v-bind:placeholder="'TT.MM.YYYY; leer lassen für unbeschränkt'"
 					v-bind:text-input="true"
 					v-bind:auto-apply="true"
 					name="bis"

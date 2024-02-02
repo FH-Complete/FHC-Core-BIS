@@ -132,7 +132,7 @@ export const HauptberufForm = {
 					<datepicker
 						v-model="hauptberuf.von"
 						v-bind:enable-time-picker="false"
-						v-bind:placeholder="'TT.MM.YY; leer lassen für unbeschränkt'"
+						v-bind:placeholder="'TT.MM.YYYY; leer lassen für unbeschränkt'"
 						v-bind:text-input="true"
 						v-bind:auto-apply="true"
 						name="von"
@@ -147,7 +147,7 @@ export const HauptberufForm = {
 					<datepicker
 						v-model="hauptberuf.bis"
 						v-bind:enable-time-picker="false"
-						v-bind:placeholder="'TT.MM.YY; leer lassen für unbeschränkt'"
+						v-bind:placeholder="'TT.MM.YYYY; leer lassen für unbeschränkt'"
 						v-bind:text-input="true"
 						v-bind:auto-apply="true"
 						name="bis"

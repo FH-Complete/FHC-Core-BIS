@@ -37,7 +37,7 @@ export const Personalmeldung = {
 			personalmeldungSums: null,
 			verwendungenSaved: false,
 			personalmeldungTabulatorOptions: {
-				layout: 'fitDataFill',
+				layout: 'fitDataTable',
 				columns: [
 					{title: 'PersNr', field: 'personalnummer', headerFilter: true,
 						formatter: function(cell) {return cell.getValue().replace(/^0+/, '');}

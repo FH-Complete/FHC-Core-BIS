@@ -198,10 +198,12 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 			$this->terminateWithJsonError('Es gibt folgende paralelle Codes für den eingegebenen Zeitraum: '.implode(', ', $paralellCodes));
 		}
 
+		// fill fields - manually added Verwendung
 		$data['manuell'] = true;
 		$data['insertamum'] = 'NOW()';
 		$data['insertvon'] = $this->_uid;
 
+		// add the Verwendung
 		$this->outputJson(
 			$this->BisVerwendungModel->insert(
 				$data
@@ -234,9 +236,19 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 
 		if (!hasData($bisVerwendungRes)) $this->terminateWithJsonError('Bisverwendung nicht gefunden');
 
-		if (!in_array(getData($bisVerwendungRes)[0]->verwendung_code, $paralellGroup))
+		$bisVerwendung = getData($bisVerwendungRes)[0];
+
+		// if verwendung code did not change, do nothing and return success
+		if ($bisVerwendung->verwendung_code == $data['verwendung_code'])
+		{
+			return $this->outputJsonSuccess(array($data['bis_verwendung_id']));
+		}
+
+		// check if code from wrong parallisation group
+		if (!in_array($bisVerwendung->verwendung_code, $paralellGroup))
 			$this->terminateWithJsonError('Ungültige Verwendungsänderung (unterschiedliche Parallellisierungstypgruppen)');
 
+		// update the Verwendung
 		$this->outputJson(
 			$this->BisVerwendungModel->update(
 				$data['bis_verwendung_id'],

@@ -29,7 +29,7 @@ class BisVerwendung_model extends DB_Model
 				bisverw.von,
 				bisverw.bis,
 				codes.verwendungbez,
-				bisverw.gesperrt,
+				bisverw.manuell,
 				pers.vorname,
 				pers.nachname
 			FROM

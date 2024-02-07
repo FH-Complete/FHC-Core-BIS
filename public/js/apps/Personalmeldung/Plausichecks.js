@@ -15,10 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
 import {Plausichecks} from '../../components/Personalmeldung/Plausichecks.js';
 
 const plausicheckApp = Vue.createApp({
 	components: {
+		CoreNavigationCmpt,
 		Plausichecks
 	},
 });

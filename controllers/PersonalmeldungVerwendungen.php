@@ -198,7 +198,7 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 			$this->terminateWithJsonError('Es gibt folgende paralelle Codes für den eingegebenen Zeitraum: '.implode(', ', $paralellCodes));
 		}
 
-		$data['gesperrt'] = true;
+		$data['manuell'] = true;
 		$data['insertamum'] = 'NOW()';
 		$data['insertvon'] = $this->_uid;
 
@@ -220,7 +220,7 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 
 		$verwendung_code = $data['verwendung_code'];
 
-		// check if code valid (not in other paralellization group)
+		// check if code valid (= code is not in other paralellization group)
 		$verwendungenNonLehreConfig = $this->config->item('fhc_bis_verwendung_codes_non_lehre');
 		$verwendungenLehreConfig = $this->config->item('fhc_bis_verwendung_codes_lehre');
 
@@ -240,7 +240,7 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 		$this->outputJson(
 			$this->BisVerwendungModel->update(
 				$data['bis_verwendung_id'],
-				array('verwendung_code' => $data['verwendung_code'], 'gesperrt' => true, 'updateamum' => 'NOW()', 'updatevon' => $this->_uid)
+				array('verwendung_code' => $data['verwendung_code'], 'manuell' => true, 'updateamum' => 'NOW()', 'updatevon' => $this->_uid)
 			)
 		);
 	}
@@ -255,7 +255,7 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 
 		// there should be a "locked" Verwendung with given id
 		$this->BisVerwendungModel->addSelect('1');
-		$bisVerwendungRes = $this->BisVerwendungModel->loadWhere(array('bis_verwendung_id' => $data['bis_verwendung_id'], 'gesperrt' => true));
+		$bisVerwendungRes = $this->BisVerwendungModel->loadWhere(array('bis_verwendung_id' => $data['bis_verwendung_id'], 'manuell' => true));
 
 		if (!hasData($bisVerwendungRes)) $this->terminateWithJsonError('Keine Bisverwendung zum Löschen gefunden');
 

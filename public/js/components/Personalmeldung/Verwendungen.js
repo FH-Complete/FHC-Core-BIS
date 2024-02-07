@@ -16,7 +16,6 @@
  */
 
 import {CoreFilterCmpt} from '../../../../../js/components/filter/Filter.js';
-import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
 import FhcLoader from '../../../../../js/components/Loader.js';
 import {PersonalmeldungAPIs} from './API.js';
 import studiensemester from './studiensemester/Studiensemester.js';
@@ -27,7 +26,6 @@ import PersonalmeldungDates from "../../mixins/PersonalmeldungDates.js";
 export const Verwendungen = {
 	components: {
 		CoreFilterCmpt,
-		CoreNavigationCmpt,
 		FhcLoader,
 		PersonalmeldungAPIs,
 		studiensemester,
@@ -56,7 +54,7 @@ export const Verwendungen = {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Gesperrt', field: 'gesperrt', headerFilter: true, mutator: (value) => {
+					{title: 'Manuell', field: 'manuell', headerFilter: true, mutator: (value) => {
 							return value ? 'Ja' : 'Nein';
 						}}
 					,
@@ -67,7 +65,7 @@ export const Verwendungen = {
 						field: 'actions',
 						hozAlign: 'center',
 						formatter: (cell) => {
-							let gesperrt = cell.getRow().getData().gesperrt;
+							let manuell = cell.getRow().getData().manuell;
 
 							let container = document.createElement('div');
 							container.className = "d-flex gap-2";
@@ -80,7 +78,7 @@ export const Verwendungen = {
 							container.append(button);
 
 							// add delete button for manually added entries
-							if (gesperrt == "Ja")
+							if (manuell == "Ja")
 							{
 								button = document.createElement('button');
 								button.className = 'btn btn-outline-secondary';
@@ -145,12 +143,12 @@ export const Verwendungen = {
 			);
 		},
 		/**
-		 * save ("refresh") Verwendungen
+		 * generate ("refresh") Verwendungen
 		 */
-		saveVerwendungen: function() {
+		generateVerwendungen: function() {
 			// show loading
 			this.$refs.loader.show();
-			PersonalmeldungAPIs.saveVerwendungen(
+			PersonalmeldungAPIs.generateVerwendungen(
 				this.studiensemester_kurzbz,
 				(data) => {
 					this.getVerwendungen();
@@ -175,9 +173,6 @@ export const Verwendungen = {
 		}
 	},
 	template: `
-		<!-- Navigation component -->
-		<core-navigation-cmpt></core-navigation-cmpt>
-
 		<div id="content">
 			<header>
 				<h1 class="h2 fhc-hr">Personalmeldung Verwendungen</h1>
@@ -194,7 +189,7 @@ export const Verwendungen = {
 						</button>
 					</span>
 					<span class="text-end">
-						<button type="button" class="btn btn-outline-secondary me-2 float-end" @click="saveVerwendungen">
+						<button type="button" class="btn btn-outline-secondary me-2 float-end" @click="generateVerwendungen">
 							Verwendungen neu generieren
 						</button>
 					</span>

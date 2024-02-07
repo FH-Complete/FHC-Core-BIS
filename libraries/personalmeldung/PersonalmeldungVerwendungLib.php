@@ -539,7 +539,7 @@ class PersonalmeldungVerwendungLib
 	private function _getVerwendungActions($uidVerwendungen, $uidExVerwendungen)
 	{
 		$nonLockedUidExVerwendungen = array_filter($uidExVerwendungen, function ($exVerwendung) {
-			return !$exVerwendung->gesperrt;
+			return !$exVerwendung->manuell;
 		});
 		$verwendungActionArr = array(
 			'insert' => array(),
@@ -562,7 +562,7 @@ class PersonalmeldungVerwendungLib
 					&& $verw->bis == $exBis
 					&& $verw->mitarbeiter_uid == $exVerw->mitarbeiter_uid;
 
-				// There is a paralell Verwendung which is gesperrt
+				// There is a paralell Verwendung which is manuell
 				$verwendungenNonLehreConfig = $this->_ci->config->item('fhc_bis_verwendung_codes_non_lehre');
 				$verwendungenLehreConfig = $this->_ci->config->item('fhc_bis_verwendung_codes_lehre');
 
@@ -571,14 +571,14 @@ class PersonalmeldungVerwendungLib
 					(in_array($verw->verwendung_code, $verwendungenLehreConfig) && in_array($exVerw->verwendung_code, $verwendungenLehreConfig))
 					|| (in_array($verw->verwendung_code, $verwendungenNonLehreConfig) && in_array($exVerw->verwendung_code, $verwendungenNonLehreConfig));
 
-				$isGesperrt =
+				$isManuell =
 					$verw->mitarbeiter_uid == $exVerw->mitarbeiter_uid
 					&& $verw->von <= $exBis
 					&& $verw->bis >= $exVon
-					&& $exVerw->gesperrt
+					&& $exVerw->manuell
 					&& $isParalell;
 
-				if ($alreadySaved || $isGesperrt)
+				if ($alreadySaved || $isManuell)
 				{
 					// no need to add it
 					$found = true;

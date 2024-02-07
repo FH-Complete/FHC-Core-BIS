@@ -15,10 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
 import {Hauptberuf} from '../../components/Personalmeldung/Hauptberuf.js';
 
 const verwendungenApp = Vue.createApp({
 	components: {
+		CoreNavigationCmpt,
 		Hauptberuf
 	},
 });

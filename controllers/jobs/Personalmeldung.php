@@ -24,7 +24,7 @@ class Personalmeldung extends JOB_Controller
 	/**
 	 * @param string $studiensemester_kurzbz semester for which data should be sent
 	 */
-	public function saveVerwendungen($studiensemester_kurzbz)
+	public function generateVerwendungen($studiensemester_kurzbz)
 	{
 		$verwendungCodesRes = $this->personalmeldungverwendunglib->saveVerwendungCodes($studiensemester_kurzbz);
 	}

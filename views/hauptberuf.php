@@ -19,7 +19,13 @@
 	$this->load->view('templates/FHC-Header', $includesArray);
 ?>
 	<div id="main">
+
+		<!-- Navigation component -->
+		<core-navigation-cmpt></core-navigation-cmpt>
+
+		<!-- Hauptberuf component -->
 		<hauptberuf></hauptberuf>
+
 	</div>
 
 <?php $this->load->view('templates/FHC-Footer', $includesArray); ?>

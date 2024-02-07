@@ -16,7 +16,6 @@
  */
 
 import {CoreFilterCmpt} from '../../../../../js/components/filter/Filter.js';
-import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
 import FhcLoader from '../../../../../js/components/Loader.js';
 import {PersonalmeldungAPIs} from './API.js';
 import studiensemester from './studiensemester/Studiensemester.js';
@@ -25,7 +24,6 @@ import personalmeldungSums from './personalmeldungsums/PersonalmeldungSums.js';
 export const Personalmeldung = {
 	components: {
 		CoreFilterCmpt,
-		CoreNavigationCmpt,
 		FhcLoader,
 		PersonalmeldungAPIs,
 		studiensemester,
@@ -33,6 +31,7 @@ export const Personalmeldung = {
 	},
 	data: function() {
 		return {
+			appSideMenuEntries: {},
 			studiensemester_kurzbz: null,
 			personalmeldungSums: null,
 			verwendungenSaved: false,
@@ -206,10 +205,10 @@ export const Personalmeldung = {
 		/**
 		 * save ("refresh") Verwendungen
 		 */
-		saveVerwendungen: function() {
+		generateVerwendungen: function() {
 			// show loading
 			this.$refs.loader.show();
-			PersonalmeldungAPIs.saveVerwendungen(
+			PersonalmeldungAPIs.generateVerwendungen(
 				this.studiensemester_kurzbz,
 				(data) => {
 					// display success alert
@@ -235,9 +234,6 @@ export const Personalmeldung = {
 		}
 	},
 	template: `
-		<!-- Navigation component -->
-		<core-navigation-cmpt></core-navigation-cmpt>
-
 		<div id="content">
 			<header>
 				<h1 class="h2 fhc-hr">Personalmeldung</h1>
@@ -257,7 +253,7 @@ export const Personalmeldung = {
 						<button type="button" class="btn btn-primary me-2" @click="downloadPersonalmeldungXml">
 							XML exportieren
 						</button>
-						<button type="button" class="btn btn-outline-secondary me-2 float-end" @click="saveVerwendungen">
+						<button type="button" class="btn btn-outline-secondary me-2 float-end" @click="generateVerwendungen">
 							Verwendungen neu generieren
 						</button>
 					</span>

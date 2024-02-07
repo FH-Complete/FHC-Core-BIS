@@ -102,7 +102,7 @@ export const HauptberufForm = {
 				</div>
 				<div class="col-12">
 					<div class="form-check">
-					<label class="form-check-label" for="hauptberuflich">Hauptberuflich</label>
+					<label class="form-check-label" for="hauptberuflich">Hauptberuflich lehrend</label>
 					<input
 						class="form-check-input"
 						type="checkbox"

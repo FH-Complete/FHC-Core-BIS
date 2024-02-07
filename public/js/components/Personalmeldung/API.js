@@ -73,9 +73,9 @@ export const PersonalmeldungAPIs = {
 
 	/**------------------------------------------- VERWENDUNGEN -------------------------------------------**/
 
-	saveVerwendungen: function(studiensemester_kurzbz, successCallback) {
+	generateVerwendungen: function(studiensemester_kurzbz, successCallback) {
 		return CoreRESTClient.get(
-			'extensions/FHC-Core-BIS/Personalmeldung/saveVerwendungen',
+			'extensions/FHC-Core-BIS/Personalmeldung/generateVerwendungen',
 			{
 				studiensemester_kurzbz: studiensemester_kurzbz
 			},

@@ -16,7 +16,13 @@
 	$this->load->view('templates/FHC-Header', $includesArray);
 ?>
 	<div id="main">
+
+		<!-- Navigation component -->
+		<core-navigation-cmpt></core-navigation-cmpt>
+
+		<!-- Personalmeldung component -->
 		<personalmeldung></personalmeldung>
+
 	</div>
 
 <?php $this->load->view('templates/FHC-Footer', $includesArray); ?>

@@ -16,7 +16,7 @@ class Personalmeldung extends Auth_Controller
 				'getStudiensemester' => 'admin:r',
 				'getMitarbeiter' => 'admin:r',
 				'downloadPersonalmeldungXml' => 'admin:r',
-				'saveVerwendungen' => 'admin:r'
+				'generateVerwendungen' => 'admin:r'
 			)
 		);
 
@@ -117,7 +117,7 @@ class Personalmeldung extends Auth_Controller
 	/**
 	 * Saves ("refreshed") Verwendung codes for a semester.
 	 */
-	public function saveVerwendungen()
+	public function generateVerwendungen()
 	{
 		// get Studiensemester
 		$studiensemester_kurzbz = $this->input->get('studiensemester_kurzbz');

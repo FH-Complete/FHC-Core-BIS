@@ -15,7 +15,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
 import FhcLoader from '../../../../../js/components/Loader.js';
 import {PersonalmeldungAPIs} from './API.js';
 import studiensemester from './studiensemester/Studiensemester.js';
@@ -28,7 +27,6 @@ export const Plausichecks = {
 		};
 	},
 	components: {
-		CoreNavigationCmpt,
 		FhcLoader,
 		PersonalmeldungAPIs,
 		studiensemester
@@ -53,9 +51,6 @@ export const Plausichecks = {
 		}
 	},
 	template: `
-		<!-- Navigation component -->
-		<core-navigation-cmpt></core-navigation-cmpt>
-
 		<div id="content">
 			<header>
 				<h1 class="h2 fhc-hr">Personalmeldung Plausichecks</h1>

@@ -16,7 +16,6 @@
  */
 
 import {CoreFilterCmpt} from '../../../../../js/components/filter/Filter.js';
-import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
 import FhcLoader from '../../../../../js/components/Loader.js';
 import {PersonalmeldungAPIs} from './API.js';
 import studiensemester from './studiensemester/Studiensemester.js';
@@ -26,7 +25,6 @@ import PersonalmeldungDates from "../../mixins/PersonalmeldungDates.js";
 export const Hauptberuf = {
 	components: {
 		CoreFilterCmpt,
-		CoreNavigationCmpt,
 		FhcLoader,
 		PersonalmeldungAPIs,
 		studiensemester,
@@ -44,7 +42,7 @@ export const Hauptberuf = {
 				columns: [
 					{title: 'ID', field: 'bis_hauptberuf_id', headerFilter: true, visible: false},
 					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true},
-					{title: 'Hauptberuflich', field: 'hauptberuflich', headerFilter: true,
+					{title: 'Hauptberuflich lehrend', field: 'hauptberuflich', headerFilter: true,
 						formatter: (cell) => {
 							return cell.getValue() ? 'Ja' : 'Nein';
 						},
@@ -151,9 +149,6 @@ export const Hauptberuf = {
 		}
 	},
 	template: `
-		<!-- Navigation component -->
-		<core-navigation-cmpt></core-navigation-cmpt>
-
 		<div id="content">
 			<header>
 				<h1 class="h2 fhc-hr">Personalmeldung Hauptberufe</h1>

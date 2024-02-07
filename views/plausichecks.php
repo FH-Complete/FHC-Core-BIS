@@ -15,6 +15,10 @@
 	$this->load->view('templates/FHC-Header', $includesArray);
 ?>
 	<div id="main">
+		<!-- Navigation component -->
+		<core-navigation-cmpt></core-navigation-cmpt>
+
+		<!-- Plausichecks component -->
 		<plausichecks></plausichecks>
 	</div>
 

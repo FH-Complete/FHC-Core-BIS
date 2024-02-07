@@ -55,8 +55,8 @@ class LehrauftragOhneDienstverhaeltnis extends PlausiChecker
 							hr.tbl_dienstverhaeltnis dv
 						WHERE
 						(
-							dv.von <= sem.start
-							AND (dv.bis >= sem.ende OR dv.bis IS NULL)
+							dv.von <= sem.ende
+							AND (dv.bis >= sem.start OR dv.bis IS NULL)
 						)
 						AND mitarbeiter_uid=lm.mitarbeiter_uid
 					)";

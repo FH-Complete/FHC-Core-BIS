@@ -1096,33 +1096,6 @@ class PersonalmeldungLib extends BISErrorProducerLib
 	}
 
 	/**
-	 * Checks if a Verwendung is a gap between two semesters, i.e. "lecture-free time", which must be skipped
-	 * @param $verwendung the Verwendung for check
-	 * @param $verwendungCodeArr the other Verwendungen, to determine if the checked Verwendung is between them
-	 * @return bool is gap or not
-	 */
-	//~ private function _isLehreGapBetweenSemesters($verwendung, $verwendungCodeArr)
-	//~ {
-		//~ // No Verwendung code should be assigned
-		//~ if (!is_null($verwendung->verwendung_code)) return false;
-
-		//~ // gap must be between two other Verwendungen (start v - ende ov1 = 1 and start ov2 - ende v = 1, ov being "other verwendung")
-		//~ $startFound = false;
-		//~ $endFound = false;
-
-		//~ foreach ($verwendungCodeArr as $verwendungCode)
-		//~ {
-			//~ if ($verwendungCode->verwendung_code == $this->_config['verwendung_codes']['lehre'])
-			//~ {
-				//~ if ($verwendung->von->diff($verwendungCode->ende_im_bismeldungsjahr)->days == 1) $startFound = true;
-				//~ if ($verwendungCode->beginn_im_bismeldungsjahr->diff($verwendung->bis)->days == 1) $endFound = true;
-			//~ }
-		//~ }
-
-		//~ return $startFound && $endFound;
-	//~ }
-
-	/**
 	 * Prueft ob in Verwendung_arr bereits eine Kombination mit selben ba1code, ba2code und verwendungcode
 	 * vorhanden ist
 	 * @param $verwendung Verwendungsobjekt

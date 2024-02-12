@@ -163,10 +163,8 @@ class PersonalmeldungVerwendungLib
 		$oeVerwendungCodes = $this->_ci->config->item('fhc_bis_oe_verwendung_code_zuordnung');
 
 		// get Verwendungen vertragstyp mappings
-		$vertragstypVerwendungCodes = $this->_ci->config->item('fhc_bis_vertragstyp_verwendung_code_zuordnung');
-
-		// get exceptions for Zuordnung of Oe to Vewendung code (if certain Vertragstyp, Verwendung of OE should not be assigned)
-		$oeVerwendungCodesVertragsartExceptions = $this->_ci->config->item('fhc_bis_oe_verwendung_code_zuordnung_vertragstyp_exceptions');
+		$vertragstypVerwendungCodesHighPrio = $this->_ci->config->item('fhc_bis_vertragstyp_verwendung_code_zuordnung_hochprio');
+		$vertragstypVerwendungCodesLowPrio = $this->_ci->config->item('fhc_bis_vertragstyp_verwendung_code_zuordnung_niederprio');
 
 		// retrieve children for each OE
 		foreach ($oeVerwendungCodes as $oe_kurzbz => $verwendungCode)
@@ -208,8 +206,7 @@ class PersonalmeldungVerwendungLib
 
 		// get Dienstverhältnisse with Vertragsarten
 		$dvRes = $this->_ci->personalmeldungdataprovisionlib->getDienstverhaeltnisse(
-			$this->_dateData['bismeldungYear'],
-			array_keys($vertragstypVerwendungCodes)
+			$this->_dateData['bismeldungYear']
 		);
 
 		if (isError($dvRes)) return $dvRes;
@@ -218,6 +215,8 @@ class PersonalmeldungVerwendungLib
 
 		// get funktionen for the uids
 		$funktionVerwendungCodeZuordnung = $this->_ci->config->item('fhc_bis_funktion_verwendung_code_zuordnung');
+
+		$funktionVerwendungen = array();
 
 		// get data for Verwendung codes derived from Funktionen
 		$funktionRes = $this->_ci->personalmeldungdataprovisionlib->getMitarbeiterFunktionData(
@@ -248,7 +247,7 @@ class PersonalmeldungVerwendungLib
 				$verwCodeObj->verwendung_code = $verwendung_code;
 				$verwCodeObj->von = $funktion->datum_von;
 				$verwCodeObj->bis = $funktion->datum_bis;
-				$verwendungCodes[] = $verwCodeObj;
+				$funktionVerwendungen[$funktion->uid][] = $verwCodeObj;
 			}
 		}
 
@@ -263,38 +262,74 @@ class PersonalmeldungVerwendungLib
 			{
 				foreach ($this->_verwendung_oe_kurzbz_with_children as $oe_kurzbz => $children)
 				{
-					// skip if oe has a "verwendungsart exception",
-					// i.e. its Verwendungscode of the oe shouldn't be added if it's a certain contract type
-
 					if (in_array($oeFunktion->oe_kurzbz, $children))
 					{
-						if (isset($oeVerwendungCodesVertragsartExceptions[$oe_kurzbz]))
-						{
-							$vertragsart_kurzbz = $oeVerwendungCodesVertragsartExceptions[$oe_kurzbz];
-
-							if ($this->_findDienstverhaeltnisObj(
-								$dvData,
-								$oeFunktion->uid,
-								$vertragsart_kurzbz,
-								$oeFunktion->datum_von,
-								$oeFunktion->datum_bis
-							))
-							continue;
-						}
-
 						$verwCodeObj = new StdClass();
 						$verwCodeObj->mitarbeiter_uid = $oeFunktion->uid;
 						$verwCodeObj->verwendung_code = $oeVerwendungCodes[$oe_kurzbz];
 						$verwCodeObj->von = $oeFunktion->datum_von;
 						$verwCodeObj->bis = $oeFunktion->datum_bis;
-						$verwendungCodes[] = $verwCodeObj;
+						$funktionVerwendungen[$oeFunktion->uid][] = $verwCodeObj;
 						break;
 					}
 				}
 			}
 		}
 
-		// get lehre Verwendungen
+		// Put together Vertragstyp and Funktion Verwendungen
+		foreach ($dvData as $dv)
+		{
+			$uid = $dv->mitarbeiter_uid;
+
+			// skip if Vertragstyp of Dienstverhältnis is high Prio Verwendung code, then Verwendung has only one code
+			if (isset($vertragstypVerwendungCodesHighPrio[$dv->vertragsart_kurzbz]))
+			{
+				$verwCodeObj = new StdClass();
+				$verwCodeObj->mitarbeiter_uid = $uid;
+				$verwCodeObj->verwendung_code = $vertragstypVerwendungCodesHighPrio[$dv->vertragsart_kurzbz];
+				$verwCodeObj->von = $dv->beginn_im_bismeldungsjahr;
+				$verwCodeObj->bis = $dv->ende_im_bismeldungsjahr;
+				$verwendungCodes[] = $verwCodeObj;
+				continue;
+			}
+
+			// add funktionen Verwendungen
+			if (isset($funktionVerwendungen[$uid]))
+			{
+				foreach ($funktionVerwendungen[$uid] as $idx => $verwendung)
+				{
+					// if overlaps with Dienstverhältnis
+					if (($dv->beginn_im_bismeldungsjahr <= $verwendung->bis || is_null($verwendung->bis))
+						&& ($dv->ende_im_bismeldungsjahr >= $verwendung->von || is_null($verwendung->von)))
+					{
+						$verwendungCodes[] = $verwendung;
+						// every Verwendung should be added only once
+						unset($funktionVerwendungen[$uid][$idx]);
+					}
+				}
+			}
+
+			// add low prio Dienstverhältnis Verwendungen
+			if (!$this->_findVerwendungCodeObj(
+				$verwendungCodes,
+				$uid,
+				$dv->beginn_im_bismeldungsjahr,
+				$dv->ende_im_bismeldungsjahr
+			))
+			{
+				if (isset($vertragstypVerwendungCodesLowPrio[$dv->vertragsart_kurzbz]))
+				{
+					$verwCodeObj = new StdClass();
+					$verwCodeObj->mitarbeiter_uid = $uid;
+					$verwCodeObj->verwendung_code = $vertragstypVerwendungCodesLowPrio[$dv->vertragsart_kurzbz];
+					$verwCodeObj->von = $dv->beginn_im_bismeldungsjahr;
+					$verwCodeObj->bis = $dv->ende_im_bismeldungsjahr;
+					$verwendungCodes[] = $verwCodeObj;
+				}
+			}
+		}
+
+		// get SWS lehre Verwendungen
 		$lehreRes = $this->_ci->personalmeldungdataprovisionlib->getLehreinheitenSemesterwochenstunden(
 			$this->_dateData['yearStart']->format('Y-m-d'),
 			$this->_dateData['yearEnd']->format('Y-m-d')
@@ -314,25 +349,6 @@ class PersonalmeldungVerwendungLib
 				$lehreObj->von = $le->sem_start;
 				$lehreObj->bis = $le->sem_ende;
 				$verwendungCodes[] = $lehreObj;
-			}
-		}
-
-		// get Verwendungen derived from Vertragstyp
-		foreach ($dvData as $dv)
-		{
-			if (!$this->_findVerwendungCodeObj(
-				$verwendungCodes,
-				$dv->mitarbeiter_uid,
-				$dv->beginn_im_bismeldungsjahr,
-				$dv->ende_im_bismeldungsjahr
-			))
-			{
-				$verwCodeObj = new StdClass();
-				$verwCodeObj->mitarbeiter_uid = $dv->mitarbeiter_uid;
-				$verwCodeObj->verwendung_code = $vertragstypVerwendungCodes[$dv->vertragsart_kurzbz];
-				$verwCodeObj->von = $dv->beginn_im_bismeldungsjahr;
-				$verwCodeObj->bis = $dv->ende_im_bismeldungsjahr;
-				$verwendungCodes[] = $verwCodeObj;
 			}
 		}
 
@@ -380,7 +396,7 @@ class PersonalmeldungVerwendungLib
 
 		foreach ($verwendungCodeDates as $i => $date)
 		{
-			// ignore first date , create span with end date
+			// ignore first date , create date span for each end date
 			if ($i == 0 || $date->startEndType != PersonalmeldungDate::END_TYPE) continue;
 
 			$newVerwendung = new StdClass();

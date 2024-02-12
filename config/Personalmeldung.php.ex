@@ -88,23 +88,23 @@ $config['fhc_bis_oe_verwendung_code_zuordnung'] = array(
 	'Auslandsbuero' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung']
 );
 
-// if Verwendungscode of the oe shouldn't be added if it's a certain contract type
-$config['fhc_bis_oe_verwendung_code_zuordnung_vertragstyp_exceptions'] = array(
-	'gmbh' => array($config['fhc_bis_vertragsarten']['freierDienstvertrag'])
+// if Verwendung is determined by Vertragsart. High prio: has priority over other criteria (like oe, funktion....)
+$config['fhc_bis_vertragstyp_verwendung_code_zuordnung_hochprio'] = array(
+	'externerlehrender' => $config['fhc_bis_verwendung_codes']['lehre']
 );
 
-$config['fhc_bis_vertragstyp_verwendung_code_zuordnung'] = array(
-	'freierdv' => $config['fhc_bis_verwendung_codes']['lehre'],
+// if Verwendung is determined by Vertragsart. High prio: has no priority over other criteria (like oe, funktion....)
+$config['fhc_bis_vertragstyp_verwendung_code_zuordnung_niederprio'] = array(
 	'werkvertrag' => $config['fhc_bis_verwendung_codes']['lehre'],
 	'studentischehilfskr' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit']
 );
-
 
 $config['fhc_bis_funktion_verwendung_code_zuordnung'] = array(
 	'laborant' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
 	'researcherjunior' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
 	'studentischehilfskr' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
-	'Leitung' => $config['fhc_bis_verwendung_codes']['management']
+	'Leitung' => $config['fhc_bis_verwendung_codes']['management'],
+	'ass' => $config['fhc_bis_verwendung_codes']['verwaltung']
 );
 
 // Funktionen für Verwendung codes, die aufgrund von Änderungsbeschränkungen nur schrittweise geändert werden

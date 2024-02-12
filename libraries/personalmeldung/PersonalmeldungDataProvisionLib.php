@@ -167,12 +167,11 @@ class PersonalmeldungDataProvisionLib
 	/**
 	 * Get Dienstverhältnisse for a year and for certain Vertragsarten
 	 * @param $bismeldungJahr
-	 * @param $vertragsarten
 	 * @return object success or error
 	 */
-	public function getDienstverhaeltnisse($bismeldungJahr, $vertragsarten)
+	public function getDienstverhaeltnisse($bismeldungJahr)
 	{
-		$params = array($bismeldungJahr, $bismeldungJahr, $vertragsarten);
+		$params = array($bismeldungJahr, $bismeldungJahr);
 
 		$qry = "
 			WITH bis_datum AS (
@@ -199,7 +198,6 @@ class PersonalmeldungDataProvisionLib
 			WHERE
 				ma.bismelden
 				AND ma.personalnummer > 0
-				AND dv.vertragsart_kurzbz IN ?
 				AND (dv.von <= bis_datum.bis_ende OR dv.von IS NULL)
 				AND (dv.bis >= bis_datum.bis_start OR dv.bis IS NULL)
 			ORDER BY dv.von, dv.bis";

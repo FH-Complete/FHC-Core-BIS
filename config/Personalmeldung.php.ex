@@ -90,17 +90,18 @@ $config['fhc_bis_oe_verwendung_code_zuordnung'] = array(
 
 // if Verwendung is determined by Vertragsart. High prio: has priority over other criteria (like oe, funktion....)
 $config['fhc_bis_vertragstyp_verwendung_code_zuordnung_hochprio'] = array(
+	'werkvertrag' => $config['fhc_bis_verwendung_codes']['lehre'],
 	'externerlehrender' => $config['fhc_bis_verwendung_codes']['lehre']
 );
 
 // if Verwendung is determined by Vertragsart. High prio: has no priority over other criteria (like oe, funktion....)
 $config['fhc_bis_vertragstyp_verwendung_code_zuordnung_niederprio'] = array(
-	'werkvertrag' => $config['fhc_bis_verwendung_codes']['lehre'],
 	'studentischehilfskr' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit']
 );
 
 $config['fhc_bis_funktion_verwendung_code_zuordnung'] = array(
 	'laborant' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
+	'researchsenior' => $config['fhc_bis_verwendung_codes']['lehre'],
 	'researcherjunior' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
 	'studentischehilfskr' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
 	'Leitung' => $config['fhc_bis_verwendung_codes']['management'],

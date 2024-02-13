@@ -21,7 +21,8 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 				'getFullVerwendungList' => 'admin:r',
 				'addVerwendung' => 'admin:rw',
 				'updateVerwendung' => 'admin:rw',
-				'deleteVerwendung' => 'admin:rw'
+				'deleteVerwendung' => 'admin:rw',
+				'generateVerwendungen' => 'admin:rw'
 			)
 		);
 
@@ -33,6 +34,7 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 		// Loads libraries
 		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDateLib');
 		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDataProvisionLib');
+			$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungVerwendungLib');
 
 		// Loads config
 		$this->config->load('extensions/FHC-Core-BIS/Personalmeldung');
@@ -276,6 +278,19 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 				$data['bis_verwendung_id']
 			)
 		);
+	}
+
+	/**
+	 * Saves ("refreshed") Verwendung codes for a semester.
+	 */
+	public function generateVerwendungen()
+	{
+		// get Studiensemester
+		$studiensemester_kurzbz = $this->input->get('studiensemester_kurzbz');
+
+		if (isEmptyString($studiensemester_kurzbz)) $this->terminateWithJsonError('Ungültiges Studiensemster');
+
+		$this->outputJson($this->personalmeldungverwendunglib->saveVerwendungCodes($studiensemester_kurzbz));
 	}
 
 	//------------------------------------------------------------------------------------------------------------------

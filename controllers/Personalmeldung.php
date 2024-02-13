@@ -15,8 +15,7 @@ class Personalmeldung extends Auth_Controller
 				'index' => 'admin:r',
 				'getStudiensemester' => 'admin:r',
 				'getMitarbeiter' => 'admin:r',
-				'downloadPersonalmeldungXml' => 'admin:r',
-				'generateVerwendungen' => 'admin:r'
+				'downloadPersonalmeldungXml' => 'admin:r'
 			)
 		);
 
@@ -26,7 +25,6 @@ class Personalmeldung extends Auth_Controller
 		// Loads libraries
 		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDateLib');
 		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungLib');
-		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungVerwendungLib');
 		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDataProvisionLib');
 
 		// Loads phrases system
@@ -112,18 +110,5 @@ class Personalmeldung extends Auth_Controller
 		// download XML
 		$this->load->helper('download');
 		force_download('personalmeldung.xml', $xml);
-	}
-
-	/**
-	 * Saves ("refreshed") Verwendung codes for a semester.
-	 */
-	public function generateVerwendungen()
-	{
-		// get Studiensemester
-		$studiensemester_kurzbz = $this->input->get('studiensemester_kurzbz');
-
-		if (isEmptyString($studiensemester_kurzbz)) $this->terminateWithJsonError('Ungültiges Studiensemster');
-
-		$this->outputJson($this->personalmeldungverwendunglib->saveVerwendungCodes($studiensemester_kurzbz));
 	}
 }

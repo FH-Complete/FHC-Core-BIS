@@ -204,7 +204,7 @@ class PersonalmeldungVerwendungLib
 			$uids[] = $ma->uid;
 		}
 
-		// get Dienstverhältnisse with Vertragsarten
+		// get Dienstverhältnisse
 		$dvRes = $this->_ci->personalmeldungdataprovisionlib->getDienstverhaeltnisse(
 			$this->_dateData['bismeldungYear']
 		);
@@ -293,7 +293,7 @@ class PersonalmeldungVerwendungLib
 				continue;
 			}
 
-			// add funktionen Verwendungen
+			// add Funktion Verwendungen
 			if (isset($funktionVerwendungen[$uid]))
 			{
 				foreach ($funktionVerwendungen[$uid] as $idx => $verwendung)

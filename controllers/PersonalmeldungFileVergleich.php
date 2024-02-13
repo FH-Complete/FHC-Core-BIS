@@ -10,6 +10,7 @@ class PersonalmeldungFileVergleich extends Auth_Controller
 
 	private $_messages = array(
 		'mitarbeiter' => array(),
+		'hauptberufcode' => array(),
 		'fehlender_verwendung_code' => array(),
 		'falscher_verwendung_code' => array(),
 		'ba1code' => array(),
@@ -121,6 +122,9 @@ class PersonalmeldungFileVergleich extends Auth_Controller
 					);
 				}
 
+				$oldHauptberuf = $oldMa->hauptberufcode ?? '';
+				$newHauptberuf = $newMa->hauptberufcode ?? '';
+
 				$oldBa1Codes = array_unique(array_column($oldVerwendungen, 'ba1code'));
 				$newBa1Codes = array_unique(array_column($newMa->verwendungen, 'ba1code'));
 
@@ -139,6 +143,14 @@ class PersonalmeldungFileVergleich extends Auth_Controller
 				sort($newBa1Codes);
 				sort($oldBa2Codes);
 				sort($newBa2Codes);
+
+				if ($oldHauptberuf != $newHauptberuf)
+				{
+					$this->_messages['hauptberufcode'][] = $this->_getMsgObj(
+						"Unterschiedliche Hauptberuf Codes, ".$oldHauptberuf." (File) VS ".$newHauptberuf,
+						$newMa->uid
+					);
+				}
 
 				if ($oldVerwendungCodes != $newVerwendungCodes)
 				{
@@ -336,6 +348,9 @@ class PersonalmeldungFileVergleich extends Auth_Controller
 							$funktion->{$propName} = $funktionValue->nodeValue;
 						}
 						$convMa->funktionen[] = $funktion;
+						break;
+					case 'HauptberufCode':
+						$convMa->hauptberufcode = $nodeValue;
 						break;
 				}
 			}

@@ -252,7 +252,6 @@ class PersonalmeldungDataProvisionLib
 				CROSS JOIN public.tbl_mitarbeiter ma
 				JOIN hr.tbl_dienstverhaeltnis dv USING (mitarbeiter_uid)
 				LEFT JOIN extension.tbl_bis_vertragsart_beschaeftigungsart1 vertragsart_ba1 USING(vertragsart_kurzbz)
-				LEFT JOIN extension.tbl_bis_hauptberuf hb USING (mitarbeiter_uid)
 				-- add ba1code of highest parent of Vertragsart
 				LEFT JOIN (
 					WITH RECURSIVE recursive_va AS (
@@ -386,7 +385,7 @@ class PersonalmeldungDataProvisionLib
 	 * Nur bisrelevante SWS.
 	 * @param $startDate
 	 * @param $endDate
-	 * @param $uid
+	 * @param $uids
 	 */
 	public function getLehreinheitenSemesterwochenstunden($startDate, $endDate, $uids = null)
 	{

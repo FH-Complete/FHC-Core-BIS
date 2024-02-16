@@ -134,6 +134,9 @@ class PersonalmeldungDateLib
 		return $preparedDates;
 	}
 
+	// --------------------------------------------------------------------------------------------
+	// Private methods
+
 	/**
 	 * Removes dublicates from Personalmeldung date array.
 	 * Personalemldung dates are identical only if their type (start/end) is also equal.

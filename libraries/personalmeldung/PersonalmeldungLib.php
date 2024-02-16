@@ -522,8 +522,9 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				{
 					// set the dv properties
 					$verwendung->mitarbeiter_uid = $dvPart->mitarbeiter_uid;
-					$verwendung->ba1code = $dvPart->ba1code;
+					$verwendung->dienstverhaeltnis_id = $dvPart->dienstverhaeltnis_id;
 					$verwendung->vertragsart_kurzbz = $dvPart->vertragsart_kurzbz;
+					$verwendung->ba1code = $dvPart->ba1code;
 					$verwendung->dv_von = $dvPart->dv_von;
 					$verwendung->dv_bis = $dvPart->dv_bis;
 					if (isset($dvPart->vertragsbestandteil_beginn_im_bismeldungsjahr) && isset($dvPart->vertragsbestandteil_ende_im_bismeldungsjahr))
@@ -580,7 +581,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 	/**
 	 * Add Lehre data to Verwendungen. Lehre data is needed for calculating VZAE JVZAE.
-	 * @param $verwendungen
+	 * @param $verwendungen of one Mitarbeiter
 	 * @param $lehreVerwendungCodes
 	 * @param $swsArr Semesterwochenstunden
 	 */
@@ -633,7 +634,15 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				// If Lehre date span overlaps with BIS Verwendung date span
 				$overlapping = $lehreVerwendungCode->beginn_im_bismeldungsjahr <= $verwendung->bis
 					&& $lehreVerwendungCode->ende_im_bismeldungsjahr >= $verwendung->von;
-
+				// if pauschale should be used for calculation instead of semesterstunden
+				$pauschale =
+					$verwendung->vertragsart_kurzbz == $this->_config['vertragsarten']['studentischeHilfskraft']
+					|| $verwendung->vertragsart_kurzbz == $this->_config['vertragsarten']['werkvertrag'];
+				// check if there are other contracts: Lehre sws should still be added to stand alone contracts
+				$hasOtherVertraege = $this->_verwendungWithOtherVertragsartExists(
+					$verwendungen,
+					array($this->_config['vertragsarten']['werkvertrag'], $this->_config['vertragsarten']['studentischeHilfskraft'])
+				);
 
 				// if karenz or no other Verwendung, "stand alone" Lehre with Vertragsstunden
 				if ($verwendung->karenz || ($hasVertragsstunden && (is_null($verwendung->verwendung_code) || $isLehre)))
@@ -644,32 +653,35 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				}
 				elseif ($overlapping)
 				{
-					// add sws data to Verwendung (can be Lehre or non-Lehre Verwendung)
-					$verwendung->sws = $lehreVerwendungCode->sws;
-					$verwendung->sws_studiensemester_kurzbz = $lehreVerwendungCode->studiensemester_kurzbz;
-					$verwendung->tage_lehre_im_semester = 0;
-
-					// for all not yet distributed lehre days
-					foreach ($lehreVerwendungCode->nonDistributedDays as $idx => $day)
+					if (!($pauschale && $hasOtherVertraege)) // not add sws if pauschale should be calculated
 					{
-						// if day between verwendung dates -> add lehre day
-						if ($day >= $verwendung->von && $day <= $verwendung->bis)
+						// add sws data to Verwendung (can be Lehre or non-Lehre Verwendung)
+						$verwendung->sws = $lehreVerwendungCode->sws;
+						$verwendung->sws_studiensemester_kurzbz = $lehreVerwendungCode->studiensemester_kurzbz;
+						$verwendung->tage_lehre_im_semester = 0;
+
+						// for all not yet distributed lehre days
+						foreach ($lehreVerwendungCode->nonDistributedDays as $idx => $day)
 						{
-							// add to days for calculation
-							$verwendung->tage_lehre_im_semester++;
+							// if day between verwendung dates -> add lehre day
+							if ($day >= $verwendung->von && $day <= $verwendung->bis)
+							{
+								// add to days for calculation
+								$verwendung->tage_lehre_im_semester++;
 
-							// day distributed now - remove
-							unset($lehreVerwendungCode->nonDistributedDays[$idx]);
+								// day distributed now - remove
+								unset($lehreVerwendungCode->nonDistributedDays[$idx]);
+							}
 						}
-					}
 
-					// add additional days, which fall into next year, but have no DV assigned
-					if (isset($lehreVerwendungCode->extended_enddate))
-					{
-						$extendedEnddate = new DateTime($lehreVerwendungCode->extended_enddate);
-						$days = $extendedEnddate->diff($verwCodeEnd)->days;
-						$verwendung->tage_lehre_im_semester += $days;
-						unset($lehreVerwendungCode->extended_enddate);
+						// add additional days, which fall into next year, but have no DV assigned
+						if (isset($lehreVerwendungCode->extended_enddate))
+						{
+							$extendedEnddate = new DateTime($lehreVerwendungCode->extended_enddate);
+							$days = $extendedEnddate->diff($verwCodeEnd)->days;
+							$verwendung->tage_lehre_im_semester += $days;
+							unset($lehreVerwendungCode->extended_enddate);
+						}
 					}
 
 					// if no verwendung code yet: "stand alone lehre" without Vertragsstunden
@@ -697,11 +709,12 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 	/**
 	 * Calculate and add Beschäftigungsausmass and Jahresvollzeitäquivalenz for the Verwendungen of a Mitarbeiter.
-	 * @param $verwendungen
+	 * @param $verwendungen of one Mitarbeiter
 	 * @param $hasAnySws
 	 */
 	private function _addRelativesBaUndAnteiligeJVZAE($verwendungen, $hasAnySws)
 	{
+		$dvsPauschaleAdded = array();
 		foreach ($verwendungen as $idx => $verwendung)
 		{
 			$hasVertragsstunden =
@@ -776,8 +789,9 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				//~ var_dump("FREIER DV");
 				$verwendungen[$idx] = $this->_calculateLehreJVZAEAnteilig($verwendung);
 			}
-			// fallback - "pauschale" Stunden if no Vertragsstunden and no Lehre at all
-			elseif (!$hasAnySws || $isStudentischeHilfskraft || $isWerkvertrag)
+			// fallback - "pauschale" Stunden if no Vertragsstunden and no Lehre at all.
+			// make sure that Paushcale is only added once per Dienstverhältnis (dvsPauschaleAdded)
+			elseif ((!$hasAnySws || $isStudentischeHilfskraft || $isWerkvertrag) && !in_array($verwendung->dienstverhaeltnis_id, $dvsPauschaleAdded))
 			{
 				//~ var_dump("SONSTIGES:");
 				// Studentische HilfskrHilfskraft/sonstiges Dienstverhältnis (Werkvertrag)
@@ -796,6 +810,8 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				// Relatives Beschaeftigungsausmass / Anteilige JVZAE ermitteln
 				$verwendung->beschaeftigungsausmass_relativ = $pauschaleInStunden / $vollzeitArbeitsstundenimJahr;
 				$verwendung->jvzae_anteilig = $pauschaleInStunden / $vollzeitArbeitsstundenimJahr;
+
+				$dvsPauschaleAdded[] = $verwendung->dienstverhaeltnis_id;
 			}
 		}
 
@@ -804,7 +820,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 	/**
 	 * Calculate and add Vollzeitäquivalenzen.
-	 * @param $verwendungen
+	 * @param $verwendungen of one Mitarbeiter
 	 * @return array with Verwendungen with Vollzeitäquivalenzen
 	 */
 	private function _addVZAEAndJVZAE($verwendungen)
@@ -1128,6 +1144,24 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			if ($row_verwendung->ba1code == $verwendung->ba1code
 			 && $row_verwendung->ba2code == $verwendung->ba2code
 			 && !is_null($row_verwendung->verwendung_code))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Checks if there is a Verwendung with a different Vertragsart than in vertragsartArr.
+	 * @param $verwendungArr
+	 * @param $verwendungartArr
+	 * @return true when different Vertragsart exists
+	 */
+	private function _verwendungWithOtherVertragsartExists($verwendungArr, $vertragsartArr)
+	{
+		foreach ($verwendungArr as $verwendung)
+		{
+			if (!in_array($verwendung->vertragsart_kurzbz, $vertragsartArr))
 			{
 				return true;
 			}

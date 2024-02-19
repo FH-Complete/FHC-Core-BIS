@@ -105,7 +105,8 @@ $config['fhc_bis_funktion_verwendung_code_zuordnung'] = array(
 	'researcherjunior' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
 	'studentischehilfskr' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
 	'Leitung' => $config['fhc_bis_verwendung_codes']['management'],
-	'ass' => $config['fhc_bis_verwendung_codes']['verwaltung']
+	'ass' => $config['fhc_bis_verwendung_codes']['verwaltung'],
+	'Praktikum' => $config['fhc_bis_verwendung_codes']['verwaltung']
 );
 
 // Funktionen für Verwendung codes, die aufgrund von Änderungsbeschränkungen nur schrittweise geändert werden

@@ -601,7 +601,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			// add Semesterwochenstunden and Studiensemester to Lehre
 			foreach ($swsArr as $swsObj)
 			{
-				if ($verwCodeStart <= new DateTime($swsObj->sem_ende) && $verwCodeEnd >= new DateTime($swsObj->sem_start))
+				if ($verwCodeStart <= new DateTime($swsObj->sem_ende_verlaengert) && $verwCodeEnd >= new DateTime($swsObj->sem_start))
 				{
 					$lehreVerwendungCode->sws = $swsObj->sws;
 					$lehreVerwendungCode->studiensemester_kurzbz = $swsObj->studiensemester_kurzbz;

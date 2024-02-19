@@ -392,7 +392,22 @@ class PersonalmeldungDataProvisionLib
 		$params = array($endDate, $startDate);
 		$qry = "
 			SELECT
-				mitarbeiter_uid, studiensemester_kurzbz, sem_start, sem_ende, round(sum(semesterstunden) / 15, 2) AS sws
+				mitarbeiter_uid, studiensemester_kurzbz, sem_start, sem_ende,
+				COALESCE
+				(
+					(
+						(
+							SELECT start
+							FROM
+								public.tbl_studiensemester
+							WHERE
+								start > sem_ende
+							ORDER BY start LIMIT 1
+						) - INTERVAL '1 DAY'
+					)::date,
+					sem_ende
+				) AS sem_ende_verlaengert,
+				round(sum(semesterstunden) / 15, 2) AS sws
 			FROM (
 					SELECT
 						DISTINCT lehreinheit_id, studiensemester_kurzbz, mitarbeiter_uid, lema.semesterstunden,

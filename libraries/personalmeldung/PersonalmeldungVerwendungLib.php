@@ -347,7 +347,7 @@ class PersonalmeldungVerwendungLib
 				$lehreObj->mitarbeiter_uid = $le->mitarbeiter_uid;
 				$lehreObj->verwendung_code = $verwendungCodesList['lehre'];
 				$lehreObj->von = $le->sem_start;
-				$lehreObj->bis = $le->sem_ende;
+				$lehreObj->bis = $le->sem_ende_verlaengert;
 				$verwendungCodes[] = $lehreObj;
 			}
 		}
@@ -498,19 +498,6 @@ class PersonalmeldungVerwendungLib
 					$verwendungArr[$idx]->bis = $verwendung->bis;
 					$foundVerw = true;
 					break;
-				}
-				// if it is "lehre gap" between two semesters, add days of gap to first Lehre Verwendung
-				elseif ($idx == count($verwendungArr) - 1 // previous lehre should be last element
-					&& in_array($verw->verwendung_code, $this->_ci->config->item('fhc_bis_verwendung_codes_lehre')) // both codes should be lehre
-					&& in_array($verwendung->verwendung_code, $this->_ci->config->item('fhc_bis_verwendung_codes_lehre'))
-					&& in_array($verw->bis, $this->_dateData['semesterEndDates']) // existing is end of semester, newly added is start of semester
-					&& in_array($verwendung->von, $this->_dateData['semesterStartDates'])
-					&& $verw->bis < $verwendung->von
-				)
-				{
-					// "extend" bis date of previous Verwendung
-					$newBis = clone $verwendung->von;
-					$verwendungArr[$idx]->bis = $newBis->modify('-1 day');
 				}
 			}
 		}

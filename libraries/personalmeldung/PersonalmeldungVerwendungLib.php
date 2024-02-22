@@ -161,13 +161,15 @@ class PersonalmeldungVerwendungLib
 
 		// get Verwendungen OE mappings
 		$oeVerwendungCodes = $this->_ci->config->item('fhc_bis_oe_verwendung_code_zuordnung');
+		$oeVerwendungCodesLowPrio = $this->_ci->config->item('fhc_bis_oe_verwendung_code_zuordnung_niederprio');
+		$allOeVerwendungCodes = array_merge($oeVerwendungCodes, $oeVerwendungCodesLowPrio);
 
 		// get Verwendungen vertragstyp mappings
-		$vertragstypVerwendungCodesHighPrio = $this->_ci->config->item('fhc_bis_vertragstyp_verwendung_code_zuordnung_hochprio');
+		$vertragstypVerwendungCodes = $this->_ci->config->item('fhc_bis_vertragstyp_verwendung_code_zuordnung');
 		$vertragstypVerwendungCodesLowPrio = $this->_ci->config->item('fhc_bis_vertragstyp_verwendung_code_zuordnung_niederprio');
 
 		// retrieve children for each OE
-		foreach ($oeVerwendungCodes as $oe_kurzbz => $verwendungCode)
+		foreach ($allOeVerwendungCodes as $oe_kurzbz => $verwendungCode)
 		{
 			$oeChildrenRes = $this->_ci->OrganisationseinheitModel->getChilds($oe_kurzbz, true);
 
@@ -215,6 +217,8 @@ class PersonalmeldungVerwendungLib
 
 		// get funktionen for the uids
 		$funktionVerwendungCodeZuordnung = $this->_ci->config->item('fhc_bis_funktion_verwendung_code_zuordnung');
+		$funktionVerwendungCodeZuordnungLowPrio = $this->_ci->config->item('fhc_bis_funktion_verwendung_code_zuordnung_niederprio');
+		$allFunktionVerwendungCodeZuordnung = array_merge($funktionVerwendungCodeZuordnung, $funktionVerwendungCodeZuordnungLowPrio);
 
 		$funktionVerwendungen = array();
 
@@ -222,7 +226,7 @@ class PersonalmeldungVerwendungLib
 		$funktionRes = $this->_ci->personalmeldungdataprovisionlib->getMitarbeiterFunktionData(
 			$bismeldungYear,
 			$uids,
-			array_keys($funktionVerwendungCodeZuordnung) // funktionen
+			array_keys($allFunktionVerwendungCodeZuordnung) // funktionen
 		);
 
 		if (isError($funktionRes)) return $funktionRes;
@@ -247,6 +251,7 @@ class PersonalmeldungVerwendungLib
 				$verwCodeObj->verwendung_code = $verwendung_code;
 				$verwCodeObj->von = $funktion->datum_von;
 				$verwCodeObj->bis = $funktion->datum_bis;
+				$verwCodeObj->lowPrio = in_array($funktion->funktion_kurzbz, array_keys($funktionVerwendungCodeZuordnungLowPrio));
 				$funktionVerwendungen[$funktion->uid][] = $verwCodeObj;
 			}
 		}
@@ -266,9 +271,10 @@ class PersonalmeldungVerwendungLib
 					{
 						$verwCodeObj = new StdClass();
 						$verwCodeObj->mitarbeiter_uid = $oeFunktion->uid;
-						$verwCodeObj->verwendung_code = $oeVerwendungCodes[$oe_kurzbz];
+						$verwCodeObj->verwendung_code = $allOeVerwendungCodes[$oe_kurzbz];
 						$verwCodeObj->von = $oeFunktion->datum_von;
 						$verwCodeObj->bis = $oeFunktion->datum_bis;
+						$verwCodeObj->lowPrio = in_array($oe_kurzbz, array_keys($oeVerwendungCodesLowPrio));
 						$funktionVerwendungen[$oeFunktion->uid][] = $verwCodeObj;
 						break;
 					}
@@ -282,15 +288,14 @@ class PersonalmeldungVerwendungLib
 			$uid = $dv->mitarbeiter_uid;
 
 			// skip if Vertragstyp of Dienstverhältnis is high Prio Verwendung code, then Verwendung has only one code
-			if (isset($vertragstypVerwendungCodesHighPrio[$dv->vertragsart_kurzbz]))
+			if (isset($vertragstypVerwendungCodes[$dv->vertragsart_kurzbz]))
 			{
 				$verwCodeObj = new StdClass();
 				$verwCodeObj->mitarbeiter_uid = $uid;
-				$verwCodeObj->verwendung_code = $vertragstypVerwendungCodesHighPrio[$dv->vertragsart_kurzbz];
+				$verwCodeObj->verwendung_code = $vertragstypVerwendungCodes[$dv->vertragsart_kurzbz];
 				$verwCodeObj->von = $dv->beginn_im_bismeldungsjahr;
 				$verwCodeObj->bis = $dv->ende_im_bismeldungsjahr;
 				$verwendungCodes[] = $verwCodeObj;
-				continue;
 			}
 
 			// add Funktion Verwendungen
@@ -298,6 +303,18 @@ class PersonalmeldungVerwendungLib
 			{
 				foreach ($funktionVerwendungen[$uid] as $idx => $verwendung)
 				{
+					// skip if low priority and there already is a Verwendung
+					if (
+						$verwendung->lowPrio
+						&& $this->_findVerwendungCodeObj(
+							$verwendungCodes,
+							$uid,
+							$verwendung->von,
+							$verwendung->bis
+						)
+					)
+					continue;
+
 					// if overlaps with Dienstverhältnis
 					if (($dv->beginn_im_bismeldungsjahr <= $verwendung->bis || is_null($verwendung->bis))
 						&& ($dv->ende_im_bismeldungsjahr >= $verwendung->von || is_null($verwendung->von)))
@@ -308,6 +325,7 @@ class PersonalmeldungVerwendungLib
 					}
 				}
 			}
+
 
 			// add low prio Dienstverhältnis Verwendungen
 			if (!$this->_findVerwendungCodeObj(
@@ -517,7 +535,10 @@ class PersonalmeldungVerwendungLib
 		$uid = $funktion->uid;
 
 		// get Verwendungen funktion mappings
-		$funktionVerwendungCodes = $this->_ci->config->item('fhc_bis_funktion_verwendung_code_zuordnung');
+		$funktionVerwendungCodes = array_merge(
+			$this->_ci->config->item('fhc_bis_funktion_verwendung_code_zuordnung'),
+			$this->_ci->config->item('fhc_bis_funktion_verwendung_code_zuordnung_niederprio')
+		);
 		$wanderfunktionen = $this->_ci->config->item('fhc_bis_wanderfunktionen');
 
 		$verwendung_code = $funktionVerwendungCodes[$funktion_kurzbz];
@@ -609,9 +630,12 @@ class PersonalmeldungVerwendungLib
 	{
 		foreach ($verwendungCodeObjArr as $verwendungCodeObj)
 		{
-			if ($verwendungCodeObj->mitarbeiter_uid == $mitarbeiter_uid
-				&& $verwendungCodeObj->von <= $bis
-				&& $verwendungCodeObj->bis >= $von)
+			if (
+				$verwendungCodeObj->mitarbeiter_uid == $mitarbeiter_uid
+				&& ($verwendungCodeObj->von <= $bis || is_null($bis))
+				&& ($verwendungCodeObj->bis >= $von || is_null($verwendungCodeObj->bis))
+				&& !(isset($verwendungCodeObj->lowPrio) && $verwendungCodeObj->lowPrio)
+			)
 			return true;
 		}
 		return false;

@@ -239,12 +239,12 @@ class PersonalmeldungDataProvisionLib
 				END AS ende_im_bismeldungsjahr,
 				CASE
 					WHEN (vtbs.von IS NULL OR vtbs.von < bis_datum.bis_start)
-					THEN bis_datum.bis_start
+					THEN GREATEST(bis_datum.bis_start, dv.von)
 					ELSE vtbs.von
 				END AS vertragsbestandteil_beginn_im_bismeldungsjahr,
 				CASE
 					WHEN (vtbs.bis IS NULL OR vtbs.bis > bis_datum.bis_ende)
-					THEN bis_datum.bis_ende
+					THEN LEAST(bis_datum.bis_ende, dv.bis)
 					ELSE vtbs.bis
 				END AS vertragsbestandteil_ende_im_bismeldungsjahr
 			FROM

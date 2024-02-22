@@ -81,17 +81,20 @@ $config['fhc_bis_verwendung_codes_non_lehre'] = array(
 
 $config['fhc_bis_oe_verwendung_code_zuordnung'] = array(
 	'atw' => $config['fhc_bis_verwendung_codes']['verwaltung'],		// Administration = Verwaltung
-	'gmbh' => $config['fhc_bis_verwendung_codes']['verwaltung'],		// Administration = Verwaltung
 	'Reinigung' => $config['fhc_bis_verwendung_codes']['wartung'],		// Wartung und Betrieb
 	'Haustechnik' => $config['fhc_bis_verwendung_codes']['wartung'],		// Wartung und Betrieb
-	'Bibliothek' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'],
-	'Auslandsbuero' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung']
+	'Bibliothek' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'], // professionelle Unterstützung der Studierenden in akademischen Belangen
+	'Auslandsbuero' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'] // professionelle Unterstützung der Studierenden in Gesundheits- und Sozialbelangen
+);
+
+$config['fhc_bis_oe_verwendung_code_zuordnung_niederprio'] = array(
+	'gmbh' => $config['fhc_bis_verwendung_codes']['verwaltung']
 );
 
 // if Verwendung is determined by Vertragsart. High prio: has priority over other criteria (like oe, funktion....)
-$config['fhc_bis_vertragstyp_verwendung_code_zuordnung_hochprio'] = array(
-	'werkvertrag' => $config['fhc_bis_verwendung_codes']['lehre'],
-	'externerlehrender' => $config['fhc_bis_verwendung_codes']['lehre']
+$config['fhc_bis_vertragstyp_verwendung_code_zuordnung'] = array(
+	'externerlehrender' => $config['fhc_bis_verwendung_codes']['lehre'],
+	'werkvertrag' => $config['fhc_bis_verwendung_codes']['lehre']
 );
 
 // if Verwendung is determined by Vertragsart. High prio: has no priority over other criteria (like oe, funktion....)
@@ -103,10 +106,13 @@ $config['fhc_bis_funktion_verwendung_code_zuordnung'] = array(
 	'laborant' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
 	'researchsenior' => $config['fhc_bis_verwendung_codes']['lehre'],
 	'researcherjunior' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
-	'studentischehilfskr' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
 	'Leitung' => $config['fhc_bis_verwendung_codes']['management'],
-	'ass' => $config['fhc_bis_verwendung_codes']['verwaltung'],
 	'praktikum' => $config['fhc_bis_verwendung_codes']['verwaltung']
+);
+
+$config['fhc_bis_funktion_verwendung_code_zuordnung_niederprio'] = array(
+	'studentischehilfskr' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit'],
+	'ass' => $config['fhc_bis_verwendung_codes']['verwaltung']
 );
 
 // Funktionen für Verwendung codes, die aufgrund von Änderungsbeschränkungen nur schrittweise geändert werden

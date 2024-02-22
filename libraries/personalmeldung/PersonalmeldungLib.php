@@ -497,7 +497,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			// for all start/end dates
 			for ($i = 0; $i < count($verwendungDates); $i++)
 			{
-				// skip first and last date
+				// skip first date, add Verwendung only for end dates
 				if ($i < 1 || $verwendungDates[$i]->startEndType != PersonalmeldungDate::END_TYPE) continue;
 
 				$dayDiff = $verwendungDates[$i]->diff($verwendungDates[$i-1])->days;
@@ -756,14 +756,12 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 					if ($isLehre)
 					{
-					//~ var_dump("VERTRAGSSTUNDEN IS LEHRE");
 						// if it's lehre and there is a paralell non-lehre Verwendung for the lehre (i.e. lehre_berechnungsbasis is set),
 						// replace old verwendung with calculated lehre
 						if (isset($lehreJvzaeAnteilig->lehre_berechnungsbasis)) $verwendungen[$idx] = $lehreJvzaeAnteilig;
 					}
 					else // non-lehre, subtract the paralell Lehre Verwendung
 					{
-					//~ var_dump("VERTRAGSSTUNDEN NON LEHRE, SUBTRACT PARALLEL LEHRE");
 						/**
 						 * Relativen Beschaeftigungsausmass der BIS-Verwendung berichtigen
 						 * (durch Abzug des eben erstellten relativen Beschaeftigungsausmass fuer Lehrtaetigkeiten)
@@ -801,8 +799,6 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				$pauschaleInStunden = $isStudentischeHilfskraft
 					? $this->_config['pauschale_studentische_hilfskraft']
 					: $this->_config['pauschale_sonstiges_dienstverhaeltnis'];
-				//~ var_dump("STUD HILFSKRAFT:");
-				//~ var_dump($isStudentischeHilfskraft);
 
 				// Kalkulatorische Umrechnung der Jahrespauschale
 				$vollzeitArbeitsstundenimJahr = $this->_config['vollzeit_arbeitsstunden'] * $this->_dateData['weeksInYear'];

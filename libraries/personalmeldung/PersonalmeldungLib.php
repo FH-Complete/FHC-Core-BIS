@@ -656,7 +656,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					if (!($pauschale && $hasOtherVertraege)) // not add sws if pauschale should be calculated
 					{
 						// add sws data to Verwendung (can be Lehre or non-Lehre Verwendung)
-						$verwendung->sws = $lehreVerwendungCode->sws;
+						$verwendung->sws = $lehreVerwendungCode->sws ?? 0;
 						$verwendung->sws_studiensemester_kurzbz = $lehreVerwendungCode->studiensemester_kurzbz;
 						$verwendung->tage_lehre_im_semester = 0;
 
@@ -687,12 +687,14 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					// if no verwendung code yet: "stand alone lehre" without Vertragsstunden
 					if (is_null($verwendung->verwendung_code))
 					{
+						//~ var_dump("STAND ALONE LEHRE");
 						$verwendung->verwendung_code = $lehreVerwendungCode->verwendung_code;
 						// "externe Lehre" -> calculate based on Einzelstundenbasis
 						$verwendung->lehre_berechnungsbasis = $this->_config['vollzeit_sws_einzelstundenbasis'];
 					}
 					elseif (!$isLehre)
 					{
+						//~ var_dump("PARALELL LEHRE");
 						// non-lehre verwendung exists -> paralell lehre, add new lehre object
 						$verwendung->lehre_berechnungsbasis = $this->_config['vollzeit_sws_inkludierte_lehre'];
 						$paralellVerwendung = clone $verwendung;
@@ -919,9 +921,8 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				 */
 				// calculate params for vzae
 				$lehreObj->beschaeftigungsausmass_relativ = $verwendung->sws / $verwendung->lehre_berechnungsbasis;
-				$lehreObj->gewichtung = ($verwendung->tage_lehre_im_semester == self::TAGE_LEHRE_IM_SEMESTER)
-					? $this->_config['halbjahres_gewichtung_sws']
-					: $this->_config['halbjahres_gewichtung_sws'] / ($this->_dateData['daysInYear'] / 2) * $verwendung->tage_lehre_im_semester;
+				$lehreObj->gewichtung =
+					$this->_config['halbjahres_gewichtung_sws'] / ($this->_dateData['daysInYear'] / 2) * $verwendung->tage_lehre_im_semester;
 				$lehreObj->jvzae_anteilig = $lehreObj->beschaeftigungsausmass_relativ * $lehreObj->gewichtung;
 		}
 

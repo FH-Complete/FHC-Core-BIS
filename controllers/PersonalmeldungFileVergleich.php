@@ -114,7 +114,7 @@ class PersonalmeldungFileVergleich extends Auth_Controller
 				$newVerwendungCodes = array_unique(array_column($newMa->verwendungen, 'verwendung_code'));
 
 				// get unknown Verwendungen
-				if (count($newVerwendungCodes) == 1 && is_null($newVerwendungCodes[0]))
+				if (in_array(null, $newVerwendungCodes))
 				{
 					$this->_messages['fehlender_verwendung_code'][] = $this->_getMsgObj(
 						"Fehlender Verwendung Code",

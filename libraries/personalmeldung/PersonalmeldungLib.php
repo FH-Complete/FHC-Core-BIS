@@ -1018,18 +1018,19 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				}
 			}
 
+			$studiengang_kz_padded = isset($studiengang->studiengang_kz)
+				? str_pad(intval($studiengang->studiengang_kz), 4, "0", STR_PAD_LEFT)
+				: null;
+
 			// Funktionsobjekt generieren
 			if (!is_null($funktionscode)		// Funktionscode vorhanden UND
 				&& (isEmptyArray($funktionArr)		// (Erster Durchlauf ODER
 				|| !$this->_funktionscodeExists($funktionscode, $funktionArr)))	// Funktionsobjekt mit diesem Funktionscode nicht vorhanden)
 			{
-				$studiengang_kz_padded = isset($studiengang->studiengang_kz)
-					? str_pad(intval($studiengang->studiengang_kz), 4, "0", STR_PAD_LEFT)
-					: null;
 				$funktionObj = new StdClass();
 				$funktionObj->funktionscode = $funktionscode;
 				$funktionObj->besondereQualifikationCode = null;
-				$funktionObj->studiengang = ($funktionscode == 5)
+				$funktionObj->studiengang = ($funktionscode == $this->_config['studiengangsleitungfunktion'])
 					? array($studiengang_kz_padded)		// STG bei Funktionscode 5 melden
 					: array();
 

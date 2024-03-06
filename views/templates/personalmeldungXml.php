@@ -7,6 +7,9 @@
 		<Person>
 			<PersonalNummer><?php echo $person->personalnummer ?></PersonalNummer>
 			<Geschlecht><?php echo $person->geschlecht ?></Geschlecht>
+<?php if ($person->geschlecht == 'x'): ?>
+				<GeschlechtX><?php echo $person->geschlechtX ?></GeschlechtX>
+<?php endif; ?>
 			<Geburtsjahr><?php echo $person->geburtsjahr ?></Geburtsjahr>
 			<StaatsangehoerigkeitCode><?php echo $person->staatsangehoerigkeit ?></StaatsangehoerigkeitCode>
 			<HoechsteAbgeschlosseneAusbildung><?php echo $person->hoechste_abgeschlossene_ausbildung ?></HoechsteAbgeschlosseneAusbildung>

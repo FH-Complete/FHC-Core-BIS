@@ -173,7 +173,7 @@ export const Verwendungen = {
 		}
 	},
 	template: `
-		<div id="content">
+		<div>
 			<header>
 				<h1 class="h2 fhc-hr">Personalmeldung Verwendungen</h1>
 			</header>

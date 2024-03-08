@@ -149,7 +149,7 @@ export const Hauptberuf = {
 		}
 	},
 	template: `
-		<div id="content">
+		<div>
 			<header>
 				<h1 class="h2 fhc-hr">Personalmeldung Hauptberufe</h1>
 			</header>

@@ -31,9 +31,23 @@ export const Hauptberuf = {
 		HauptberufModal
 	},
 	mixins: [PersonalmeldungDates],
+        props: {
+            modelValue: Object
+        },
 	data: function() {
 		return {
 			studiensemester_kurzbz: null,
+                        hauptberufTabulatorEvents: [{
+                            event: "rowClick",
+                            handler: (e, row) => {
+
+				// exclude other clicked elements like buttons, icons...
+				if (e.target.nodeName != 'DIV') return;
+
+				// open modal for editing
+				this.openModal(row.getData());
+                            }
+                        }],
 			hauptberufTabulatorOptions: {
 				index: 'bis_hauptberuf_id',
 				maxHeight: "100%",
@@ -93,21 +107,7 @@ export const Hauptberuf = {
 			}
 		};
 	},
-	mounted() {
-		this.setTabulatorEvents();
-	},
 	methods: {
-		setTabulatorEvents() {
-			// row click event (showing Hauptberuf details)
-			this.$refs.hauptberufTable.tabulator.on("rowClick", (e, row) => {
-
-				// exclude other clicked elements like buttons, icons...
-				if (e.target.nodeName != 'DIV') return;
-
-				// open modal for editing
-				this.openModal(row.getData());
-			});
-		},
 		openModal(data) {
 			this.$refs.hauptberufModal.openHauptberufModal(data);
 		},
@@ -167,6 +167,7 @@ export const Hauptberuf = {
 						ref="hauptberufTable"
 						:side-menu="false"
 						:tabulator-options="hauptberufTabulatorOptions"
+                                                :tabulator-events="hauptberufTabulatorEvents"
 						:table-only="true"
 						:new-btn-label="'Hauptberuf'"
 						:new-btn-show="true"
@@ -185,3 +186,5 @@ export const Hauptberuf = {
 			<fhc-loader ref="loader"></fhc-loader>
 		</div>`
 };
+
+export default Hauptberuf;

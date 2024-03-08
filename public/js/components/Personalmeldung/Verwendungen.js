@@ -33,9 +33,23 @@ export const Verwendungen = {
 		UpdateVerwendungModal
 	},
 	mixins: [PersonalmeldungDates],
+        props: {
+            modelValue: Object
+        },
 	data: function() {
 		return {
 			studiensemester_kurzbz: null,
+                        verwendungenTabulatorEvents: [{
+                            event: "rowClick",
+                            handler: (e, row) => {
+
+				// exclude other clicked elements like buttons, icons...
+				if (e.target.nodeName != 'DIV') return;
+
+				// open modal for editing
+				this.openUpdateModal(row.getData());
+                            }
+                        }],
 			verwendungenTabulatorOptions: {
 				index: 'bis_verwendung_id',
 				maxHeight: "100%",
@@ -94,21 +108,7 @@ export const Verwendungen = {
 			}
 		};
 	},
-	mounted() {
-		this.setTabulatorEvents();
-	},
 	methods: {
-		setTabulatorEvents() {
-			// row click event (showing verwendung details)
-			this.$refs.verwendungTable.tabulator.on("rowClick", (e, row) => {
-
-				// exclude other clicked elements like buttons, icons...
-				if (e.target.nodeName != 'DIV') return;
-
-				// open modal for editing
-				this.openUpdateModal(row.getData());
-			});
-		},
 		openNewModal() {
 			this.$refs.newVerwendungModal.openVerwendungModal();
 		},
@@ -203,6 +203,7 @@ export const Verwendungen = {
 						ref="verwendungTable"
 						:side-menu="false"
 						:tabulator-options="verwendungenTabulatorOptions"
+                                                :tabulator-events="verwendungenTabulatorEvents"
 						:table-only="true"
 						:new-btn-label="'Verwendung'"
 						:new-btn-show="true"
@@ -227,3 +228,5 @@ export const Verwendungen = {
 			<fhc-loader ref="loader"></fhc-loader>
 		</div>`
 };
+
+export default Verwendungen;

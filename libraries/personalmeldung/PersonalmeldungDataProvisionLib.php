@@ -111,8 +111,7 @@ class PersonalmeldungDataProvisionLib
 				AND (dv.bis IS NULL OR dv.bis >= make_date(substring(? from 3 for 4)::INTEGER - 1, 1, 1))
 				AND (
 					ma.mitarbeiter_uid ILIKE '%".$this->_dbModel->escapeLike($mitarbeiter_uid_searchtext)."%'
-					OR pers.vorname ILIKE '%".$this->_dbModel->escapeLike($mitarbeiter_uid_searchtext)."%'
-					OR pers.nachname ILIKE '%".$this->_dbModel->escapeLike($mitarbeiter_uid_searchtext)."%'
+					OR pers.vorname || ' ' || pers.nachname || ' ' || pers.vorname ILIKE '%".$this->_dbModel->escapeLike($mitarbeiter_uid_searchtext)."%'
 				)
 			ORDER BY mitarbeiter_uid";
 

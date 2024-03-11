@@ -326,7 +326,6 @@ class PersonalmeldungVerwendungLib
 				}
 			}
 
-
 			// add low prio Dienstverhältnis Verwendungen
 			if (!$this->_findVerwendungCodeObj(
 				$verwendungCodes,

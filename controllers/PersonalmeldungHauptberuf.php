@@ -16,6 +16,7 @@ class PersonalmeldungHauptberuf extends Auth_Controller
 			array(
 				'index' => 'admin:r',
 				'getHauptberufe' => 'admin:r',
+				'getHauptberufeByUid' => 'admin:r',
 				'getHauptberufcodeList' => 'admin:r',
 				'addHauptberuf' => 'admin:rw',
 				'updateHauptberuf' => 'admin:rw',
@@ -73,6 +74,29 @@ class PersonalmeldungHauptberuf extends Auth_Controller
 		$bismeldungYear = $dateData['bismeldungYear'];
 
 		$hauptberufeRes = $this->BisHauptberufModel->getByYear($bismeldungYear);
+
+		if (isError($hauptberufeRes)) $this->terminateWithJsonError(getError($hauptberufeRes));
+
+		if (hasData($hauptberufeRes)) $hauptberufe = getData($hauptberufeRes);
+
+		$this->outputJsonSuccess(
+			array(
+				'hauptberufe' => $hauptberufe
+			)
+		);
+	}
+	/**
+
+	 * Gets Hauptberuf data
+	 */
+	public function getHauptberufeByUid()
+	{
+		$mitarbeiter_uid = $this->input->get('mitarbeiter_uid');
+		if (isEmptyString($mitarbeiter_uid)) $this->terminateWithJsonError('Ungültige Uid');
+
+		$hauptberufe = array();
+
+		$hauptberufeRes = $this->BisHauptberufModel->getByUid($mitarbeiter_uid);
 
 		if (isError($hauptberufeRes)) $this->terminateWithJsonError(getError($hauptberufeRes));
 
@@ -191,7 +215,7 @@ class PersonalmeldungHauptberuf extends Auth_Controller
 
 		$von = isset($data['von']) && !isEmptyString($data['von']) ? $data['von'] : null;
 		$bis = isset($data['bis']) && !isEmptyString($data['bis']) ? $data['bis'] : null;
-		if (isset($von) && isset($bis) && new DateTime($von) >= new DateTime($bis)) $errorTexts[] = 'Von Datum größer als Bis Datum';
+		if (isset($von) && isset($bis) && new DateTime($von) > new DateTime($bis)) $errorTexts[] = 'Von Datum größer als Bis Datum';
 
 		$bis_hauptberuf_id = isset($data['bis_hauptberuf_id']) ? $data['bis_hauptberuf_id'] : null;
 

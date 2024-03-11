@@ -16,6 +16,7 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 			array(
 				'index' => 'admin:r',
 				'getVerwendungen' => 'admin:r',
+				'getVerwendungenByUid' => 'admin:r',
 				'getMitarbeiterUids' => 'admin:r',
 				'getVerwendungList' => 'admin:r',
 				'getFullVerwendungList' => 'admin:r',
@@ -78,6 +79,29 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 		$bismeldungYear = $dateData['bismeldungYear'];
 
 		$verwendungenRes = $this->BisVerwendungModel->getByYear($bismeldungYear);
+
+		if (isError($verwendungenRes)) $this->terminateWithJsonError(getError($verwendungenRes));
+
+		if (hasData($verwendungenRes)) $verwendungen = getData($verwendungenRes);
+
+		$this->outputJsonSuccess(
+			array(
+				'verwendungen' => $verwendungen
+			)
+		);
+	}
+
+	/**
+	 * Gets Verwendungen data
+	 */
+	public function getVerwendungenByUid()
+	{
+		$mitarbeiter_uid = $this->input->get('mitarbeiter_uid');
+		if (isEmptyString($mitarbeiter_uid)) $this->terminateWithJsonError('Ungültige Uid');
+
+		$verwendungen = array();
+
+		$verwendungenRes = $this->BisVerwendungModel->getByUid($mitarbeiter_uid);
 
 		if (isError($verwendungenRes)) $this->terminateWithJsonError(getError($verwendungenRes));
 
@@ -281,7 +305,7 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 	}
 
 	/**
-	 * Saves ("refreshed") Verwendung codes for a semester.
+	 * Saves ("refreshes") Verwendung codes for a semester.
 	 */
 	public function generateVerwendungen()
 	{

@@ -33,23 +33,26 @@ export const Verwendungen = {
 		UpdateVerwendungModal
 	},
 	mixins: [PersonalmeldungDates],
-        props: {
-            modelValue: Object
-        },
+	props: {
+		modelValue: {
+			type: Object,
+			default: null
+		}
+	},
 	data: function() {
 		return {
 			studiensemester_kurzbz: null,
-                        verwendungenTabulatorEvents: [{
-                            event: "rowClick",
-                            handler: (e, row) => {
+			verwendungenTabulatorEvents: [{
+				event: "rowClick",
+				handler: (e, row) => {
 
-				// exclude other clicked elements like buttons, icons...
-				if (e.target.nodeName != 'DIV') return;
+					// exclude other clicked elements like buttons, icons...
+					if (e.target.nodeName != 'DIV') return;
 
-				// open modal for editing
-				this.openUpdateModal(row.getData());
-                            }
-                        }],
+					// open modal for editing
+					this.openUpdateModal(row.getData());
+				}
+			}],
 			verwendungenTabulatorOptions: {
 				index: 'bis_verwendung_id',
 				maxHeight: "100%",
@@ -108,6 +111,9 @@ export const Verwendungen = {
 			}
 		};
 	},
+	mounted() {
+		this.getVerwendungen();
+	},
 	methods: {
 		openNewModal() {
 			this.$refs.newVerwendungModal.openVerwendungModal();
@@ -119,16 +125,34 @@ export const Verwendungen = {
 		 * get Verwendungen
 		 */
 		getVerwendungen() {
-			// show loading
+			let successCallback = (data) => {
+				// set the employee data
+				this.$refs.verwendungTable.tabulator.setData(data.verwendungen);
+				// hide loading
+				this.$refs.loader.hide();
+			};
+
+			if (this.studiensemester_kurzbz != null)
+			{
+				this.getAllVerwendungen(successCallback);
+			}
+			else if(this.modelValue != null && this.modelValue.personUID)
+			{
+				this.getVerwendungenByUid(successCallback);
+			}
+		 },
+		getAllVerwendungen(successCallback) {
 			this.$refs.loader.show();
 			PersonalmeldungAPIs.getVerwendungen(
 				this.studiensemester_kurzbz,
-				(data) => {
-					// set the employee data
-					this.$refs.verwendungTable.tabulator.setData(data.verwendungen);
-					// hide loading
-					this.$refs.loader.hide();
-				}
+				successCallback
+			);
+		},
+		getVerwendungenByUid(successCallback) {
+			this.$refs.loader.show();
+			PersonalmeldungAPIs.getVerwendungenByUid(
+				this.modelValue.personUID,
+				successCallback
 			);
 		},
 		deleteVerwendung(bis_verwendung_id) {
@@ -161,7 +185,7 @@ export const Verwendungen = {
 		setSemester(studiensemester_kurzbz) {
 			this.studiensemester_kurzbz = studiensemester_kurzbz;
 			// get Verwendungen after semester has been set
-			//this.getVerwendungen();
+			this.getVerwendungen();
 		},
 		handleVerwendungAdded() {
 			this.$refs.newVerwendungModal.hide();
@@ -178,7 +202,7 @@ export const Verwendungen = {
 				<h1 class="h2 fhc-hr">Personalmeldung Verwendungen</h1>
 			</header>
 			<!-- input fields -->
-			<div class="row">
+			<div class="row" v-if="modelValue == null || !modelValue.personUID">
 				<div class="col-7">
 					<studiensemester @passSemester="setSemester"></studiensemester>
 				</div>
@@ -203,7 +227,7 @@ export const Verwendungen = {
 						ref="verwendungTable"
 						:side-menu="false"
 						:tabulator-options="verwendungenTabulatorOptions"
-                                                :tabulator-events="verwendungenTabulatorEvents"
+						:tabulator-events="verwendungenTabulatorEvents"
 						:table-only="true"
 						:new-btn-label="'Verwendung'"
 						:new-btn-show="true"
@@ -217,6 +241,7 @@ export const Verwendungen = {
 				ref="newVerwendungModal"
 				dialog-class="modal-xl"
 				:studiensemester_kurzbz="studiensemester_kurzbz"
+				:mitarbeiter="modelValue"
 				@verwendung-added="handleVerwendungAdded">
 			</new-verwendung-modal>
 			<update-verwendung-modal

@@ -13,7 +13,8 @@ export default {
 		BsModal
 	],
 	props: {
-		studiensemester_kurzbz: String
+		studiensemester_kurzbz: String,
+		mitarbeiter: Object
 	},
 	data: function() {
 		return {
@@ -46,6 +47,7 @@ export default {
 				<new-verwendung-form
 					ref="verwendungFormCmpt"
 					:studiensemester_kurzbz="studiensemester_kurzbz"
+					:mitarbeiter="mitarbeiter"
 					@verwendung-added="handleVerwendungFormAdded">
 				</new-verwendung-form>
 			</template>

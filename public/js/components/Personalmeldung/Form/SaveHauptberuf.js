@@ -11,7 +11,8 @@ export const HauptberufForm = {
 		"datepicker": VueDatePicker
 	},
 	props: {
-		studiensemester_kurzbz: String
+		studiensemester_kurzbz: String,
+		mitarbeiter: Object
 	},
 	data() {
 		return {
@@ -26,6 +27,7 @@ export const HauptberufForm = {
 	computed: {
 		fullHauptberuf() {
 			if (this.hauptberuf.hauptberuflich === true) this.hauptberuf.hauptberufcode = null;
+			if (this.mitarbeiter != null) this.hauptberuf.mitarbeiter_uid = this.mitarbeiter.personUID;
 			return this.hauptberuf;
 		}
 	},
@@ -39,7 +41,7 @@ export const HauptberufForm = {
 			if (hauptberuf.hasOwnProperty('mitarbeiter_uid'))
 			{
 				this.hauptberuf = JSON.parse(JSON.stringify(hauptberuf)); // deep copy
-				this.$refs.uids.prefill(hauptberuf);
+				if (this.$refs.uids) this.$refs.uids.prefill(hauptberuf);
 			}
 		},
 		save() {
@@ -78,7 +80,7 @@ export const HauptberufForm = {
 				hauptberuflich: true,
 				hauptberufcode: 0
 			};
-			this.$refs.uids.reset();
+			if (this.$refs.uids) this.$refs.uids.reset();
 			this.resetError();
 		},
 		resetError() {
@@ -93,7 +95,7 @@ export const HauptberufForm = {
 		</div>
 		<br />
 		<form ref="saveHauptberufForm" class="row gy-3">
-				<div class="col-12">
+				<div class="col-12" v-if="mitarbeiter == null">
 					<uids
 						ref="uids"
 						:studiensemester_kurzbz="studiensemester_kurzbz"

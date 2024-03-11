@@ -93,4 +93,40 @@ class BisHauptberuf_model extends DB_Model
 			$params
 		);
 	}
+
+	/**
+	 * Gets all Hauptberufe for a certain person.
+	 * @param $bismeldungYear
+	 * @return object success or error
+	 */
+	public function getByUid($mitarbeiter_uid)
+	{
+		$params = array($mitarbeiter_uid);
+
+		$qry = '
+			SELECT
+				hb.bis_hauptberuf_id,
+				hb.mitarbeiter_uid,
+				hb.hauptberuflich,
+				hb.hauptberufcode,
+				hb.von,
+				hb.bis,
+				codes.bezeichnung,
+				pers.vorname,
+				pers.nachname
+			FROM
+				extension.tbl_bis_hauptberuf hb
+				JOIN public.tbl_benutzer ben ON hb.mitarbeiter_uid = ben.uid
+				JOIN public.tbl_person pers ON ben.person_id = pers.person_id
+				LEFT JOIN bis.tbl_hauptberuf codes USING (hauptberufcode)
+			WHERE
+				hb.mitarbeiter_uid = ?
+			ORDER BY
+				hb.mitarbeiter_uid, hb.bis DESC';
+
+		return $this->execQuery(
+			$qry,
+			$params
+		);
+	}
 }

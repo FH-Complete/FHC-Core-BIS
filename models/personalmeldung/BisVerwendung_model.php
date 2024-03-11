@@ -13,8 +13,8 @@ class BisVerwendung_model extends DB_Model
 	}
 
 	/**
-	 *
-	 * @param
+	 * Gets all Verwendungen for a certain year.
+	 * @param $bismeldungYear
 	 * @return object success or error
 	 */
 	public function getByYear($bismeldungYear)
@@ -42,6 +42,42 @@ class BisVerwendung_model extends DB_Model
 				AND (bisverw.bis IS NULL OR bisverw.bis >= make_date(?::INTEGER, 1, 1))
 			ORDER BY
 				bisverw.mitarbeiter_uid, bisverw.bis DESC';
+
+		return $this->execQuery(
+			$qry,
+			$params
+		);
+	}
+
+	/**
+	 * Gets all Verwendungen for a certain person.
+	 * @param $bismeldungYear
+	 * @return object success or error
+	 */
+	public function getByUid($mitarbeiter_uid)
+	{
+		$params = array($mitarbeiter_uid);
+
+		$qry = '
+			SELECT
+				bisverw.bis_verwendung_id,
+				bisverw.mitarbeiter_uid,
+				bisverw.verwendung_code,
+				bisverw.von,
+				bisverw.bis,
+				codes.verwendungbez,
+				bisverw.manuell,
+				pers.vorname,
+				pers.nachname
+			FROM
+				extension.tbl_bis_verwendung bisverw
+				JOIN bis.tbl_verwendung codes USING (verwendung_code)
+				JOIN public.tbl_benutzer ben ON bisverw.mitarbeiter_uid = ben.uid
+				JOIN public.tbl_person pers ON ben.person_id = pers.person_id
+			WHERE
+				bisverw.mitarbeiter_uid = ?
+			ORDER BY
+				bisverw.bis DESC';
 
 		return $this->execQuery(
 			$qry,

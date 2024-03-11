@@ -13,7 +13,8 @@ export default {
 		BsModal
 	],
 	props: {
-		studiensemester_kurzbz: String
+		studiensemester_kurzbz: String,
+		mitarbeiter: Object
 	},
 	data: function() {
 		return {
@@ -52,6 +53,7 @@ export default {
 				<hauptberuf-form
 					ref="hauptberufFormCmpt"
 					:studiensemester_kurzbz="studiensemester_kurzbz"
+					:mitarbeiter="mitarbeiter"
 					@hauptberuf-saved="handleHauptberufFormSaved">
 				</hauptberuf-form>
 			</template>

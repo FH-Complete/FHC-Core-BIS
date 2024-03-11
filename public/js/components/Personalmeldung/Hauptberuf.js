@@ -31,23 +31,24 @@ export const Hauptberuf = {
 		HauptberufModal
 	},
 	mixins: [PersonalmeldungDates],
-        props: {
-            modelValue: Object
-        },
+	props: {
+		modelValue: Object,
+		default: null
+	},
 	data: function() {
 		return {
 			studiensemester_kurzbz: null,
-                        hauptberufTabulatorEvents: [{
-                            event: "rowClick",
-                            handler: (e, row) => {
+			hauptberufTabulatorEvents: [{
+				event: "rowClick",
+				handler: (e, row) => {
 
-				// exclude other clicked elements like buttons, icons...
-				if (e.target.nodeName != 'DIV') return;
+					// exclude other clicked elements like buttons, icons...
+					if (e.target.nodeName != 'DIV') return;
 
-				// open modal for editing
-				this.openModal(row.getData());
-                            }
-                        }],
+					// open modal for editing
+					this.openModal(row.getData());
+				}
+			}],
 			hauptberufTabulatorOptions: {
 				index: 'bis_hauptberuf_id',
 				maxHeight: "100%",
@@ -107,21 +108,42 @@ export const Hauptberuf = {
 			}
 		};
 	},
+	mounted() {
+		this.getHauptberufe();
+	},
 	methods: {
 		openModal(data) {
 			this.$refs.hauptberufModal.openHauptberufModal(data);
 		},
 		getHauptberufe() {
-			// show loading
+			let successCallback = (data) => {
+				// set the employee data
+				this.$refs.hauptberufTable.tabulator.setData(data.hauptberufe);
+				// hide loading
+				this.$refs.loader.hide();
+			};
+
+			if (this.studiensemester_kurzbz != null)
+			{
+				this.getAllHauptberufe(successCallback);
+			}
+			else if(this.modelValue != null && this.modelValue.personUID)
+			{
+				this.getHauptberufeByUid(successCallback);
+			}
+		 },
+		getAllHauptberufe(successCallback) {
 			this.$refs.loader.show();
 			PersonalmeldungAPIs.getHauptberufe(
 				this.studiensemester_kurzbz,
-				(data) => {
-					// set the employee data
-					this.$refs.hauptberufTable.tabulator.setData(data.hauptberufe);
-					// hide loading
-					this.$refs.loader.hide();
-				}
+				successCallback
+			);
+		},
+		getHauptberufeByUid(successCallback) {
+			this.$refs.loader.show();
+			PersonalmeldungAPIs.getHauptberufeByUid(
+				this.modelValue.personUID,
+				successCallback
 			);
 		},
 		deleteHauptberuf(bis_hauptberuf_id) {
@@ -154,7 +176,7 @@ export const Hauptberuf = {
 				<h1 class="h2 fhc-hr">Personalmeldung Hauptberufe</h1>
 			</header>
 			<!-- input fields -->
-			<div class="row">
+			<div class="row" v-if="modelValue == null || !modelValue.personUID">
 				<div class="col-12">
 					<studiensemester @passSemester="setSemester"></studiensemester>
 				</div>
@@ -167,7 +189,7 @@ export const Hauptberuf = {
 						ref="hauptberufTable"
 						:side-menu="false"
 						:tabulator-options="hauptberufTabulatorOptions"
-                                                :tabulator-events="hauptberufTabulatorEvents"
+						:tabulator-events="hauptberufTabulatorEvents"
 						:table-only="true"
 						:new-btn-label="'Hauptberuf'"
 						:new-btn-show="true"
@@ -181,6 +203,7 @@ export const Hauptberuf = {
 				ref="hauptberufModal"
 				dialog-class="modal-xl"
 				:studiensemester_kurzbz="studiensemester_kurzbz"
+				:mitarbeiter="modelValue"
 				@hauptberuf-saved="handleHauptberufSaved">
 			</hauptberuf-modal>
 			<fhc-loader ref="loader"></fhc-loader>

@@ -11,7 +11,8 @@ export const NewVerwendungForm = {
 		"datepicker": VueDatePicker
 	},
 	props: {
-		studiensemester_kurzbz: String
+		studiensemester_kurzbz: String,
+		mitarbeiter: Object
 	},
 	data() {
 		return {
@@ -22,30 +23,23 @@ export const NewVerwendungForm = {
 			errorText: null
 		}
 	},
+	computed: {
+		fullVerwendung() { // the Verwendung to add
+			if (this.mitarbeiter != null) this.verwendung.mitarbeiter_uid = this.mitarbeiter.personUID;
+			return this.verwendung;
+		}
+	},
 	methods: {
-		prefill(verwendung_code) {
+		prefill() {
 			PersonalmeldungAPIs.getFullVerwendungList(
 				(data) => {
 					this.verwendungList = data.verwendungList;
 				}
 			);
 		},
-		getMitarbeiterUids(event) {
-			PersonalmeldungAPIs.getMitarbeiterUids(
-				this.studiensemester_kurzbz,
-				event.query,
-				(data) => {
-					for (let mitarbeiter of data.mitarbeiterUids) {
-						// set Bezeichnung for autocomplete option text
-						mitarbeiter.bezeichnung = mitarbeiter.mitarbeiter_uid + " - " + mitarbeiter.vorname + " " + mitarbeiter.nachname;
-					}
-					this.mitarbeiterUids = data.mitarbeiterUids;
-				}
-			);
-		},
 		add() {
 			PersonalmeldungAPIs.addVerwendung(
-				this.verwendung,
+				this.fullVerwendung,
 				(data) => {
 					this.$emit('verwendungAdded');
 					this.reset();
@@ -62,7 +56,7 @@ export const NewVerwendungForm = {
 			this.verwendung = {
 				verwendung_code: 1
 			};
-			this.$refs.uids.reset();
+			if (this.$refs.uids) this.$refs.uids.reset();
 			this.resetError();
 		},
 		resetError() {
@@ -77,14 +71,14 @@ export const NewVerwendungForm = {
 		</div>
 		<br />
 		<form ref="newVerwendungForm" class="row gy-3">
-			<div class="col-6">
+			<div class="col-6" v-if="mitarbeiter == null">
 				<uids
 					ref="uids"
 					:studiensemester_kurzbz="studiensemester_kurzbz"
 					@passUid="setMitarbeiterUid">
 				</uids>
 			</div>
-			<div class="col-6">
+			<div v-bind:class="mitarbeiter == null ? 'col-6' : 'col-12'">
 				<label class="form-label" for="verwendung_code">Verwendung</label>
 				<select
 					class="form-select"

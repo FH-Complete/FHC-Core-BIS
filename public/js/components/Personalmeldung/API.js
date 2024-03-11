@@ -17,7 +17,7 @@
 
 import {CoreRESTClient} from '../../../../../js/RESTClient.js';
 
-const PERSONALMELDUNG_TIMEOUT = 4000;
+const PERSONALMELDUNG_TIMEOUT = 5000;
 
 /**
  *
@@ -117,6 +117,28 @@ export const PersonalmeldungAPIs = {
 			}
 		);
 	},
+	getVerwendungenByUid: function(mitarbeiter_uid, successCallback) {
+		return CoreRESTClient.get(
+			'extensions/FHC-Core-BIS/PersonalmeldungVerwendungen/getVerwendungenByUid',
+			{
+				mitarbeiter_uid: mitarbeiter_uid
+			},
+			{
+				timeout: PERSONALMELDUNG_TIMEOUT
+			}
+		).then(
+			result => {
+				if (CoreRESTClient.hasData(result.data))
+				{
+					successCallback(CoreRESTClient.getData(result.data));
+				}
+			}
+		).catch(
+			error => {
+				alert('Fehler beim Holen der Verwendungen: ' + error.message);
+			}
+		);
+	},
 	addVerwendung: function(data, successCallback, errorCallback) {
 		return CoreRESTClient.post(
 			'extensions/FHC-Core-BIS/PersonalmeldungVerwendungen/addVerwendung',
@@ -194,29 +216,6 @@ export const PersonalmeldungAPIs = {
 			}
 		);
 	},
-	getMitarbeiterUids: function(studiensemester_kurzbz, mitarbeiter_uid_searchtext, successCallback) {
-		return CoreRESTClient.get(
-			'extensions/FHC-Core-BIS/PersonalmeldungVerwendungen/getMitarbeiterUids',
-			{
-				studiensemester_kurzbz: studiensemester_kurzbz,
-				mitarbeiter_uid_searchtext: mitarbeiter_uid_searchtext
-			},
-			{
-				timeout: PERSONALMELDUNG_TIMEOUT
-			}
-		).then(
-			result => {
-				if (CoreRESTClient.hasData(result.data))
-				{
-					successCallback(CoreRESTClient.getData(result.data));
-				}
-			}
-		).catch(
-			error => {
-				alert('Fehler beim Holen der Mitarbeiter Uids: ' + error.message);
-			}
-		);
-	},
 	getVerwendungList: function(verwendung_code, successCallback) {
 		return CoreRESTClient.get(
 			'extensions/FHC-Core-BIS/PersonalmeldungVerwendungen/getVerwendungList',
@@ -281,6 +280,28 @@ export const PersonalmeldungAPIs = {
 		).catch(
 			error => {
 				alert('Fehler beim Holen der Hauptberufe: ' + error.message);
+			}
+		);
+	},
+	getHauptberufeByUid: function(mitarbeiter_uid, successCallback) {
+		return CoreRESTClient.get(
+			'extensions/FHC-Core-BIS/PersonalmeldungHauptberuf/getHauptberufeByUid',
+			{
+				mitarbeiter_uid: mitarbeiter_uid
+			},
+			{
+				timeout: PERSONALMELDUNG_TIMEOUT
+			}
+		).then(
+			result => {
+				if (CoreRESTClient.hasData(result.data))
+				{
+					successCallback(CoreRESTClient.getData(result.data));
+				}
+			}
+		).catch(
+			error => {
+				alert('Fehler beim Holen der Verwendungen: ' + error.message);
 			}
 		);
 	},

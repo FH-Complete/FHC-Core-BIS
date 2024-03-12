@@ -428,6 +428,7 @@ class PersonalmeldungDataProvisionLib
 		}
 
 		$qry .= ") tbl_semesterstunden
+			 WHERE semesterstunden > 0
 			GROUP BY mitarbeiter_uid, studiensemester_kurzbz, sem_start, sem_ende
 			ORDER BY sem_start";
 

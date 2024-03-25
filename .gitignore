@@ -1,3 +1,4 @@
 config/BISClient.php
 config/BISSync.php
+config/Personalmeldung.php
 .idea

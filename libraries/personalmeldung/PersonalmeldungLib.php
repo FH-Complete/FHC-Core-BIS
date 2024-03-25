@@ -24,6 +24,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		'pauschale_sonstiges_dienstverhaeltnis' => null,
 		'funktionscodes' => array(),
 		'leitungsfunktionen' => array(),
+		'entwicklungsteamfunktioncode' => null,
 		'studiengangsleitungfunktion' => null,
 		'exclude_leitung_organisationseinheitstypen' => array(),
 		'beschaeftigungsart2_codes' => array(),
@@ -53,6 +54,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		$this->_ci->load->model('person/Benutzerfunktion_model', 'BenutzerfunktionModel');
 		$this->_ci->load->model('organisation/Studiengang_model', 'StudiengangModel');
 		$this->_ci->load->model('organisation/Organisationseinheit_model', 'OrganisationseinheitModel');
+		$this->_ci->load->model('codex/Entwicklungsteam_model', 'EntwicklungsteamModel');
 
 		$this->_dbModel = new DB_Model(); // get db
 
@@ -163,6 +165,17 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			if (isError($benutzerfunktionRes)) return $benutzerfunktionRes;
 			$benutzerfunktionen = hasData($benutzerfunktionRes) ? $this->_splitByProperty(getData($benutzerfunktionRes), 'uid') : array();
 
+			$entwicklungsteamfunktionRes = $this->_ci->personalmeldungdataprovisionlib->getEntwicklungsteamData(
+				$this->_dateData['bismeldungYear'],
+				$uids
+			);
+
+			if (isError($entwicklungsteamfunktionRes)) return $entwicklungsteamfunktionRes;
+
+			$entwicklungsteamfunktionen = hasData($entwicklungsteamfunktionRes)
+				? $this->_splitByProperty(getData($entwicklungsteamfunktionRes), 'mitarbeiter_uid')
+				: array();
+
 			// get Semesterwochenstunden for each Studiengang
 			$swsProStgRes = $this->_ci->personalmeldungdataprovisionlib->getSemesterwochenstundenGroupByStudiengang(
 				$this->_dateData['yearStart']->format('Y-m-d'),
@@ -211,9 +224,13 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				// Add Verwendungen to person object
 				$personObj->verwendungen = $verwendungenMa;
 
-				//~ // Add Funktionen to person object
+				// Add Funktionen to person object
 				$funktionenMa = $benutzerfunktionen[$ma->uid] ?? array();
 				$personObj->funktionen = $this->_getFunktionen($funktionenMa);
+
+				// Add Entwicklungsteam Funktionen to person object
+				$entwicklungsteamfunktionenMa = $entwicklungsteamfunktionen[$ma->uid] ?? array();
+				$personObj->funktionen = array_merge($personObj->funktionen, $this->_getEntwicklungsteamFunktionen($entwicklungsteamfunktionenMa));
 
 				// Add Lehre to person object
 				// Alle Semesterwochenstunden, summiert nach STG und Studiensemester
@@ -239,7 +256,8 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		$configFunktionCodes = array_merge(
 			$this->_config['funktionscodes'],
 			$this->_config['leitungsfunktionen'],
-			$studiengangsleitungfunktion
+			$studiengangsleitungfunktion,
+			array('Entwicklungsteam' => $this->_config['entwicklungsteamfunktioncode'])
 		);
 
 		$identifierForUnknown = 'unknown';
@@ -1019,9 +1037,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				}
 			}
 
-			$studiengang_kz_padded = isset($studiengang->studiengang_kz)
-				? str_pad(intval($studiengang->studiengang_kz), 4, "0", STR_PAD_LEFT)
-				: null;
+			$studiengang_kz_padded = $this->_padStudiengangKz($studiengang->studiengang_kz ?? null);
 
 			// Funktionsobjekt generieren
 			if (!is_null($funktionscode)		// Funktionscode vorhanden UND
@@ -1046,6 +1062,61 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 				$funktionObjArr[0]->studiengang[] = $studiengang_kz_padded;	// STG ergaenzen
 			}
+		}
+
+		return $funktionArr;
+	}
+
+	/**
+	 * Get Entwicklungsteam funktion objects.
+	 * @param $entwicklungsteamfunktionenArr Entwicklungsteamfunktionen
+	 * @return object success or error
+	 */
+	private function _getEntwicklungsteamFunktionen($entwicklungsteamfunktionenArr)
+	{
+		$funktionArr = array();
+
+		if (isEmptyArray($entwicklungsteamfunktionenArr))
+		{
+			// Lehrgaenge und STG, die nicht BIS gemeldet werden, extrahieren
+			$entwicklungsteamfunktionenArr = array_filter($entwicklungsteamfunktionenArr, function ($obj)
+			{
+				return
+					!in_array($obj->studiengang_kz, $this->_config['exclude_stg']) &&
+					$obj->studiengang_kz > 0 &&
+					$obj->studiengang_kz < 10000;
+			});
+		}
+
+		if (!empty($entwicklungsteamfunktionenArr))
+		{
+			// Hoechste besondere Qualifikation
+			$besondereQualifikationCodeArr = array();
+			foreach($entwicklungsteamfunktionenArr as $entwTeamFunk)
+				$besondereQualifikationCodeArr[] = $entwTeamFunk->besqualcode;
+
+			$besondereQualifikationCode = max($besondereQualifikationCodeArr);
+
+			// Studiengaenge, wo Person Teil des Entwicklungsteams gewesen ist
+			$studiengangKzArr = array();
+			foreach($entwicklungsteamfunktionenArr as $entwTeamFunk)
+				$studiengangKzArr[] = $entwTeamFunk->studiengang_kz;
+
+			// sort
+			sort($studiengangKzArr);
+
+			// fuehrende Nullen fuer STG
+			foreach($studiengangKzArr as &$studiengang_kz)
+			{
+				$studiengang_kz = $this->_padStudiengangKz($studiengang_kz);
+			}
+
+			// Funktionsobjekt generieren und dem Funktionscontainer anhaengen
+			$funktionObj = new StdClass();
+			$funktionObj->funktionscode = $this->_config['entwicklungsteamfunktioncode'];
+			$funktionObj->besondereQualifikationCode = $besondereQualifikationCode;
+			$funktionObj->studiengang = $studiengangKzArr;
+			$funktionArr[]= $funktionObj;
 		}
 
 		return $funktionArr;
@@ -1218,5 +1289,15 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		}
 
 		return $resultArr;
+	}
+
+	/**
+	 * Add zeros to Studiengangskennzahl.
+	 * @param $studiengang_kz
+	 * @return string padded Studiengangskennzahl
+	 */
+	private function _padStudiengangKz($studiengang_kz)
+	{
+		return isset($studiengang_kz) ? str_pad(intval($studiengang_kz), 4, "0", STR_PAD_LEFT) : null;
 	}
 }

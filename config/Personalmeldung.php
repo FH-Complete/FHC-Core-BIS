@@ -1,7 +1,7 @@
 <?php
 
 // Basis Vollzeit Arbeitsstunden für Berechnung von Jahresvollzeitaequivalenz JVZAE (echte Dienstverträge)
-$config['fhc_bis_vollzeit_arbeitsstunden'] = 38.5;
+$config['fhc_bis_vollzeit_arbeitsstunden'] = 40;
 
 // Basis Vollzeit Semesterwochenstunden für Berechnung von Jahresvollzeitaequivalenz JVZAE auf Stundenbasis (freie Dienstverträge)
 $config['fhc_bis_vollzeit_sws_einzelstundenbasis'] = 15;

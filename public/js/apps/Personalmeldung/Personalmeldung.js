@@ -17,6 +17,7 @@
 
 import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
 import {Personalmeldung} from '../../components/Personalmeldung/Personalmeldung.js';
+import Phrasen from '../../../../../js/plugin/Phrasen.js';
 
 const personalmeldungApp = Vue.createApp({
 	components: {
@@ -25,4 +26,4 @@ const personalmeldungApp = Vue.createApp({
 	},
 });
 
-personalmeldungApp.mount('#main');
+personalmeldungApp.use(Phrasen).mount('#main');

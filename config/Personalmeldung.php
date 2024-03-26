@@ -46,6 +46,9 @@ $config['fhc_bis_leitungsfunktionen'] = array(
 
 $config['fhc_bis_studiengangsleitungfunktion'] = 5;
 
+// Funktionscode für Entwicklungsteammitglieder
+$config['fhc_bis_entwicklungsteamfunktioncode'] = 7;
+
 // Organisationseinheitstypen bei denen KEINE Leiter gemeldet werden (Code 7)
 $config['fhc_bis_exclude_leitung_organisationseinheitstypen'] = array(
 	'Team'

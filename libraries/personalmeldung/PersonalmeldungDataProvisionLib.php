@@ -164,6 +164,40 @@ class PersonalmeldungDataProvisionLib
 	}
 
 	/**
+	 * Gets Entwicklungsteam data of Mitarbeiter for a year.
+	 * @param $bismeldungJahr
+	 * @param $uidArr
+	 * @return object success or error
+	 */
+	public function getEntwicklungsteamData($bismeldungJahr, $uidArr = null)
+	{
+		$params = array($bismeldungJahr, $bismeldungJahr);
+
+		$qry = "
+			SELECT
+				et.mitarbeiter_uid, et.studiengang_kz, besqualcode
+			FROM
+				bis.tbl_entwicklungsteam et
+				JOIN bis.tbl_besqual USING (besqualcode)
+			WHERE
+				(et.beginn <= make_date(?::INTEGER, 12, 31) OR et.beginn IS NULL)
+				AND (et.ende >= make_date(?::INTEGER, 1, 1) OR et.ende IS NULL)";
+
+		if (isset($uidArr))
+		{
+			$qry .= " AND et.mitarbeiter_uid IN ?";
+			$params[] = $uidArr;
+		}
+
+		$qry .= " ORDER BY et.ende NULLS LAST, et.beginn NULLS LAST";
+
+		return $this->_dbModel->execReadOnlyQuery(
+			$qry,
+			$params
+		);
+	}
+
+	/**
 	 * Get Dienstverhältnisse for a year and for certain Vertragsarten
 	 * @param $bismeldungJahr
 	 * @return object success or error

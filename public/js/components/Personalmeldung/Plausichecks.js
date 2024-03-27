@@ -16,10 +16,11 @@
  */
 
 import FhcLoader from '../../../../../js/components/Loader.js';
-import {PersonalmeldungAPIs} from './API.js';
+import PersonalmeldungAPI from '../../mixins/api/PersonalmeldungAPI.js';
 import studiensemester from './studiensemester/Studiensemester.js';
 
 export const Plausichecks = {
+	mixins: [PersonalmeldungAPI],
 	data: function() {
 		return {
 			studiensemester_kurzbz: null,
@@ -28,7 +29,6 @@ export const Plausichecks = {
 	},
 	components: {
 		FhcLoader,
-		PersonalmeldungAPIs,
 		studiensemester
 	},
 	methods: {
@@ -37,7 +37,7 @@ export const Plausichecks = {
 		 */
 		startPlausichecks: function() {
 			this.$refs.loader.show();
-			PersonalmeldungAPIs.runPlausichecks(
+			this.callRunPlausichecks(
 				this.studiensemester_kurzbz,
 				(data) => {
 					// set the issue data

@@ -5,8 +5,9 @@
 		'bootstrap5' => true,
 		'fontawesome6' => true,
 		'vue3' => true,
-		'filtercomponent' => true,
+		'primevue3' => true,
 		'navigationcomponent' => true,
+		'filtercomponent' => true,
 		'tabulator5' => true,
 		'customJSModules' => array(
 			'public/extensions/FHC-Core-BIS/js/apps/Personalmeldung/Personalmeldung.js'

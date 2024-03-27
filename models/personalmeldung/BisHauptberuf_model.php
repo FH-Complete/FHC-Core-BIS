@@ -72,7 +72,7 @@ class BisHauptberuf_model extends DB_Model
 				codes.bezeichnung
 			FROM
 				extension.tbl_bis_hauptberuf hb
-				JOIN bis.tbl_hauptberuf codes USING (hauptberufcode)
+				LEFT JOIN bis.tbl_hauptberuf codes USING (hauptberufcode)
 			WHERE
 				hb.mitarbeiter_uid = ?
 				AND (hb.von <= ?::date OR hb.von IS NULL OR ? IS NULL)

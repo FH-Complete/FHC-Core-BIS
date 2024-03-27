@@ -1,12 +1,12 @@
-import {PersonalmeldungAPIs} from '../API.js';
+import HauptberufAPI from '../../../mixins/api/HauptberufAPI.js';
 import uids from '../personalmeldunguids/Uids.js';
 
 export const HauptberufForm = {
 	emits: [
 		'hauptberufSaved'
 	],
+	mixins: [HauptberufAPI],
 	components: {
-		PersonalmeldungAPIs,
 		uids,
 		"datepicker": VueDatePicker
 	},
@@ -20,8 +20,7 @@ export const HauptberufForm = {
 				hauptberuflich: true,
 				hauptberufcode: 0
 			}, // the edited Hauptberuf
-			hauptberufcodeList: [], // Hauptberufcode list for dropdown
-			errorText: null
+			hauptberufcodeList: [] // Hauptberufcode list for dropdown
 		}
 	},
 	computed: {
@@ -33,7 +32,7 @@ export const HauptberufForm = {
 	},
 	methods: {
 		prefill(hauptberuf) {
-			PersonalmeldungAPIs.getHauptberufcodeList(
+			this.callGetHauptberufcodeList(
 				(data) => {
 					this.hauptberufcodeList = data.hauptberufcodeList;
 				}
@@ -50,10 +49,10 @@ export const HauptberufForm = {
 				this.reset();
 			};
 			let errorCallback = (error) => {
-				this.errorText = error;
+				this.$fhcAlert.alertError(error);
 			};
 			if (this.fullHauptberuf.hasOwnProperty('bis_hauptberuf_id')) {
-				PersonalmeldungAPIs.updateHauptberuf(
+				this.callUpdateHauptberuf(
 					this.fullHauptberuf,
 					successCallback,
 					errorCallback
@@ -61,7 +60,7 @@ export const HauptberufForm = {
 			}
 			else
 			{
-				PersonalmeldungAPIs.addHauptberuf(
+				this.callAddHauptberuf(
 					this.fullHauptberuf,
 					successCallback,
 					errorCallback
@@ -81,19 +80,14 @@ export const HauptberufForm = {
 				hauptberufcode: 0
 			};
 			if (this.$refs.uids) this.$refs.uids.reset();
-			this.resetError();
-		},
-		resetError() {
-			this.errorText = null;
+			//this.resetError();
 		}
+		//~ resetError() {
+			//~ this.errorText = null;
+		//~ }
 	},
 	template: `
 	<div>
-		<div class="alert alert-danger" role="alert" v-show="errorText != null">
-			{{ errorText }}
-		<br />
-		</div>
-		<br />
 		<form ref="saveHauptberufForm" class="row gy-3">
 				<div class="col-12" v-if="mitarbeiter == null">
 					<uids

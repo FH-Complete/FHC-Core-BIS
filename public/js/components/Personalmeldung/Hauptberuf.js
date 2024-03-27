@@ -17,20 +17,19 @@
 
 import {CoreFilterCmpt} from '../../../../../js/components/filter/Filter.js';
 import FhcLoader from '../../../../../js/components/Loader.js';
-import {PersonalmeldungAPIs} from './API.js';
+import HauptberufAPI from '../../mixins/api/HauptberufAPI.js';
 import studiensemester from './studiensemester/Studiensemester.js';
 import HauptberufModal from "./Modals/HauptberufModal.js";
 import PersonalmeldungDates from "../../mixins/PersonalmeldungDates.js";
 
 export const Hauptberuf = {
+	mixins: [PersonalmeldungDates, HauptberufAPI],
 	components: {
 		CoreFilterCmpt,
 		FhcLoader,
-		PersonalmeldungAPIs,
 		studiensemester,
 		HauptberufModal
 	},
-	mixins: [PersonalmeldungDates],
 	props: {
 		modelValue: Object,
 		default: null
@@ -116,9 +115,11 @@ export const Hauptberuf = {
 			this.$refs.hauptberufModal.openHauptberufModal(data);
 		},
 		getHauptberufe() {
+			this.$refs.loader.show();
 			let successCallback = (data) => {
 				// set the employee data
-				this.$refs.hauptberufTable.tabulator.setData(data.hauptberufe);
+				if (this.$refs.hauptberufTable)
+					this.$refs.hauptberufTable.tabulator.setData(data.hauptberufe);
 				// hide loading
 				this.$refs.loader.hide();
 			};
@@ -133,27 +134,25 @@ export const Hauptberuf = {
 			}
 		 },
 		getAllHauptberufe(successCallback) {
-			this.$refs.loader.show();
-			PersonalmeldungAPIs.getHauptberufe(
+			this.callGetHauptberufe(
 				this.studiensemester_kurzbz,
 				successCallback
 			);
 		},
 		getHauptberufeByUid(successCallback) {
-			this.$refs.loader.show();
-			PersonalmeldungAPIs.getHauptberufeByUid(
+			this.callGetHauptberufeByUid(
 				this.modelValue.personUID,
 				successCallback
 			);
 		},
 		deleteHauptberuf(bis_hauptberuf_id) {
-			PersonalmeldungAPIs.deleteHauptberuf(
+			this.callDeleteHauptberuf(
 				bis_hauptberuf_id,
 				(data) => {
 					this.getHauptberufe();
 				},
 				(error) => {
-					alert(error);
+					this.$fhcAlert.alertError(error);
 				}
 			);
 		},

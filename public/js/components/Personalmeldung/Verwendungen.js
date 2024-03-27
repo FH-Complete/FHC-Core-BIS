@@ -17,22 +17,21 @@
 
 import {CoreFilterCmpt} from '../../../../../js/components/filter/Filter.js';
 import FhcLoader from '../../../../../js/components/Loader.js';
-import {PersonalmeldungAPIs} from './API.js';
+import VerwendungenAPI from '../../mixins/api/VerwendungenAPI.js';
 import studiensemester from './studiensemester/Studiensemester.js';
 import NewVerwendungModal from "./Modals/NewVerwendungModal.js";
 import UpdateVerwendungModal from "./Modals/UpdateVerwendungModal.js";
 import PersonalmeldungDates from "../../mixins/PersonalmeldungDates.js";
 
 export const Verwendungen = {
+	mixins: [PersonalmeldungDates, VerwendungenAPI],
 	components: {
 		CoreFilterCmpt,
 		FhcLoader,
-		PersonalmeldungAPIs,
 		studiensemester,
 		NewVerwendungModal,
 		UpdateVerwendungModal
 	},
-	mixins: [PersonalmeldungDates],
 	props: {
 		modelValue: {
 			type: Object,
@@ -127,7 +126,8 @@ export const Verwendungen = {
 		getVerwendungen() {
 			let successCallback = (data) => {
 				// set the employee data
-				this.$refs.verwendungTable.tabulator.setData(data.verwendungen);
+				if (this.$refs.verwendungTable)
+					this.$refs.verwendungTable.tabulator.setData(data.verwendungen);
 				// hide loading
 				this.$refs.loader.hide();
 			};
@@ -143,26 +143,26 @@ export const Verwendungen = {
 		 },
 		getAllVerwendungen(successCallback) {
 			this.$refs.loader.show();
-			PersonalmeldungAPIs.getVerwendungen(
+			this.callGetVerwendungen(
 				this.studiensemester_kurzbz,
 				successCallback
 			);
 		},
 		getVerwendungenByUid(successCallback) {
 			this.$refs.loader.show();
-			PersonalmeldungAPIs.getVerwendungenByUid(
+			this.callGetVerwendungenByUid(
 				this.modelValue.personUID,
 				successCallback
 			);
 		},
 		deleteVerwendung(bis_verwendung_id) {
-			PersonalmeldungAPIs.deleteVerwendung(
+			this.callDeleteVerwendung(
 				bis_verwendung_id,
 				(data) => {
 					this.getVerwendungen();
 				},
 				(error) => {
-					alert(error);
+					this.$fhcAlert.alertError(error);
 				}
 			);
 		},
@@ -172,10 +172,11 @@ export const Verwendungen = {
 		generateVerwendungen: function() {
 			// show loading
 			this.$refs.loader.show();
-			PersonalmeldungAPIs.generateVerwendungen(
+			this.callGenerateVerwendungen(
 				this.studiensemester_kurzbz,
 				(data) => {
-					this.getVerwendungen();
+					this.getVerwendungen()
+					this.$fhcAlert.alertSuccess("Verwendungen erfolgreich aktualisiert");
 				}
 			);
 		},

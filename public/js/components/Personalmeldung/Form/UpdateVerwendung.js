@@ -1,14 +1,11 @@
-import {PersonalmeldungAPIs} from '../API.js';
+import VerwendungenAPI from '../../../mixins/api/VerwendungenAPI.js';
 import PersonalmeldungDates from '../../../mixins/PersonalmeldungDates.js';
 
 export const UpdateVerwendungForm = {
 	emits: [
 		'verwendungUpdated'
 	],
-	components: {
-		PersonalmeldungAPIs
-	},
-	mixins: [PersonalmeldungDates],
+	mixins: [PersonalmeldungDates, VerwendungenAPI],
 	props: {
 		verwendung: Object
 	},
@@ -31,7 +28,7 @@ export const UpdateVerwendungForm = {
 	},
 	methods: {
 		prefill(verwendung_code) {
-			PersonalmeldungAPIs.getVerwendungList(
+			this.callGetVerwendungList(
 				verwendung_code,
 				(data) => {
 					this.verwendungList = data.verwendungList;
@@ -39,7 +36,7 @@ export const UpdateVerwendungForm = {
 			);
 		},
 		update() {
-			PersonalmeldungAPIs.updateVerwendung(
+			this.callUpdateVerwendung(
 				this.verwendung,
 				(data) => {
 					this.$emit('verwendungUpdated');

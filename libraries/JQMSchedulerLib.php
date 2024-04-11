@@ -78,15 +78,6 @@ class JQMSchedulerLib
 					AND status_kurzbz IN ?
 					AND ps.bismelden
 					AND stg.melderelevant
-					AND EXISTS ( /* is registered for Reihungstest */
-						SELECT 1
-						FROM
-							public.tbl_rt_person rtp
-							JOIN tbl_reihungstest rt ON(rtp.rt_id = rt.reihungstest_id)
-						WHERE
-							rtp.person_id = ps.person_id
-							AND rt.studiensemester_kurzbz = pss.studiensemester_kurzbz
-					)
 					AND NOT EXISTS ( /* has not been sent to BIS yet*/
 						SELECT 1
 						FROM
@@ -95,6 +86,22 @@ class JQMSchedulerLib
 							prestudent_id = ps.prestudent_id
 							AND studiensemester_kurzbz = pss.studiensemester_kurzbz
 					)";
+
+
+		$sendOnlyRtRegistered = $this->_ci->config->item('fhc_bis_UHSTAT0_nur_reihungstest_registrierte_senden');
+		if (isset($sendOnlyRtRegistered) && $sendOnlyRtRegistered === true)
+		{
+			$qry .= "
+				AND EXISTS ( /* is registered for Reihungstest */
+					SELECT 1
+					FROM
+						public.tbl_rt_person rtp
+						JOIN tbl_reihungstest rt ON(rtp.rt_id = rt.reihungstest_id)
+					WHERE
+						rtp.person_id = ps.person_id
+						AND rt.studiensemester_kurzbz = pss.studiensemester_kurzbz
+				)";
+		}
 
 		// if only certain Studiengang types have to be sent
 		if (isset($this->_studiengangtyp[self::JOB_TYPE_UHSTAT0]) && !isEmptyArray($this->_studiengangtyp[self::JOB_TYPE_UHSTAT0]))

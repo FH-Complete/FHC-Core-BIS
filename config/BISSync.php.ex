@@ -26,3 +26,6 @@ $config['fhc_bis_status_kurzbz'] = array(
 $config['fhc_bis_studiengangtyp'] = array(
 	'BISUHSTAT0' => array('b', 'm')
 );
+
+// whether only students registered to Reihungstest should be sent for UHSTAT0
+$config['fhc_bis_UHSTAT0_nur_reihungstest_registrierte_senden'] = true;

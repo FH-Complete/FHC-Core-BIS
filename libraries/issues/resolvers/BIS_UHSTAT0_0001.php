@@ -18,14 +18,14 @@ class BIS_UHSTAT0_0001 implements IIssueResolvedChecker
 		$this->_ci =& get_instance(); // get code igniter instance
 
 		$this->_ci->load->library('extensions/FHC-Core-BIS/JQMSchedulerLib');
-		$this->_ci->load->library('extensions/FHC-Core-BIS/FHCManagementLib');
+		$this->_ci->load->library('extensions/FHC-Core-BIS/BISDataProvisionLib');
 
 		$this->_ci->config->load('extensions/FHC-Core-BIS/BISSync');
 
 		// load uhstat data including orgforms for given prestudent
-		$studDataRes = $this->_ci->fhcmanagementlib->getUHSTAT0StudentData(
-			array($params['prestudent_id']),
+		$studDataRes = $this->_ci->bisdataprovisionlib->getUHSTAT0StudentData(
 			$params['studiensemester_kurzbz'],
+			array($params['prestudent_id']),
 			$this->_ci->config->item('fhc_bis_status_kurzbz')[JQMSchedulerLib::JOB_TYPE_UHSTAT0]
 		);
 

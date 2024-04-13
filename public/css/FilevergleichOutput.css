@@ -1,0 +1,3 @@
+#verwendungSums tr td:nth-child(odd) {
+	border-right: 1px solid;
+}

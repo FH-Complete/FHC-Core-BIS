@@ -3,7 +3,7 @@
 /**
  * Library for handling operations with fhcomplete database.
  */
-class FHCManagementLib
+class BISDataProvisionLib
 {
 	private $_ci;
 	private $_dbModel;

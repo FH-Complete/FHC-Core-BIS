@@ -50,13 +50,12 @@ export const Hauptberuf = {
 			}],
 			hauptberufTabulatorOptions: {
 				index: 'bis_hauptberuf_id',
-				maxHeight: "100%",
-				minHeight: 50,
+				//persistenceID: 'hauptberufTable',
 				layout: 'fitColumns',
 				columns: [
-					{title: 'ID', field: 'bis_hauptberuf_id', headerFilter: true, visible: false},
-					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true},
-					{title: 'Hauptberuflich lehrend', field: 'hauptberuflich', headerFilter: true,
+					{title: 'ID', field: 'bis_hauptberuf_id', headerFilter: true, visible: false, width: 100},
+					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true, width: 140},
+					{title: 'Hauptberuflich lehrend', field: 'hauptberuflich', headerFilter: true, width: 140,
 						formatter: (cell) => {
 							return cell.getValue() ? 'Ja' : 'Nein';
 						},
@@ -66,22 +65,23 @@ export const Hauptberuf = {
 							return false;
 						}
 					},
-					{title: 'Hauptberuf Code', field: 'hauptberufcode', headerFilter: true},
-					{title: 'Hauptberuf Bezeichnung', field: 'bezeichnung', headerFilter: true},
-					{title: 'Von', field: 'von', headerFilter: true, formatter: (cell) => {
+					{title: 'Hauptberuf Code', field: 'hauptberufcode', headerFilter: true, width: 140},
+					{title: 'Hauptberuf Bezeichnung', field: 'bezeichnung', headerFilter: true, width: 140},
+					{title: 'Von', field: 'von', headerFilter: true, width: 140, formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Bis', field: 'bis', headerFilter: true, formatter: (cell) => {
+					{title: 'Bis', field: 'bis', headerFilter: true, width: 140, formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false},
-					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false},
+					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false, width: 140},
+					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false, width: 140},
 					{
 						title: 'Aktionen',
 						field: 'actions',
 						hozAlign: 'center',
+						width: 140,
 						formatter: (cell) => {
 							let container = document.createElement('div');
 							container.className = "d-flex gap-2";
@@ -118,7 +118,7 @@ export const Hauptberuf = {
 			this.$refs.loader.show();
 			let successCallback = (data) => {
 				// set the employee data
-				if (this.$refs.hauptberufTable)
+				if (this.$refs.hauptberufTable && this.$refs.hauptberufTable.tabulator)
 					this.$refs.hauptberufTable.tabulator.setData(data.hauptberufe);
 				// hide loading
 				this.$refs.loader.hide();

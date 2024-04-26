@@ -54,32 +54,32 @@ export const Verwendungen = {
 			}],
 			verwendungenTabulatorOptions: {
 				index: 'bis_verwendung_id',
-				maxHeight: "100%",
-				minHeight: 50,
+				//~ persistenceID:'verwendungenTable',
 				layout: 'fitColumns',
 				columns: [
-					{title: 'ID', field: 'bis_verwendung_id', headerFilter: true, visible: false},
-					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true},
-					{title: 'Verwendung Code', field: 'verwendung_code', headerFilter: true},
-					{title: 'Verwendung Bezeichnung', field: 'verwendungbez', headerFilter: true},
-					{title: 'Von', field: 'von', headerFilter: true, formatter: (cell) => {
+					{title: 'ID', field: 'bis_verwendung_id', headerFilter: true, visible: false, width: 140},
+					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true, width: 140},
+					{title: 'Verwendung Code', field: 'verwendung_code', headerFilter: true, width: 140},
+					{title: 'Verwendung Bezeichnung', field: 'verwendungbez', headerFilter: true, width: 200},
+					{title: 'Von', field: 'von', headerFilter: true, width: 140, formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Bis', field: 'bis', headerFilter: true, formatter: (cell) => {
+					{title: 'Bis', field: 'bis', headerFilter: true, width: 140, formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Manuell', field: 'manuell', headerFilter: true, mutator: (value) => {
+					{title: 'Manuell', field: 'manuell', headerFilter: true, width: 140, mutator: (value) => {
 							return value ? 'Ja' : 'Nein';
 						}}
 					,
-					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false},
-					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false},
+					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false, width: 140},
+					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false, width: 140},
 					{
 						title: 'Aktionen',
 						field: 'actions',
 						hozAlign: 'center',
+						width: 140,
 						formatter: (cell) => {
 							let manuell = cell.getRow().getData().manuell;
 
@@ -126,7 +126,7 @@ export const Verwendungen = {
 		getVerwendungen() {
 			let successCallback = (data) => {
 				// set the employee data
-				if (this.$refs.verwendungTable)
+				if (this.$refs.verwendungTable && this.$refs.verwendungTable.tabulator)
 					this.$refs.verwendungTable.tabulator.setData(data.verwendungen);
 				// hide loading
 				this.$refs.loader.hide();

@@ -80,11 +80,7 @@ export const HauptberufForm = {
 				hauptberufcode: 0
 			};
 			if (this.$refs.uids) this.$refs.uids.reset();
-			//this.resetError();
 		}
-		//~ resetError() {
-			//~ this.errorText = null;
-		//~ }
 	},
 	template: `
 	<div>

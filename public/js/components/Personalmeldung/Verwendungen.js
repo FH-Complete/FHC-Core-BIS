@@ -41,45 +41,53 @@ export const Verwendungen = {
 	data: function() {
 		return {
 			studiensemester_kurzbz: null,
-			verwendungenTabulatorEvents: [{
-				event: "rowClick",
-				handler: (e, row) => {
+			verwendungenTabulatorEvents: [
+				{
+					event: "rowClick",
+					handler: (e, row) => {
 
-					// exclude other clicked elements like buttons, icons...
-					if (e.target.nodeName != 'DIV') return;
+						// exclude other clicked elements like buttons, icons...
+						if (e.target.nodeName != 'DIV') return;
 
-					// open modal for editing
-					this.openUpdateModal(row.getData());
+						// open modal for editing
+						this.openUpdateModal(row.getData());
+					}
+				},
+				{
+					event: "tableBuilt",
+					handler: () => {
+						this.getVerwendungen();
+					}
 				}
-			}],
+			],
 			verwendungenTabulatorOptions: {
 				index: 'bis_verwendung_id',
-				//~ persistenceID:'verwendungenTable',
+				persistenceID:'verwendungenTable',
 				layout: 'fitColumns',
 				columns: [
-					{title: 'ID', field: 'bis_verwendung_id', headerFilter: true, visible: false, width: 140},
-					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true, width: 140},
-					{title: 'Verwendung Code', field: 'verwendung_code', headerFilter: true, width: 140},
-					{title: 'Verwendung Bezeichnung', field: 'verwendungbez', headerFilter: true, width: 200},
-					{title: 'Von', field: 'von', headerFilter: true, width: 140, formatter: (cell) => {
+					{title: 'ID', field: 'bis_verwendung_id', headerFilter: true, visible: false, width: '10%'},
+					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true, width: '10%'},
+					{title: 'Verwendung Code', field: 'verwendung_code', headerFilter: true, width: '15%'},
+					{title: 'Verwendung Bezeichnung', field: 'verwendungbez', headerFilter: true, width: '25%'},
+					{title: 'Von', field: 'von', headerFilter: true, width: '15%', formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Bis', field: 'bis', headerFilter: true, width: 140, formatter: (cell) => {
+					{title: 'Bis', field: 'bis', headerFilter: true, width: '15%', formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Manuell', field: 'manuell', headerFilter: true, width: 140, mutator: (value) => {
+					{title: 'Manuell', field: 'manuell', headerFilter: true, width: '10%', mutator: (value) => {
 							return value ? 'Ja' : 'Nein';
 						}}
 					,
-					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false, width: 140},
-					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false, width: 140},
+					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false, width: '15%'},
+					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false, width: '15%'},
 					{
 						title: 'Aktionen',
 						field: 'actions',
 						hozAlign: 'center',
-						width: 140,
+						width: '10%',
 						formatter: (cell) => {
 							let manuell = cell.getRow().getData().manuell;
 
@@ -109,9 +117,6 @@ export const Verwendungen = {
 				]
 			}
 		};
-	},
-	mounted() {
-		this.getVerwendungen();
 	},
 	methods: {
 		openNewModal() {

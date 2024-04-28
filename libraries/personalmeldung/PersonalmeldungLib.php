@@ -202,13 +202,12 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 				// get Mitarbeiter Semesterwochenstunden
 				$swsMa = $sws[$ma->uid] ?? array();
-				$hasSws = count($swsMa) > 0;
 
 				// distribute Lehre to Verwendungen, using the Lehre Verwendungen and the Semesterwochenstunden
 				$verwendungenMa = $this->_addLehreToVerwendungen($verwendungenMa, $verwendungCodesLehreMa, $swsMa);
 
 				// add numbers for Beschäftigungsausmass and Jahresvollzeitäquivalenz
-				$verwendungenMa = $this->_addRelativesBaUndAnteiligeJVZAE($verwendungenMa, $hasSws);
+				$verwendungenMa = $this->_addRelativesBaUndAnteiligeJVZAE($verwendungenMa);
 
 				//~ var_dump("AFTER ADD");
 				//~ var_dump("-------------------------------------------------------");
@@ -669,7 +668,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					// set the lehre code for the verwendung, regardless of dates
 					elseif (is_null($verwendung->verwendung_code)) $verwendung->verwendung_code = $this->_config['verwendung_codes']['lehre'];
 				}
-				elseif ($overlapping)
+				elseif ($overlapping) // if lehre overlaps with bis verwendung
 				{
 					if (!($pauschale && $hasOtherVertraege)) // not add sws if pauschale should be calculated
 					{
@@ -693,7 +692,16 @@ class PersonalmeldungLib extends BISErrorProducerLib
 						}
 
 						// add additional days, which fall into next year, but have no DV assigned
-						if (isset($lehreVerwendungCode->extended_enddate))
+						if (
+							isset($lehreVerwendungCode->extended_enddate)
+							&& in_array(
+								$verwendung->vertragsart_kurzbz,
+								array(
+									$this->_config['vertragsarten']['echterDienstvertrag'],
+									$this->_config['vertragsarten']['externeLehre']
+								)
+							)
+						)
 						{
 							$extendedEnddate = new DateTime($lehreVerwendungCode->extended_enddate);
 							$days = $extendedEnddate->diff($verwCodeEnd)->days;
@@ -730,11 +738,10 @@ class PersonalmeldungLib extends BISErrorProducerLib
 	/**
 	 * Calculate and add Beschäftigungsausmass and Jahresvollzeitäquivalenz for the Verwendungen of a Mitarbeiter.
 	 * @param $verwendungen of one Mitarbeiter
-	 * @param $hasAnySws
 	 */
-	private function _addRelativesBaUndAnteiligeJVZAE($verwendungen, $hasAnySws)
+	private function _addRelativesBaUndAnteiligeJVZAE($verwendungen)
 	{
-		$dvsPauschaleAdded = array();
+		$dvPauschale = array();
 		foreach ($verwendungen as $idx => $verwendung)
 		{
 			$hasVertragsstunden =
@@ -788,7 +795,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 						 * NOTE: Abzug nur fuer Lehrtaetigkeiten im WS, da nur diese das Beschaeftigungsausmass der
 						 * BIS-Verwendung (und in Folge die VZAE ) zum Stichtag 31.12. bestimmen.
 						 * */
-						if(substr($verwendung->sws_studiensemester_kurzbz, 0, 2) == 'WS')
+						if ($this->_isWintersemester($verwendung->sws_studiensemester_kurzbz))
 						{
 							$verwendung->beschaeftigungsausmass_relativ -= $lehreJvzaeAnteilig->beschaeftigungsausmass_relativ;
 						}
@@ -801,34 +808,51 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					}
 				}
 			}
-			// freier Dienstvertrag, with lehre - calculate based on sws
-			elseif ($hasLehreSws && in_array($verwendung->verwendung_code, $this->_config['verwendung_codes_lehre']))
+			else
 			{
-				//~ var_dump("FREIER DV");
-				$verwendungen[$idx] = $this->_calculateLehreJVZAEAnteilig($verwendung);
+				// freier Dienstvertrag, with lehre - calculate based on sws
+				if ($hasLehreSws && in_array($verwendung->verwendung_code, $this->_config['verwendung_codes_lehre']))
+				{
+					//~ var_dump("FREIER DV");
+					$verwendungen[$idx] = $this->_calculateLehreJVZAEAnteilig($verwendung);
+				}
+
+				// need to add Pauschale for the dv of Verwendung
+				if ($isStudentischeHilfskraft || $isWerkvertrag)
+					$dvPauschale[$verwendung->dienstverhaeltnis_id] = $idx;
 			}
-			// fallback - "pauschale" Stunden if no Vertragsstunden and no Lehre at all.
-			// make sure that Paushcale is only added once per Dienstverhältnis (dvsPauschaleAdded)
-			elseif ((!$hasAnySws || $isStudentischeHilfskraft || $isWerkvertrag) && !in_array($verwendung->dienstverhaeltnis_id, $dvsPauschaleAdded))
-			{
-				//~ var_dump("SONSTIGES:");
-				// Studentische HilfskrHilfskraft/sonstiges Dienstverhältnis (Werkvertrag)
-				// ---------------------------------------------------------------------------------------------------------
+		}
 
-				// Pauschale pro Jahr und Person (in Stunden), different for Stud. Hilfskraft and Werkvertrag
-				$pauschaleInStunden = $isStudentischeHilfskraft
-					? $this->_config['pauschale_studentische_hilfskraft']
-					: $this->_config['pauschale_sonstiges_dienstverhaeltnis'];
+		// add "pauschale" Stunden for "special" Verträge.
+		// make sure that Pauschale is only added once per Dienstverhältnis (dvPauschale)
 
-				// Kalkulatorische Umrechnung der Jahrespauschale
-				$vollzeitArbeitsstundenimJahr = $this->_config['vollzeit_arbeitsstunden'] * $this->_dateData['weeksInYear'];
+		foreach ($dvPauschale as $lastVerwendungIdx)
+		{
+			//~ var_dump("SONSTIGES:");
+			// Studentische HilfskrHilfskraft/sonstiges Dienstverhältnis (Werkvertrag)
+			// ---------------------------------------------------------------------------------------------------------
+			$vw = $verwendungen[$lastVerwendungIdx];
 
-				// Relatives Beschaeftigungsausmass / Anteilige JVZAE ermitteln
-				$verwendung->beschaeftigungsausmass_relativ = $pauschaleInStunden / $vollzeitArbeitsstundenimJahr;
-				$verwendung->jvzae_anteilig = $pauschaleInStunden / $vollzeitArbeitsstundenimJahr;
+			// Pauschale pro Jahr und Person (in Stunden), different for Stud. Hilfskraft and Werkvertrag
+			$pauschaleInStunden =
+				$vw->vertragsart_kurzbz == $this->_config['vertragsarten']['studentischeHilfskraft']
+				? $this->_config['pauschale_studentische_hilfskraft']
+				: $this->_config['pauschale_sonstiges_dienstverhaeltnis'];
 
-				$dvsPauschaleAdded[] = $verwendung->dienstverhaeltnis_id;
-			}
+			// Kalkulatorische Umrechnung der Jahrespauschale
+			$vollzeitArbeitsstundenimJahr = $this->_config['vollzeit_arbeitsstunden'] * $this->_dateData['weeksInYear'];
+			$jahresPauschale = $pauschaleInStunden / $vollzeitArbeitsstundenimJahr;
+
+			// Relatives Beschaeftigungsausmass / Anteilige JVZAE ermitteln
+			$verwendungen[$lastVerwendungIdx]->beschaeftigungsausmass_relativ =
+				isset($vw->beschaeftigungsausmass_relativ)
+				? $vw->beschaeftigungsausmass_relativ + $jahresPauschale
+				: $jahresPauschale;
+
+			$verwendungen[$lastVerwendungIdx]->jvzae_anteilig =
+				isset($vw->jvzae_anteilig)
+				? $vw->jvzae_anteilig + $jahresPauschale
+				: $jahresPauschale;
 		}
 
 		return $verwendungen;
@@ -900,12 +924,16 @@ class PersonalmeldungLib extends BISErrorProducerLib
 						{
 							$verwendungObj->vzae = number_format(0.00, 2);
 						}
-						else
+						elseif
+						(
+							isset($verwendungTmp->beschaeftigungsausmass_relativ)
+							&& !( // vzae -1 if lehre extern and no lehre
+								$verwendungTmp->vertragsart_kurzbz == $this->_config['vertragsarten']['externeLehre']
+								&& $verwendungTmp->beschaeftigungsausmass_relativ == 0
+							)
+						)
 						{
-							if (isset($verwendungTmp->beschaeftigungsausmass_relativ))
-							{
-								$verwendungObj->vzae = $verwendungTmp->beschaeftigungsausmass_relativ * 100;
-							}
+							$verwendungObj->vzae = $verwendungTmp->beschaeftigungsausmass_relativ * 100;
 						}
 					}
 				}
@@ -1143,8 +1171,8 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		{
 			foreach ($swsProStgArr as $swsProStg)
 			{
-				$isSommersemester = substr($swsProStg->studiensemester_kurzbz, 0, 2) == 'SS';
-				$isWintersemester = substr($swsProStg->studiensemester_kurzbz, 0, 2) == 'WS';
+				$isSommersemester = $this->_isSommersemester($swsProStg->studiensemester_kurzbz);
+				$isWintersemester = $this->_isWintersemester($swsProStg->studiensemester_kurzbz);
 
 				// Lehreobjekt generieren
 				if (isEmptyArray($lehreArr) || !$this->_lehreStgExists($swsProStg->studiengang_kz, $lehreArr))
@@ -1299,5 +1327,25 @@ class PersonalmeldungLib extends BISErrorProducerLib
 	private function _padStudiengangKz($studiengang_kz)
 	{
 		return isset($studiengang_kz) ? str_pad(intval($studiengang_kz), 4, "0", STR_PAD_LEFT) : null;
+	}
+
+	/**
+	 * Checks if a semester is a Wintersemester.
+	 * @param $studiensemester_kurzbz
+	 * @return bool
+	 */
+	private function _isWintersemester($studiensemester_kurzbz)
+	{
+		return is_string($studiensemester_kurzbz) && substr($studiensemester_kurzbz, 0, 2) == 'WS';
+	}
+
+	/**
+	 * Checks if a semester is a Sommersemester.
+	 * @param $studiensemester_kurzbz
+	 * @return bool
+	 */
+	private function _isSommersemester($studiensemester_kurzbz)
+	{
+		return is_string($studiensemester_kurzbz) && substr($studiensemester_kurzbz, 0, 2) == 'SS';
 	}
 }

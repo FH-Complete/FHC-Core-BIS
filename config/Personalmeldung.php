@@ -27,7 +27,8 @@ $config['fhc_bis_vertragsarten'] = array(
 	'echterDienstvertrag' => 'echterdv',
 	'freierDienstvertrag' => 'freierdv',
 	'studentischeHilfskraft' => 'studentischehilfskr',
-	'werkvertrag' => 'werkvertrag'
+	'werkvertrag' => 'werkvertrag',
+	'externeLehre' => 'externerlehrender'
 );
 
 // Vollzeit Arbeitsstunden
@@ -100,7 +101,7 @@ $config['fhc_bis_vertragstyp_verwendung_code_zuordnung'] = array(
 	'werkvertrag' => $config['fhc_bis_verwendung_codes']['lehre']
 );
 
-// if Verwendung is determined by Vertragsart. High prio: has no priority over other criteria (like oe, funktion....)
+// if Verwendung is determined by Vertragsart. Low prio: has no priority over other criteria (like oe, funktion....)
 $config['fhc_bis_vertragstyp_verwendung_code_zuordnung_niederprio'] = array(
 	'studentischehilfskr' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit']
 );

@@ -17,6 +17,7 @@
 
 import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
 import {Plausichecks} from '../../components/Personalmeldung/Plausichecks.js';
+import Phrasen from '../../../../../js/plugin/Phrasen.js';
 
 const plausicheckApp = Vue.createApp({
 	components: {
@@ -25,4 +26,4 @@ const plausicheckApp = Vue.createApp({
 	},
 });
 
-plausicheckApp.mount('#main');
+plausicheckApp.use(Phrasen).mount('#main');

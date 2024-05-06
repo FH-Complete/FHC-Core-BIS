@@ -33,7 +33,7 @@ class AktiveFixeMitarbeiterOhneDienstverhaeltnis extends PlausiChecker
 						FROM
 							hr.tbl_dienstverhaeltnis
 						WHERE
-							bis > NOW() OR bis IS NULL
+							(bis > NOW() OR bis IS NULL)
 							AND mitarbeiter_uid = ma.mitarbeiter_uid
 					)";
 

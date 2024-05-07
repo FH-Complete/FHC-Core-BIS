@@ -80,7 +80,8 @@ $config['fhc_bis_verwendung_codes_lehre'] = array(
 $config['fhc_bis_verwendung_codes_non_lehre'] = array(
 	0 => $config['fhc_bis_verwendung_codes']['management'],
 	1 => $config['fhc_bis_verwendung_codes']['wartung'],
-	2 => $config['fhc_bis_verwendung_codes']['verwaltung']
+	2 => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'],
+	3 => $config['fhc_bis_verwendung_codes']['verwaltung']
 );
 
 $config['fhc_bis_oe_verwendung_code_zuordnung'] = array(
@@ -88,7 +89,9 @@ $config['fhc_bis_oe_verwendung_code_zuordnung'] = array(
 	'Reinigung' => $config['fhc_bis_verwendung_codes']['wartung'],		// Wartung und Betrieb
 	'Haustechnik' => $config['fhc_bis_verwendung_codes']['wartung'],		// Wartung und Betrieb
 	'Bibliothek' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'], // professionelle Unterstützung der Studierenden in akademischen Belangen
-	'Auslandsbuero' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'] // professionelle Unterstützung der Studierenden in Gesundheits- und Sozialbelangen
+	'Auslandsbuero' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'], // professionelle Unterstützung der Studierenden in Gesundheits- und Sozialbelangen
+	'tlc' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'], // professionelle Unterstützung der Studierenden in Gesundheits- und Sozialbelangen
+	'infocenter' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'] // professionelle Unterstützung der Studierenden in Gesundheits- und Sozialbelangen
 );
 
 $config['fhc_bis_oe_verwendung_code_zuordnung_niederprio'] = array(

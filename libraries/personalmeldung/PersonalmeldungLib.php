@@ -1110,6 +1110,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			$entwicklungsteamfunktionenArr = array_filter($entwicklungsteamfunktionenArr, function ($obj)
 			{
 				return
+					obj.melderelevant == true &&
 					!in_array($obj->studiengang_kz, $this->_config['exclude_stg']) &&
 					$obj->studiengang_kz > 0 &&
 					$obj->studiengang_kz < 10000;

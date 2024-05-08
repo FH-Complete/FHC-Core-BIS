@@ -175,10 +175,11 @@ class PersonalmeldungDataProvisionLib
 
 		$qry = "
 			SELECT
-				et.mitarbeiter_uid, et.studiengang_kz, besqualcode
+				et.mitarbeiter_uid, et.studiengang_kz, stg.melderelevant, besqualcode
 			FROM
 				bis.tbl_entwicklungsteam et
 				JOIN bis.tbl_besqual USING (besqualcode)
+				JOIN public.tbl_studiengang stg USING (studiengang_kz)
 			WHERE
 				(et.beginn <= make_date(?::INTEGER, 12, 31) OR et.beginn IS NULL)
 				AND (et.ende >= make_date(?::INTEGER, 1, 1) OR et.ende IS NULL)";

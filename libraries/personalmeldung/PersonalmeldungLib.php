@@ -1012,7 +1012,9 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			$funktionscode = null;
 			$hasOeLehrgang = false;	// default
 
-			$this->_ci->StudiengangModel->addSelect('studiengang_kz, melderelevant');
+			$this->_ci->StudiengangModel->addSelect(
+				'studiengang_kz, melderelevant, melde_studiengang_kz'
+			);
 			$studiengangRes = $this->_ci->StudiengangModel->loadWhere(array('oe_kurzbz' => $bisfunktion->oe_kurzbz));
 
 			//$studiengang->getStudiengangFromOe($bisfunktion->oe_kurzbz);
@@ -1065,8 +1067,6 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				}
 			}
 
-			$studiengang_kz_padded = $this->_padStudiengangKz($studiengang->studiengang_kz ?? null);
-
 			// Funktionsobjekt generieren
 			if (!is_null($funktionscode)		// Funktionscode vorhanden UND
 				&& (isEmptyArray($funktionArr)		// (Erster Durchlauf ODER
@@ -1076,7 +1076,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				$funktionObj->funktionscode = $funktionscode;
 				$funktionObj->besondereQualifikationCode = null;
 				$funktionObj->studiengang = ($funktionscode == $this->_config['studiengangsleitungfunktion'])
-					? array($studiengang_kz_padded)		// STG bei Funktionscode 5 melden
+					? array($studiengang->melde_studiengang_kz)		// STG bei Funktionscode 5 melden
 					: array();
 
 				// Funktionsobjekt dem Funktionscontainer anhaengen
@@ -1088,7 +1088,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 					return $obj->funktionscode == $this->_config['studiengangsleitungfunktion'];
 				});
 
-				$funktionObjArr[0]->studiengang[] = $studiengang_kz_padded;	// STG ergaenzen
+				$funktionObjArr[0]->studiengang[] = $studiengang->melde_studiengang_kz;	// STG ergaenzen
 			}
 		}
 
@@ -1129,16 +1129,16 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			// Studiengaenge, wo Person Teil des Entwicklungsteams gewesen ist
 			$studiengangKzArr = array();
 			foreach($entwicklungsteamfunktionenArr as $entwTeamFunk)
-				$studiengangKzArr[] = $entwTeamFunk->studiengang_kz;
+				$studiengangKzArr[] = $entwTeamFunk->melde_studiengang_kz;
 
 			// sort
 			sort($studiengangKzArr);
 
 			// fuehrende Nullen fuer STG
-			foreach($studiengangKzArr as &$studiengang_kz)
-			{
-				$studiengang_kz = $this->_padStudiengangKz($studiengang_kz);
-			}
+			//~ foreach($studiengangKzArr as &$studiengang_kz)
+			//~ {
+				//~ $studiengang_kz = $this->_padStudiengangKz($studiengang_kz);
+			//~ }
 
 			// Funktionsobjekt generieren und dem Funktionscontainer anhaengen
 			$funktionObj = new StdClass();
@@ -1176,11 +1176,11 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				$isWintersemester = $this->_isWintersemester($swsProStg->studiensemester_kurzbz);
 
 				// Lehreobjekt generieren
-				if (isEmptyArray($lehreArr) || !$this->_lehreStgExists($swsProStg->studiengang_kz, $lehreArr))
+				if (isEmptyArray($lehreArr) || !$this->_lehreStgExists($swsProStg->melde_studiengang_kz, $lehreArr))
 				{
 					$lehreObj = new StdClass();
 
-					$lehreObj->StgKz = str_pad(intval($swsProStg->studiengang_kz), 4, "0", STR_PAD_LEFT);
+					$lehreObj->StgKz = $swsProStg->melde_studiengang_kz;
 					$lehreObj->SommersemesterSWS = $isSommersemester ? $swsProStg->sws : 0.00;
 					$lehreObj->WintersemesterSWS = $isWintersemester ? $swsProStg->sws : 0.00;
 
@@ -1190,17 +1190,17 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				else	// Lehrecontainer mit STG schon vorhanden
 				{
 					$lehreObjArr = array_filter($lehreArr, function (&$obj) use ($swsProStg) {
-						return $obj->StgKz == $swsProStg->studiengang_kz;
+						return $obj->StgKz == $swsProStg->melde_studiengang_kz;
 					});
 
 					// SWS ergaenzen
 					if ($isSommersemester)
 					{
-						current($lehreObjArr)->SommersemesterSWS = $swsProStg->sws;
+						current($lehreObjArr)->SommersemesterSWS += $swsProStg->sws;
 					}
 					elseif ($isWintersemester)
 					{
-						current($lehreObjArr)->WintersemesterSWS = $swsProStg->sws;
+						current($lehreObjArr)->WintersemesterSWS += $swsProStg->sws;
 					}
 				}
 			}

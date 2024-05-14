@@ -9,7 +9,7 @@ $config['fhc_bis_vollzeit_sws_einzelstundenbasis'] = 15;
 // Vollzeit Arbeitsstunden
 $config['fhc_bis_vollzeit_sws_inkludierte_lehre'] = 25;
 
-// Studiengaenge, die nicht gemeldet werden
+// Studiengaenge, die nicht gemeldet werden (studiengang_kz, nicht melde_studiengang_kz)
 $config['fhc_bis_exclude_stg'] = array();
 
 // Semester Gewichtung für Berechnung von Jahresvollzeitaequivalenz JVZAE

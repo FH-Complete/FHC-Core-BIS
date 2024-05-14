@@ -36,7 +36,7 @@ $vzae = $verwendung->vzae < 0 ? $verwendung->vzae : number_format($verwendung->v
 <?php endif; ?>
 <?php foreach($funktion->studiengang as $studiengang): //TODO: need to check for codes 5 and 7 or not ?>
 				<Studiengang>
-				<StgKz><?php echo $studiengang ?></StgKz>
+					<StgKz><?php echo $studiengang ?></StgKz>
 				</Studiengang>
 <?php endforeach; ?>
 			</Funktion>
@@ -44,8 +44,8 @@ $vzae = $verwendung->vzae < 0 ? $verwendung->vzae : number_format($verwendung->v
 <?php foreach ($person->lehre as $lehre): ?>
 			<Lehre>
 				<StgKz><?php echo $lehre->StgKz ?></StgKz>
-				<SommersemesterSWS><?php echo $lehre->SommersemesterSWS ?></SommersemesterSWS>
-				<WintersemesterSWS><?php echo $lehre->WintersemesterSWS ?></WintersemesterSWS>
+				<SommersemesterSWS><?php echo $lehre->SommersemesterSWS == 0 ? $lehre->SommersemesterSWS : number_format($lehre->SommersemesterSWS, 2, '.', '') ?></SommersemesterSWS>
+				<WintersemesterSWS><?php echo $lehre->WintersemesterSWS == 0 ? $lehre->WintersemesterSWS : number_format($lehre->WintersemesterSWS, 2, '.', '') ?></WintersemesterSWS>
 			</Lehre>
 <?php endforeach; ?>
 		</Person>

@@ -175,7 +175,7 @@ class PersonalmeldungDataProvisionLib
 
 		$qry = "
 			SELECT
-				et.mitarbeiter_uid, et.studiengang_kz, stg.melderelevant, besqualcode
+				et.mitarbeiter_uid, et.studiengang_kz, stg.melde_studiengang_kz, stg.melderelevant, besqualcode
 			FROM
 				bis.tbl_entwicklungsteam et
 				JOIN bis.tbl_besqual USING (besqualcode)
@@ -485,7 +485,9 @@ class PersonalmeldungDataProvisionLib
 		$params = array($beginn, $ende);
 		$qry = '
 			WITH semester_sws_tbl AS (
-				SELECT DISTINCT mitarbeiter_uid, lehreinheit_id, studiensemester_kurzbz, lema.semesterstunden, stg.studiengang_kz
+				SELECT
+					DISTINCT mitarbeiter_uid, lehreinheit_id, studiensemester_kurzbz,
+					lema.semesterstunden, stg.studiengang_kz, stg.melde_studiengang_kz
 				FROM lehre.tbl_lehreinheitmitarbeiter lema
 					JOIN lehre.tbl_lehreinheit USING (lehreinheit_id)
 					JOIN lehre.tbl_lehrveranstaltung lv USING (lehrveranstaltung_id)
@@ -513,6 +515,7 @@ class PersonalmeldungDataProvisionLib
 			)
 			SELECT
 				mitarbeiter_uid,
+				melde_studiengang_kz,
 				studiengang_kz,
 				studiensemester_kurzbz,
 				sum(semesterstunden) AS summe,
@@ -521,10 +524,12 @@ class PersonalmeldungDataProvisionLib
 				semester_sws_tbl
 			GROUP BY
 				mitarbeiter_uid,
+				melde_studiengang_kz,
 				studiengang_kz,
 				studiensemester_kurzbz
 			ORDER BY
 				mitarbeiter_uid,
+				melde_studiengang_kz,
 				studiengang_kz;';
 
 		return $this->_dbModel->execReadOnlyQuery(

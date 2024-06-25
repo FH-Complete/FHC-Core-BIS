@@ -1,7 +1,8 @@
-import {StudiensemesterAPIs} from './API.js';
+import StudiensemesterAPI from '../../../mixins/api/StudiensemesterAPI.js';
 
 export default {
 	emits: ['passSemester'],
+	mixins: [StudiensemesterAPI],
 	data: function() {
 		return {
 			semList: null, // all Studiensemester for dropdown
@@ -16,7 +17,7 @@ export default {
 		 * get Studiensemester
 		 */
 		getStudiensemester: function() {
-			StudiensemesterAPIs.getStudiensemester(
+			this.callGetStudiensemester(
 				(data) => {
 					// set the Studiensemester data
 					this.semList = data.semList;

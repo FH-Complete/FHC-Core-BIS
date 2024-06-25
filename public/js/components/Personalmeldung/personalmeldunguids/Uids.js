@@ -1,9 +1,9 @@
-import {UidAPIs} from './API.js';
+import UidAPI from '../../../mixins/api/UidAPI.js';
 
 export default {
 	emits: ['passUid'],
+	mixins: [UidAPI],
 	components: {
-		UidAPIs,
 		AutoComplete: primevue.autocomplete
 	},
 	props: {
@@ -23,7 +23,7 @@ export default {
 			}
 		},
 		getMitarbeiterUids: function(event) {
-			UidAPIs.getMitarbeiterUids(
+			this.callGetMitarbeiterUids(
 				this.studiensemester_kurzbz,
 				event.query,
 				(data) => {

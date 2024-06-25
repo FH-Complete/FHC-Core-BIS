@@ -17,20 +17,19 @@
 
 import {CoreFilterCmpt} from '../../../../../js/components/filter/Filter.js';
 import FhcLoader from '../../../../../js/components/Loader.js';
-import {PersonalmeldungAPIs} from './API.js';
+import HauptberufAPI from '../../mixins/api/HauptberufAPI.js';
 import studiensemester from './studiensemester/Studiensemester.js';
 import HauptberufModal from "./Modals/HauptberufModal.js";
 import PersonalmeldungDates from "../../mixins/PersonalmeldungDates.js";
 
 export const Hauptberuf = {
+	mixins: [PersonalmeldungDates, HauptberufAPI],
 	components: {
 		CoreFilterCmpt,
 		FhcLoader,
-		PersonalmeldungAPIs,
 		studiensemester,
 		HauptberufModal
 	},
-	mixins: [PersonalmeldungDates],
 	props: {
 		modelValue: Object,
 		default: null
@@ -38,26 +37,33 @@ export const Hauptberuf = {
 	data: function() {
 		return {
 			studiensemester_kurzbz: null,
-			hauptberufTabulatorEvents: [{
-				event: "rowClick",
-				handler: (e, row) => {
+			hauptberufTabulatorEvents: [
+				{
+					event: "rowClick",
+					handler: (e, row) => {
 
-					// exclude other clicked elements like buttons, icons...
-					if (e.target.nodeName != 'DIV') return;
+						// exclude other clicked elements like buttons, icons...
+						if (e.target.nodeName != 'DIV') return;
 
-					// open modal for editing
-					this.openModal(row.getData());
+						// open modal for editing
+						this.openModal(row.getData());
+					}
+				},
+				{
+					event: "tableBuilt",
+					handler: () => {
+						this.getHauptberufe();
+					}
 				}
-			}],
+			],
 			hauptberufTabulatorOptions: {
 				index: 'bis_hauptberuf_id',
-				maxHeight: "100%",
-				minHeight: 50,
+				persistenceID: 'hauptberufTable',
 				layout: 'fitColumns',
 				columns: [
-					{title: 'ID', field: 'bis_hauptberuf_id', headerFilter: true, visible: false},
-					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true},
-					{title: 'Hauptberuflich lehrend', field: 'hauptberuflich', headerFilter: true,
+					{title: 'ID', field: 'bis_hauptberuf_id', headerFilter: true, visible: false, width: '10%'},
+					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true, width: '10%'},
+					{title: 'Hauptberuflich lehrend', field: 'hauptberuflich', headerFilter: true, width: '15%',
 						formatter: (cell) => {
 							return cell.getValue() ? 'Ja' : 'Nein';
 						},
@@ -67,22 +73,23 @@ export const Hauptberuf = {
 							return false;
 						}
 					},
-					{title: 'Hauptberuf Code', field: 'hauptberufcode', headerFilter: true},
-					{title: 'Hauptberuf Bezeichnung', field: 'bezeichnung', headerFilter: true},
-					{title: 'Von', field: 'von', headerFilter: true, formatter: (cell) => {
+					{title: 'Hauptberuf Code', field: 'hauptberufcode', headerFilter: true, width: '15%'},
+					{title: 'Hauptberuf Bezeichnung', field: 'bezeichnung', headerFilter: true, width: '20%'},
+					{title: 'Von', field: 'von', headerFilter: true, width: '15%', formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Bis', field: 'bis', headerFilter: true, formatter: (cell) => {
+					{title: 'Bis', field: 'bis', headerFilter: true, width: '15%', resizable: true, formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false},
-					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false},
+					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false, width: '15%'},
+					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false, width: '15%'},
 					{
 						title: 'Aktionen',
 						field: 'actions',
 						hozAlign: 'center',
+						width: '10%',
 						formatter: (cell) => {
 							let container = document.createElement('div');
 							container.className = "d-flex gap-2";
@@ -108,17 +115,16 @@ export const Hauptberuf = {
 			}
 		};
 	},
-	mounted() {
-		this.getHauptberufe();
-	},
 	methods: {
 		openModal(data) {
 			this.$refs.hauptberufModal.openHauptberufModal(data);
 		},
 		getHauptberufe() {
+			this.$refs.loader.show();
 			let successCallback = (data) => {
 				// set the employee data
-				this.$refs.hauptberufTable.tabulator.setData(data.hauptberufe);
+				if (this.$refs.hauptberufTable && this.$refs.hauptberufTable.tabulator)
+					this.$refs.hauptberufTable.tabulator.setData(data.hauptberufe);
 				// hide loading
 				this.$refs.loader.hide();
 			};
@@ -131,29 +137,27 @@ export const Hauptberuf = {
 			{
 				this.getHauptberufeByUid(successCallback);
 			}
-		 },
+		},
 		getAllHauptberufe(successCallback) {
-			this.$refs.loader.show();
-			PersonalmeldungAPIs.getHauptberufe(
+			this.callGetHauptberufe(
 				this.studiensemester_kurzbz,
 				successCallback
 			);
 		},
 		getHauptberufeByUid(successCallback) {
-			this.$refs.loader.show();
-			PersonalmeldungAPIs.getHauptberufeByUid(
+			this.callGetHauptberufeByUid(
 				this.modelValue.personUID,
 				successCallback
 			);
 		},
 		deleteHauptberuf(bis_hauptberuf_id) {
-			PersonalmeldungAPIs.deleteHauptberuf(
+			this.callDeleteHauptberuf(
 				bis_hauptberuf_id,
 				(data) => {
 					this.getHauptberufe();
 				},
 				(error) => {
-					alert(error);
+					this.$fhcAlert.alertError(error);
 				}
 			);
 		},

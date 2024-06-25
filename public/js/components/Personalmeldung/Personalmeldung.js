@@ -17,15 +17,16 @@
 
 import {CoreFilterCmpt} from '../../../../../js/components/filter/Filter.js';
 import FhcLoader from '../../../../../js/components/Loader.js';
-import {PersonalmeldungAPIs} from './API.js';
+import PersonalmeldungAPI from '../../mixins/api/PersonalmeldungAPI.js';
+import VerwendungenAPI from '../../mixins/api/VerwendungenAPI.js';
 import studiensemester from './studiensemester/Studiensemester.js';
 import personalmeldungSums from './personalmeldungsums/PersonalmeldungSums.js';
 
 export const Personalmeldung = {
+	mixins: [PersonalmeldungAPI, VerwendungenAPI],
 	components: {
 		CoreFilterCmpt,
 		FhcLoader,
-		PersonalmeldungAPIs,
 		studiensemester,
 		personalmeldungSums
 	},
@@ -34,9 +35,8 @@ export const Personalmeldung = {
 			appSideMenuEntries: {},
 			studiensemester_kurzbz: null,
 			personalmeldungSums: null,
-			verwendungenSaved: false,
 			personalmeldungTabulatorOptions: {
-				layout: 'fitDataTable',
+				layout: 'fitColumns',
 				columns: [
 					{title: 'PersNr', field: 'personalnummer', headerFilter: true,
 						formatter: function(cell) {return cell.getValue().replace(/^0+/, '');}
@@ -190,11 +190,12 @@ export const Personalmeldung = {
 		getMitarbeiter: function() {
 			// show loading
 			this.$refs.loader.show();
-			PersonalmeldungAPIs.getMitarbeiter(
+			this.callGetMitarbeiter(
 				this.studiensemester_kurzbz,
 				(data) => {
 					// set the employee data
-					this.$refs.personalmeldungTable.tabulator.setData(data.mitarbeiter);
+					if (this.$refs.personalmeldungTable)
+						this.$refs.personalmeldungTable.tabulator.setData(data.mitarbeiter);
 					// set employee sum data
 					this.personalmeldungSums = data.personalmeldungSums;
 					// hide loading
@@ -208,15 +209,12 @@ export const Personalmeldung = {
 		generateVerwendungen: function() {
 			// show loading
 			this.$refs.loader.show();
-			PersonalmeldungAPIs.generateVerwendungen(
+			this.callGenerateVerwendungen(
 				this.studiensemester_kurzbz,
 				(data) => {
-					// display success alert
-					this.verwendungenSaved = true;
-					// remove success alert after short time
-					setTimeout(() => this.verwendungenSaved = false, 2000)
 					// hide loading
 					this.$refs.loader.hide();
+					this.$fhcAlert.alertSuccess('Verwendungen erfolgreich aktualisiert');
 				}
 			);
 		},
@@ -258,10 +256,6 @@ export const Personalmeldung = {
 						</button>
 					</span>
 				</div>
-			</div>
-			<br />
-			<div class="alert alert-success" v-show="verwendungenSaved">
-				Verwendungen erfolgreich aktualisiert
 			</div>
 			<br />
 			<personalmeldungSums :personalmeldungSums="personalmeldungSums"></personalmeldungSums>

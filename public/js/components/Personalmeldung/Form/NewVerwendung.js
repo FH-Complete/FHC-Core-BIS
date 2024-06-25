@@ -1,12 +1,12 @@
-import {PersonalmeldungAPIs} from '../API.js';
+import VerwendungenAPI from '../../../mixins/api/VerwendungenAPI.js';
 import uids from '../personalmeldunguids/Uids.js';
 
 export const NewVerwendungForm = {
 	emits: [
 		'verwendungAdded'
 	],
+	mixins: [VerwendungenAPI],
 	components: {
-		PersonalmeldungAPIs,
 		uids,
 		"datepicker": VueDatePicker
 	},
@@ -19,8 +19,7 @@ export const NewVerwendungForm = {
 			verwendung: {
 				verwendung_code: 1
 			}, // the added Verwendung
-			verwendungList: [], // Verwendung list for dropdown
-			errorText: null
+			verwendungList: [] // Verwendung list for dropdown
 		}
 	},
 	computed: {
@@ -31,21 +30,21 @@ export const NewVerwendungForm = {
 	},
 	methods: {
 		prefill() {
-			PersonalmeldungAPIs.getFullVerwendungList(
+			this.callGetFullVerwendungList(
 				(data) => {
 					this.verwendungList = data.verwendungList;
 				}
 			);
 		},
 		add() {
-			PersonalmeldungAPIs.addVerwendung(
+			this.callAddVerwendung(
 				this.fullVerwendung,
 				(data) => {
 					this.$emit('verwendungAdded');
 					this.reset();
 				},
 				(error) => {
-					this.errorText = error;
+					this.$fhcAlert.alertError(error);
 				}
 			);
 		},
@@ -57,18 +56,10 @@ export const NewVerwendungForm = {
 				verwendung_code: 1
 			};
 			if (this.$refs.uids) this.$refs.uids.reset();
-			this.resetError();
-		},
-		resetError() {
-			this.errorText = null;
 		}
 	},
 	template: `
 	<div>
-		<div class="alert alert-danger" role="alert" v-show="errorText != null">
-			{{ errorText }}
-		<br />
-		</div>
 		<br />
 		<form ref="newVerwendungForm" class="row gy-3">
 			<div class="col-6" v-if="mitarbeiter == null">

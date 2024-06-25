@@ -9,7 +9,7 @@ $config['fhc_bis_vollzeit_sws_einzelstundenbasis'] = 15;
 // Vollzeit Arbeitsstunden
 $config['fhc_bis_vollzeit_sws_inkludierte_lehre'] = 25;
 
-// Studiengaenge, die nicht gemeldet werden
+// Studiengaenge, die nicht gemeldet werden (studiengang_kz, nicht melde_studiengang_kz)
 $config['fhc_bis_exclude_stg'] = array();
 
 // Semester Gewichtung für Berechnung von Jahresvollzeitaequivalenz JVZAE
@@ -27,7 +27,8 @@ $config['fhc_bis_vertragsarten'] = array(
 	'echterDienstvertrag' => 'echterdv',
 	'freierDienstvertrag' => 'freierdv',
 	'studentischeHilfskraft' => 'studentischehilfskr',
-	'werkvertrag' => 'werkvertrag'
+	'werkvertrag' => 'werkvertrag',
+	'externeLehre' => 'externerlehrender'
 );
 
 // Vollzeit Arbeitsstunden
@@ -79,7 +80,8 @@ $config['fhc_bis_verwendung_codes_lehre'] = array(
 $config['fhc_bis_verwendung_codes_non_lehre'] = array(
 	0 => $config['fhc_bis_verwendung_codes']['management'],
 	1 => $config['fhc_bis_verwendung_codes']['wartung'],
-	2 => $config['fhc_bis_verwendung_codes']['verwaltung']
+	2 => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'],
+	3 => $config['fhc_bis_verwendung_codes']['verwaltung']
 );
 
 $config['fhc_bis_oe_verwendung_code_zuordnung'] = array(
@@ -87,7 +89,9 @@ $config['fhc_bis_oe_verwendung_code_zuordnung'] = array(
 	'Reinigung' => $config['fhc_bis_verwendung_codes']['wartung'],		// Wartung und Betrieb
 	'Haustechnik' => $config['fhc_bis_verwendung_codes']['wartung'],		// Wartung und Betrieb
 	'Bibliothek' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'], // professionelle Unterstützung der Studierenden in akademischen Belangen
-	'Auslandsbuero' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'] // professionelle Unterstützung der Studierenden in Gesundheits- und Sozialbelangen
+	'Auslandsbuero' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'], // professionelle Unterstützung der Studierenden in Gesundheits- und Sozialbelangen
+	'tlc' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'], // professionelle Unterstützung der Studierenden in Gesundheits- und Sozialbelangen
+	'infocenter' => $config['fhc_bis_verwendung_codes']['akadUnterstuetzung'] // professionelle Unterstützung der Studierenden in Gesundheits- und Sozialbelangen
 );
 
 $config['fhc_bis_oe_verwendung_code_zuordnung_niederprio'] = array(
@@ -100,7 +104,7 @@ $config['fhc_bis_vertragstyp_verwendung_code_zuordnung'] = array(
 	'werkvertrag' => $config['fhc_bis_verwendung_codes']['lehre']
 );
 
-// if Verwendung is determined by Vertragsart. High prio: has no priority over other criteria (like oe, funktion....)
+// if Verwendung is determined by Vertragsart. Low prio: has no priority over other criteria (like oe, funktion....)
 $config['fhc_bis_vertragstyp_verwendung_code_zuordnung_niederprio'] = array(
 	'studentischehilfskr' => $config['fhc_bis_verwendung_codes']['lehreMitarbeit']
 );

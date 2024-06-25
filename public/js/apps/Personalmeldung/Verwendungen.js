@@ -17,6 +17,7 @@
 
 import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
 import {Verwendungen} from '../../components/Personalmeldung/Verwendungen.js';
+import FhcAlert from '../../../../../js/plugin/FhcAlert.js';
 import Phrasen from '../../../../../js/plugin/Phrasen.js';
 
 const verwendungenApp = Vue.createApp({
@@ -26,4 +27,8 @@ const verwendungenApp = Vue.createApp({
 	},
 });
 
-verwendungenApp.use(Phrasen).use(primevue.config.default,{zIndex: {overlay: 9999}}).mount('#main');
+verwendungenApp
+	.use(primevue.config.default,{zIndex: {overlay: 9999}})
+	.use(FhcAlert)
+	.use(Phrasen)
+	.mount('#main');

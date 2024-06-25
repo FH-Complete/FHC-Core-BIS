@@ -287,7 +287,7 @@ class PersonalmeldungVerwendungLib
 		{
 			$uid = $dv->mitarbeiter_uid;
 
-			// skip if Vertragstyp of Dienstverhältnis is high Prio Verwendung code, then Verwendung has only one code
+			// if Vertragstyp of Dienstverhältnis is high Prio Verwendung code, add the verwendung
 			if (isset($vertragstypVerwendungCodes[$dv->vertragsart_kurzbz]))
 			{
 				$verwCodeObj = new StdClass();
@@ -326,7 +326,7 @@ class PersonalmeldungVerwendungLib
 				}
 			}
 
-			// add low prio Dienstverhältnis Verwendungen
+			// add low prio Dienstverhältnis Verwendungen (Vertragstyp))
 			if (!$this->_findVerwendungCodeObj(
 				$verwendungCodes,
 				$uid,

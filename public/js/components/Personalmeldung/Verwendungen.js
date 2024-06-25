@@ -17,22 +17,21 @@
 
 import {CoreFilterCmpt} from '../../../../../js/components/filter/Filter.js';
 import FhcLoader from '../../../../../js/components/Loader.js';
-import {PersonalmeldungAPIs} from './API.js';
+import VerwendungenAPI from '../../mixins/api/VerwendungenAPI.js';
 import studiensemester from './studiensemester/Studiensemester.js';
 import NewVerwendungModal from "./Modals/NewVerwendungModal.js";
 import UpdateVerwendungModal from "./Modals/UpdateVerwendungModal.js";
 import PersonalmeldungDates from "../../mixins/PersonalmeldungDates.js";
 
 export const Verwendungen = {
+	mixins: [PersonalmeldungDates, VerwendungenAPI],
 	components: {
 		CoreFilterCmpt,
 		FhcLoader,
-		PersonalmeldungAPIs,
 		studiensemester,
 		NewVerwendungModal,
 		UpdateVerwendungModal
 	},
-	mixins: [PersonalmeldungDates],
 	props: {
 		modelValue: {
 			type: Object,
@@ -42,45 +41,53 @@ export const Verwendungen = {
 	data: function() {
 		return {
 			studiensemester_kurzbz: null,
-			verwendungenTabulatorEvents: [{
-				event: "rowClick",
-				handler: (e, row) => {
+			verwendungenTabulatorEvents: [
+				{
+					event: "rowClick",
+					handler: (e, row) => {
 
-					// exclude other clicked elements like buttons, icons...
-					if (e.target.nodeName != 'DIV') return;
+						// exclude other clicked elements like buttons, icons...
+						if (e.target.nodeName != 'DIV') return;
 
-					// open modal for editing
-					this.openUpdateModal(row.getData());
+						// open modal for editing
+						this.openUpdateModal(row.getData());
+					}
+				},
+				{
+					event: "tableBuilt",
+					handler: () => {
+						this.getVerwendungen();
+					}
 				}
-			}],
+			],
 			verwendungenTabulatorOptions: {
 				index: 'bis_verwendung_id',
-				maxHeight: "100%",
-				minHeight: 50,
+				persistenceID:'verwendungenTable',
 				layout: 'fitColumns',
 				columns: [
-					{title: 'ID', field: 'bis_verwendung_id', headerFilter: true, visible: false},
-					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true},
-					{title: 'Verwendung Code', field: 'verwendung_code', headerFilter: true},
-					{title: 'Verwendung Bezeichnung', field: 'verwendungbez', headerFilter: true},
-					{title: 'Von', field: 'von', headerFilter: true, formatter: (cell) => {
+					{title: 'ID', field: 'bis_verwendung_id', headerFilter: true, visible: false, width: '10%'},
+					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true, width: '10%'},
+					{title: 'Verwendung Code', field: 'verwendung_code', headerFilter: true, width: '15%'},
+					{title: 'Verwendung Bezeichnung', field: 'verwendungbez', headerFilter: true, width: '25%'},
+					{title: 'Von', field: 'von', headerFilter: true, width: '15%', formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Bis', field: 'bis', headerFilter: true, formatter: (cell) => {
+					{title: 'Bis', field: 'bis', headerFilter: true, width: '15%', formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Manuell', field: 'manuell', headerFilter: true, mutator: (value) => {
+					{title: 'Manuell', field: 'manuell', headerFilter: true, width: '10%', mutator: (value) => {
 							return value ? 'Ja' : 'Nein';
 						}}
 					,
-					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false},
-					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false},
+					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false, width: '15%'},
+					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false, width: '15%'},
 					{
 						title: 'Aktionen',
 						field: 'actions',
 						hozAlign: 'center',
+						width: '10%',
 						formatter: (cell) => {
 							let manuell = cell.getRow().getData().manuell;
 
@@ -111,9 +118,6 @@ export const Verwendungen = {
 			}
 		};
 	},
-	mounted() {
-		this.getVerwendungen();
-	},
 	methods: {
 		openNewModal() {
 			this.$refs.newVerwendungModal.openVerwendungModal();
@@ -127,7 +131,8 @@ export const Verwendungen = {
 		getVerwendungen() {
 			let successCallback = (data) => {
 				// set the employee data
-				this.$refs.verwendungTable.tabulator.setData(data.verwendungen);
+				if (this.$refs.verwendungTable && this.$refs.verwendungTable.tabulator)
+					this.$refs.verwendungTable.tabulator.setData(data.verwendungen);
 				// hide loading
 				this.$refs.loader.hide();
 			};
@@ -143,26 +148,26 @@ export const Verwendungen = {
 		 },
 		getAllVerwendungen(successCallback) {
 			this.$refs.loader.show();
-			PersonalmeldungAPIs.getVerwendungen(
+			this.callGetVerwendungen(
 				this.studiensemester_kurzbz,
 				successCallback
 			);
 		},
 		getVerwendungenByUid(successCallback) {
 			this.$refs.loader.show();
-			PersonalmeldungAPIs.getVerwendungenByUid(
+			this.callGetVerwendungenByUid(
 				this.modelValue.personUID,
 				successCallback
 			);
 		},
 		deleteVerwendung(bis_verwendung_id) {
-			PersonalmeldungAPIs.deleteVerwendung(
+			this.callDeleteVerwendung(
 				bis_verwendung_id,
 				(data) => {
 					this.getVerwendungen();
 				},
 				(error) => {
-					alert(error);
+					this.$fhcAlert.alertError(error);
 				}
 			);
 		},
@@ -172,10 +177,11 @@ export const Verwendungen = {
 		generateVerwendungen: function() {
 			// show loading
 			this.$refs.loader.show();
-			PersonalmeldungAPIs.generateVerwendungen(
+			this.callGenerateVerwendungen(
 				this.studiensemester_kurzbz,
 				(data) => {
-					this.getVerwendungen();
+					this.getVerwendungen()
+					this.$fhcAlert.alertSuccess("Verwendungen erfolgreich aktualisiert");
 				}
 			);
 		},

@@ -18,6 +18,7 @@
 import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
 import {Plausichecks} from '../../components/Personalmeldung/Plausichecks.js';
 import FhcAlert from '../../../../../js/plugin/FhcAlert.js';
+import Phrasen from '../../../../../js/plugin/Phrasen.js';
 
 const plausicheckApp = Vue.createApp({
 	components: {
@@ -28,4 +29,5 @@ const plausicheckApp = Vue.createApp({
 
 plausicheckApp
 	.use(FhcAlert)
+	.use(Phrasen)
 	.mount('#main');

@@ -31,3 +31,9 @@ function createIssueObj($issue_fehler_kurzbz, $person_id = null, $oe_kurzbz = nu
 
 	return $issue;
 }
+
+// base 64 url encode
+function base64_urlencode($value)
+{
+	return strtr($value, "/+", "_-");
+}

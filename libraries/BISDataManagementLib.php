@@ -19,8 +19,13 @@ class BISDataManagementLib extends BISErrorProducerLib
 	// UHSTAT codes for person id type
 	private $_pers_id_types = array(
 		'svnr' => 1,
-		'ersatzkennzeichen' => 2
+		'ersatzkennzeichen' => 2,
+		'vbpkAs' => 6
 	);
+
+	const PERS_ID_NAME = 'persId';
+	const PERS_ID_TYPE_NAME = 'persIdType';
+	const PERS_ID_FREMDSCHLÜSSEL_NAME = 'PersIdFremdVerschl'; // PersidFremdVerschl
 
 	/**
 	 * Library initialization
@@ -108,6 +113,10 @@ class BISDataManagementLib extends BISErrorProducerLib
 			// get UHSTAT0 specific data from student data
 			$uhstat0Data = $this->_getUHSTAT0Data($student);
 
+			// add pers Id foreign key vBpk (to match with main key vBpk)
+			if (isset($idData[self::PERS_ID_FREMDSCHLÜSSEL_NAME]))
+				$uhstat0Data[self::PERS_ID_FREMDSCHLÜSSEL_NAME] = $idData[self::PERS_ID_FREMDSCHLÜSSEL_NAME];
+
 			// stop if error occured when getting UHSTAT0 code data
 			if (!isset($uhstat0Data)) continue;
 
@@ -189,10 +198,14 @@ class BISDataManagementLib extends BISErrorProducerLib
 			// skip if error occured when getting UHSTAT1 code data
 			if (!isset($uhstat1Data)) continue;
 
+			// add pers Id foreign key vBpk (to match with main key vBpk)
+			if (isset($idData[self::PERS_ID_FREMDSCHLÜSSEL_NAME]))
+				$uhstat1Data[self::PERS_ID_FREMDSCHLÜSSEL_NAME] = $idData[self::PERS_ID_FREMDSCHLÜSSEL_NAME];
+
 			// if everything ok, send UHSTAT1 data to BIS
 			$uhstat1Result = $this->_ci->UHSTAT1Model->saveEntry(
-				$idData['persIdType'],
-				$idData['persId'],
+				$idData[self::PERS_ID_TYPE_NAME],
+				$idData[self::PERS_ID_NAME],
 				$uhstat1Data
 			);
 
@@ -234,6 +247,8 @@ class BISDataManagementLib extends BISErrorProducerLib
 	private function _getUHSTAT0IdentificationData($studentData)
 	{
 		$errorOccured = false;
+
+		// get "base" identification data
 		$idData = $this->_getUHSTATIdentificationData($studentData);
 
 		if (isEmptyArray($idData)) return null;
@@ -320,24 +335,34 @@ class BISDataManagementLib extends BISErrorProducerLib
 		$errorOccured = false;
 		$idData = array();
 
-		// get persIdType and persId (svnr, or ersatzkennzeichen)
-		if (isset($personData->svnr) && !isEmptyString($personData->svnr))
+		// get persIdType and persId (bpkAs, svnr, or ersatzkennzeichen)
+		//~ if (isset($personData->svnr) && !isEmptyString($personData->svnr))
+		//~ {
+			//~ $idData['persId'] = $personData->svnr;
+			//~ $idData['persIdType'] = $this->_pers_id_types['svnr'];
+			//~ $idData[self::PERS_ID_FREMDSCHLÜSSEL_NAME] = $personData->vbpkBf;
+		//~ }
+		if (isset($personData->vbpkAs) && !isEmptyString($personData->vbpkAs)
+			&& isset($personData->vbpkBf) && !isEmptyString($personData->vbpkBf))
 		{
-			$idData['persId'] = $personData->svnr;
-			$idData['persIdType'] = $this->_pers_id_types['svnr'];
+			// TODO: is it needed to explicitely replace special chars here?
+			//$idData[self::PERS_ID_NAME] = base64_urlencode($personData->vbpkAs);
+			$idData[self::PERS_ID_NAME] = $personData->vbpkAs;
+			$idData[self::PERS_ID_TYPE_NAME] = $this->_pers_id_types['vbpkAs'];
+			$idData[self::PERS_ID_FREMDSCHLÜSSEL_NAME] = $personData->vbpkBf;
 		}
 		elseif (isset($personData->ersatzkennzeichen) && !isEmptyString($personData->ersatzkennzeichen))
 		{
-			$idData['persId'] = $personData->ersatzkennzeichen;
-			$idData['persIdType'] = $this->_pers_id_types['ersatzkennzeichen'];
+			$idData[self::PERS_ID_NAME] = $personData->ersatzkennzeichen;
+			$idData[self::PERS_ID_TYPE_NAME] = $this->_pers_id_types['ersatzkennzeichen'];
 		}
 		else
 		{
 			// add issue if data missing
 			$this->addWarning(
-				error("Svnr und Ersatzkennzeichen fehlt; Person ID ".$personData->person_id),
+				error("Personkennung fehlt (vBpk AS, vBpk BF oder Ersatzkennzeichen fehlt); Person ID ".$personData->person_id),
 				createIssueObj(
-					'uhstatSvnrUndEkzFehlt',
+					'uhstatPersonkennungFehlt',
 					$personData->person_id
 				)
 			);
@@ -438,7 +463,7 @@ class BISDataManagementLib extends BISErrorProducerLib
 	}
 
 	/**
-	 * Gets UHSTAT0 data to be sent, in format as expected by SOBIS.
+	 * Gets UHSTAT1 data to be sent, in format as expected by SOBIS.
 	 * @param object $studentData data of student from FHC database
 	 */
 	private function _getUHSTAT1Data($studentData)

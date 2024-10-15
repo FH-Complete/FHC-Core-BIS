@@ -1180,6 +1180,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				{
 					$lehreObj = new StdClass();
 
+					$lehreObj->mitarbeiter_uid = $swsProStg->mitarbeiter_uid;
 					$lehreObj->StgKz = $swsProStg->melde_studiengang_kz;
 					$lehreObj->SommersemesterSWS = $isSommersemester ? $swsProStg->sws : 0.00;
 					$lehreObj->WintersemesterSWS = $isWintersemester ? $swsProStg->sws : 0.00;

@@ -594,6 +594,7 @@ class PersonalmeldungVerwendungLib
 					(in_array($verw->verwendung_code, $verwendungenLehreConfig) && in_array($exVerw->verwendung_code, $verwendungenLehreConfig))
 					|| (in_array($verw->verwendung_code, $verwendungenNonLehreConfig) && in_array($exVerw->verwendung_code, $verwendungenNonLehreConfig));
 
+				// if there is already a paralell Verwendung marked as manuell - not add the new Verwendung!
 				$isManuell =
 					$verw->mitarbeiter_uid == $exVerw->mitarbeiter_uid
 					&& $verw->von <= $exBis
@@ -601,6 +602,7 @@ class PersonalmeldungVerwendungLib
 					&& $exVerw->manuell
 					&& $isParalell;
 
+				// if same verwendung is already saved, or there is a paralell manual Verwendung
 				if ($alreadySaved || $isManuell)
 				{
 					// no need to add it

@@ -84,7 +84,7 @@ class PersonalmeldungFileVergleich extends Auth_Controller
 			$mitarbeiterMissingInFile = array_merge(array(), $newMitarbeiter);
 
 			$fileComparisonData['fileMitarbeiterCount'] = $oldMitarbeiter->length;
-			$fileComparisonData['mitarbeiterCount'] = count($newMitarbeiter);
+			$fileComparisonData['mitarbeiterCount'] = numberOfElements($newMitarbeiter);
 
 			$oldConvertedMitarbeiter = $this->_convertMitarbeiterArr($oldMitarbeiter);
 

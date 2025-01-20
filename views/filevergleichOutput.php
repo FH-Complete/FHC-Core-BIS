@@ -37,7 +37,7 @@
 				<?php
 					foreach ($messages as $key => $msgArr)
 					{
-						echo "<br><br>".count($msgArr)." Fehler für $key:";
+						echo "<br><br>".numberOfElements($msgArr)." Fehler für $key:";
 						echo "<br>----------------------------------------------------------";
 						foreach ($msgArr as $msgObj)
 						{

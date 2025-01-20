@@ -188,7 +188,7 @@ class PersonalmeldungVerwendungLib
 
 		// sort children arrays by length ascending (nearest oe is preferred in case of common ancestors), keep index
 		uasort($this->_verwendung_oe_kurzbz_with_children, function ($a, $b) {
-			return count($a) - count($b);
+			return numberOfElements($a) - numberOfElements($b);
 		});
 
 		// get all Mitarbeiter with their oes for given Bismeldung year
@@ -469,7 +469,7 @@ class PersonalmeldungVerwendungLib
 			}
 
 			// non-prio codes, add only if no code with prio defined
-			if (count($prioCodes) <= 0)
+			if (numberOfElements($prioCodes) <= 0)
 			{
 				foreach ($nonPrioCodes as $code)
 				{

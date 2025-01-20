@@ -104,7 +104,7 @@ class PersonalmeldungPlausichecks extends Auth_Controller
 						if (!isEmptyArray($fehlertext_params))
 						{
 							// replace placeholder with params, if present
-							if (count($fehlertext_params) != substr_count($fehlerText, '%s'))
+							if (numberOfElements($fehlertext_params) != substr_numberOfElements($fehlerText, '%s'))
 								$this->terminateWithJsonError('Wrong number of parameters for Fehlertext, fehler_kurzbz ' . $fehler_kurzbz);
 
 							$fehlerText = vsprintf($fehlerText, $fehlertext_params);

@@ -512,7 +512,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			//~ var_dump($verwendungDates);
 
 			// for all start/end dates
-			for ($i = 0; $i < count($verwendungDates); $i++)
+			for ($i = 0; $i < numberOfElements($verwendungDates); $i++)
 			{
 				// skip first date, add Verwendung only for end dates
 				if ($i < 1 || $verwendungDates[$i]->startEndType != PersonalmeldungDate::END_TYPE) continue;

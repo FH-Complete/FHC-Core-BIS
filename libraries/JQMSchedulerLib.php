@@ -29,7 +29,7 @@ class JQMSchedulerLib
 		// set config items
 		$this->_status_kurzbz = $this->_ci->config->item('fhc_bis_status_kurzbz');
 		$this->_studiengangtyp = $this->_ci->config->item('fhc_bis_studiengangtyp');
-		$this->_terminated_student_status_kurzbz = $this->_ci->config->item('fhc_dvuh_terminated_student_status_kurzbz');
+		$this->_terminated_student_status_kurzbz = $this->_ci->config->item('fhc_bis_terminated_student_status_kurzbz');
 		$studiensemesterMeldezeitraum = $this->_ci->config->item('fhc_bis_studiensemester_meldezeitraum');
 
 		// get default Studiensemester from config

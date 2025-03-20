@@ -28,7 +28,7 @@ $config['fhc_bis_studiengangtyp'] = array(
 );
 
 // All status_kurzbz which a student who terminated studies can have
-$config['fhc_dvuh_terminated_student_status_kurzbz'] = array('Abgewiesener', 'Abbrecher');
+$config['fhc_bis_terminated_student_status_kurzbz'] = array('Abgewiesener', 'Abbrecher');
 
 // whether only students registered to Reihungstest should be sent for UHSTAT0
 $config['fhc_bis_UHSTAT0_nur_reihungstest_registrierte_senden'] = true;

@@ -482,7 +482,7 @@ class BISDataManagementLib extends BISErrorProducerLib
 			$this->addWarning(
 				error("Geburtsnation fehlt; Person ID ".$studentData->person_id),
 				createIssueObj(
-					'uhstatGeburtsnationFehlt',
+					'geburtsnationFehlt', // person issue from core
 					$studentData->person_id
 				)
 			);

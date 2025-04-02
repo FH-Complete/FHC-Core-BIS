@@ -346,8 +346,7 @@ class BISDataManagementLib extends BISErrorProducerLib
 			&& isset($personData->vbpkBf) && !isEmptyString($personData->vbpkBf))
 		{
 			// TODO: is it needed to explicitely replace special chars here?
-			//$idData[self::PERS_ID_NAME] = base64_urlencode($personData->vbpkAs);
-			$idData[self::PERS_ID_NAME] = $personData->vbpkAs;
+			$idData[self::PERS_ID_NAME] = base64_urlencode($personData->vbpkAs);
 			$idData[self::PERS_ID_TYPE_NAME] = $this->_pers_id_types['vbpkAs'];
 			$idData[self::PERS_ID_FREMDSCHLÜSSEL_NAME] = $personData->vbpkBf;
 		}

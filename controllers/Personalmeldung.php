@@ -12,10 +12,10 @@ class Personalmeldung extends Auth_Controller
 	{
 		parent::__construct(
 			array(
-				'index' => 'admin:r',
-				'getStudiensemester' => 'admin:r',
-				'getMitarbeiter' => 'admin:r',
-				'downloadPersonalmeldungXml' => 'admin:r'
+				'index' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'getStudiensemester' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'getMitarbeiter' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'downloadPersonalmeldungXml' => array('admin:r','mitarbeiter/stammdaten:r')
 			)
 		);
 

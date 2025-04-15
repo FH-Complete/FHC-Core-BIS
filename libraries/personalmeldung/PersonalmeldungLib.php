@@ -227,6 +227,14 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				$funktionenMa = $benutzerfunktionen[$ma->uid] ?? array();
 				$personObj->funktionen = $this->_getFunktionen($funktionenMa);
 
+				//~ if ($ma->uid == 'meyerd')
+				//~ {
+					//~ var_dump($funktionenMa);
+					//~ var_dump($personObj->funktionen);
+
+				//~ die();
+				//~ }
+
 				// Add Entwicklungsteam Funktionen to person object
 				$entwicklungsteamfunktionenMa = $entwicklungsteamfunktionen[$ma->uid] ?? array();
 				$personObj->funktionen = array_merge($personObj->funktionen, $this->_getEntwicklungsteamFunktionen($entwicklungsteamfunktionenMa));
@@ -1001,7 +1009,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 	/**
 	 * Funktionscode 1 - 6 anhand Benutzerfunktionen ermitteln
-	 * @param $benutzerfunktionArr
+	 * @param $benutzerfunktionArr for one benutzer
 	 * @return array
 	 */
 	private function _getFunktionen($benutzerfunktionArr)
@@ -1084,11 +1092,14 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			}
 			elseif ($funktionscode == $this->_config['studiengangsleitungfunktion'])		// Funktionscontainer vorhanden und Funktionscode 5
 			{
-				$funktionObjArr = array_filter($funktionArr, function (&$obj) {
-					return $obj->funktionscode == $this->_config['studiengangsleitungfunktion'];
-				});
-
-				$funktionObjArr[0]->studiengang[] = $studiengang->melde_studiengang_kz;	// STG ergaenzen
+				foreach ($funktionArr as $funktion)
+				{
+					if ($funktion->funktionscode == $this->_config['studiengangsleitungfunktion'])
+					{
+						$funktion->studiengang[] = $studiengang->melde_studiengang_kz;	// STG ergaenzen
+						break;
+					}
+				}
 			}
 		}
 

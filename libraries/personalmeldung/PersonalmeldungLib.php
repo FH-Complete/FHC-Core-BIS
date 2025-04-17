@@ -227,14 +227,6 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				$funktionenMa = $benutzerfunktionen[$ma->uid] ?? array();
 				$personObj->funktionen = $this->_getFunktionen($funktionenMa);
 
-				//~ if ($ma->uid == 'meyerd')
-				//~ {
-					//~ var_dump($funktionenMa);
-					//~ var_dump($personObj->funktionen);
-
-				//~ die();
-				//~ }
-
 				// Add Entwicklungsteam Funktionen to person object
 				$entwicklungsteamfunktionenMa = $entwicklungsteamfunktionen[$ma->uid] ?? array();
 				$personObj->funktionen = array_merge($personObj->funktionen, $this->_getEntwicklungsteamFunktionen($entwicklungsteamfunktionenMa));

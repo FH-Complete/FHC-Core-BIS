@@ -14,13 +14,13 @@ class PersonalmeldungHauptberuf extends Auth_Controller
 	{
 		parent::__construct(
 			array(
-				'index' => 'admin:r',
-				'getHauptberufe' => 'admin:r',
-				'getHauptberufeByUid' => 'admin:r',
-				'getHauptberufcodeList' => 'admin:r',
-				'addHauptberuf' => 'admin:rw',
-				'updateHauptberuf' => 'admin:rw',
-				'deleteHauptberuf' => 'admin:rw'
+				'index' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'getHauptberufe' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'getHauptberufeByUid' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'getHauptberufcodeList' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'addHauptberuf' => array('admin:rw','mitarbeiter/stammdaten:rw'),
+				'updateHauptberuf' => array('admin:rw','mitarbeiter/stammdaten:rw'),
+				'deleteHauptberuf' => array('admin:rw','mitarbeiter/stammdaten:rw')
 			)
 		);
 

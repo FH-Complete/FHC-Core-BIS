@@ -5,7 +5,7 @@ $config['navigation_header']['*']['Organisation']['children']['Personalmeldung']
 	'sort' => 25,
 	'description' => 'BIS-Personalmeldung',
 	'expand' => false,
-	'requiredPermissions' => 'admin:r'
+	'requiredPermissions' => array('admin:r','mitarbeiter/stammdaten:r')
 );
 
 $config['navigation_menu']['extensions/FHC-Core-BIS/*'] = array(
@@ -13,24 +13,24 @@ $config['navigation_menu']['extensions/FHC-Core-BIS/*'] = array(
 		'link' => site_url('extensions/FHC-Core-BIS/Personalmeldung'),
 		'description' => 'BIS-Personalmeldung',
 		'icon' => 'home',
-		'requiredPermissions' => 'admin:r'
+		'requiredPermissions' => array('admin:r','mitarbeiter/stammdaten:r')
 	),
 	'Plausichecks' => array(
 		'link' => site_url('extensions/FHC-Core-BIS/PersonalmeldungPlausichecks'),
 		'description' => 'BIS-Personalmeldung Plausichecks',
 		'icon' => 'check',
-		'requiredPermissions' => 'admin:r'
+		'requiredPermissions' => array('admin:r','mitarbeiter/stammdaten:r')
 	),
 	'Verwendungen verwalten' => array(
 		'link' => site_url('extensions/FHC-Core-BIS/PersonalmeldungVerwendungen'),
 		'description' => 'BIS-Personalmeldung Verwendungen',
 		'icon' => 'list',
-		'requiredPermissions' => 'admin:r'
+		'requiredPermissions' => array('admin:r','mitarbeiter/stammdaten:r')
 	),
 	'Hauptberufe verwalten' => array(
 		'link' => site_url('extensions/FHC-Core-BIS/PersonalmeldungHauptberuf'),
 		'description' => 'BIS-Personalmeldung Hauptberufe',
 		'icon' => 'list',
-		'requiredPermissions' => 'admin:r'
+		'requiredPermissions' => array('admin:r','mitarbeiter/stammdaten:r')
 	)
 );

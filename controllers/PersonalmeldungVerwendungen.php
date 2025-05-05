@@ -14,16 +14,16 @@ class PersonalmeldungVerwendungen extends Auth_Controller
 	{
 		parent::__construct(
 			array(
-				'index' => 'admin:r',
-				'getVerwendungen' => 'admin:r',
-				'getVerwendungenByUid' => 'admin:r',
-				'getMitarbeiterUids' => 'admin:r',
-				'getVerwendungList' => 'admin:r',
-				'getFullVerwendungList' => 'admin:r',
-				'addVerwendung' => 'admin:rw',
-				'updateVerwendung' => 'admin:rw',
-				'deleteVerwendung' => 'admin:rw',
-				'generateVerwendungen' => 'admin:rw'
+				'index' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'getVerwendungen' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'getVerwendungenByUid' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'getMitarbeiterUids' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'getVerwendungList' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'getFullVerwendungList' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'addVerwendung' => array('admin:rw','mitarbeiter/stammdaten:rw'),
+				'updateVerwendung' => array('admin:rw','mitarbeiter/stammdaten:rw'),
+				'deleteVerwendung' => array('admin:rw','mitarbeiter/stammdaten:rw'),
+				'generateVerwendungen' => array('admin:rw','mitarbeiter/stammdaten:rw')
 			)
 		);
 

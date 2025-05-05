@@ -37,11 +37,11 @@ class MitarbeiterUngueltigeSemesterwochenstunden extends PlausiChecker
 		{
 			$data = getData($result);
 
-			$errorTexts = array();
-
 			// populate results with data necessary for writing issues
 			foreach ($data as $dataObj)
 			{
+				$errorTexts = array();
+
 				if ($dataObj->SommersemesterSWS < $this->_sws_boundaries[0])
 				{
 					$errorTexts[] = 'Sommersemester SWS zu klein '.$dataObj->SommersemesterSWS;

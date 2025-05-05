@@ -23,8 +23,8 @@ class PersonalmeldungPlausichecks extends Auth_Controller
 	{
 		parent::__construct(
 			array(
-				'index' => array('admin:r'),
-				'runChecks' => array('admin:r')
+				'index' => array('admin:r', 'mitarbeiter/stammdaten:r'),
+				'runChecks' => array('admin:r', 'mitarbeiter/stammdaten:r')
 			)
 		);
 

@@ -6,6 +6,7 @@ INSERT INTO system.tbl_fehler (fehlercode, fehler_kurzbz, fehlercode_extern, feh
 ('BIS_UHSTAT0_0004', 'uhstatZgvOderZgvMasterFehlt', NULL, 'Zgv/Zgv Master nicht vorhanden; prestudent_id %s', 'error', 'bis'),
 ('BIS_UHSTAT0_0005', 'meldeStudiengangKzFehlt', NULL, 'Melde-Studiengangskennzahl nicht vorhanden; prestudent_id %s', 'error', 'bis'),
 ('BIS_UHSTAT1_0001', 'uhstatGeburtsnationFehlt', NULL, 'Geburtsnation nicht vorhanden', 'error', 'bis'),
+('BIS_UHSTAT1_0002', 'uhstatPersonkennungFehlt', NULL, 'Personkennung fehlt (vBpk AS, vBpk BF oder Ersatzkennzeichen fehlt)', 'error', 'bis'),
 
 /* Personalmeldung errors */
 ('BIS_PERSONALMELDUNG_0001', 'aktiveMitarbeiterOhneDienstverhaeltnis', NULL, 'Zu meldende*r (bismelden JA) Aktive*r Mitarbeiter*in ohne aktuelles Dienstverhältnis; uid %s', 'error', 'personalmeldung'),

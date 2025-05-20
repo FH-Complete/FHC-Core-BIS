@@ -41,10 +41,17 @@ class BISDataManagementLib extends BISErrorProducerLib
 		$this->_ci->load->library('extensions/FHC-Core-BIS/JQMSchedulerLib');
 
 		// load models
+
+		// api models
 		$this->_ci->load->model('extensions/FHC-Core-BIS/UHSTAT0Model', 'UHSTAT0Model');
 		$this->_ci->load->model('extensions/FHC-Core-BIS/UHSTAT1Model', 'UHSTAT1Model');
+
+		// synctables
 		$this->_ci->load->model('extensions/FHC-Core-BIS/synctables/BISUHSTAT0_model', 'BISUHSTAT0Model');
 		$this->_ci->load->model('extensions/FHC-Core-BIS/synctables/BISUHSTAT1_model', 'BISUHSTAT1Model');
+
+		// data models
+		$this->_ci->load->model('codex/Uhstat1daten_model', 'Uhstat1datenModel');
 
 		// load helpers
 		$this->_ci->load->helper('extensions/FHC-Core-BIS/hlp_sync_helper');
@@ -169,7 +176,7 @@ class BISDataManagementLib extends BISErrorProducerLib
 	public function sendUHSTAT1($person_id_arr)
 	{
 		// get person data for UHSTAT1
-		$personRes = $this->_ci->bisdataprovisionlib->getUHSTAT1PersonData($person_id_arr);
+		$personRes = $this->_ci->Uhstat1datenModel->getUHSTAT1PersonData($person_id_arr);
 
 		if (isError($personRes))
 		{
@@ -498,7 +505,7 @@ class BISDataManagementLib extends BISErrorProducerLib
 			$this->addWarning(
 				error("Geburtsnation fehlt; Person ID ".$studentData->person_id),
 				createIssueObj(
-					'uhstatGeburtsnationFehlt',
+					'geburtsnationFehlt', // person issue from core
 					$studentData->person_id
 				)
 			);

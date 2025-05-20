@@ -367,7 +367,7 @@ class BISDataManagementLib extends BISErrorProducerLib
 			$this->addWarning(
 				error("Personkennung fehlt (vBpk AS, vBpk BF oder Ersatzkennzeichen fehlt); Person ID ".$personData->person_id),
 				createIssueObj(
-					'uhstatPersonkennungFehlt',
+					'uhstatPersonkennungFehltCore',
 					$personData->person_id
 				)
 			);

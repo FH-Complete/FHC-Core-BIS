@@ -168,79 +168,20 @@ class JQMSchedulerLib
 
 		$params = array($studiensemester_kurzbz_arr, $this->_status_kurzbz[self::JOB_TYPE_UHSTAT0]);
 
-		// get students not sent to BIS yet
-		$qry = "SELECT
-					DISTINCT prestudent_id, studiensemester_kurzbz
-				FROM
-					public.tbl_prestudent ps
-					JOIN public.tbl_prestudentstatus pss USING (prestudent_id)
-					JOIN public.tbl_studiengang stg on ps.studiengang_kz = stg.studiengang_kz
-				WHERE
-					studiensemester_kurzbz IN ?
-					AND status_kurzbz IN ?
-					AND ps.bismelden
-					AND stg.melderelevant
-					AND NOT EXISTS ( /* has not been sent to BIS yet*/
-						SELECT 1
-						FROM
-							sync.tbl_bis_uhstat0
-						WHERE
-							prestudent_id = ps.prestudent_id
-							AND studiensemester_kurzbz = pss.studiensemester_kurzbz
-					)";
-
-		// if only students registered for Reihungstest should be sent
-		$sendOnlyRtRegistered = $this->_ci->config->item('fhc_bis_UHSTAT0_nur_reihungstest_registrierte_senden');
-		if (isset($sendOnlyRtRegistered) && $sendOnlyRtRegistered === true)
-		{
-			$qry .= "
-					AND EXISTS ( /* is registered for Reihungstest */
-						SELECT 1
-						FROM
-							public.tbl_rt_person rtp
-							JOIN tbl_reihungstest rt ON(rtp.rt_id = rt.reihungstest_id)
-						WHERE
-							rtp.person_id = ps.person_id
-							AND rt.studiensemester_kurzbz = pss.studiensemester_kurzbz
-					)";
-		}
-
-		// if only students with UHSTAT1 data should be sent
-		if ($onlyAfterUhstat1 === true)
-		{
-			$qry .= "
-					AND ( /* uhstat1 data has already been sent */
-						EXISTS (
-							SELECT 1
-							FROM
-								sync.tbl_bis_uhstat1
-							JOIN
-								bis.tbl_uhstat1daten USING (uhstat1daten_id)
-							WHERE
-								person_id = ps.person_id
-						)
-						OR EXISTS (
-							SELECT 1
-							FROM
-								public.tbl_dokumentprestudent
-							WHERE
-								prestudent_id = ps.prestudent_id
-								AND dokument_kurzbz = 'Statisti'
-						)
-					)";
-		}
 
 		// if only certain Studiengang types have to be sent
+		$studiengangTypClause = '';
 		if (isset($this->_studiengangtyp[self::JOB_TYPE_UHSTAT0]) && !isEmptyArray($this->_studiengangtyp[self::JOB_TYPE_UHSTAT0]))
 		{
+			$studiengangTypClause = " AND stg.typ IN ?";
 			$params[] = $this->_studiengangtyp[self::JOB_TYPE_UHSTAT0];
-			$qry .= " AND stg.typ IN ?";
 		}
 
 		// exclude terminated
+		$terminatedClause = "";
 		if (isset($this->_terminated_student_status_kurzbz))
 		{
-			$qry .= "
+			$terminatedClause = "
 					AND NOT EXISTS (
 						SELECT 1
 						FROM
@@ -251,6 +192,80 @@ class JQMSchedulerLib
 					)";
 			$params[] = $this->_terminated_student_status_kurzbz;
 		}
+
+		// if only students registered for Reihungstest should be sent
+		$reihungstestClause = "";
+		$sendOnlyRtRegistered = $this->_ci->config->item('fhc_bis_UHSTAT0_nur_reihungstest_registrierte_senden');
+		if (isset($sendOnlyRtRegistered) && $sendOnlyRtRegistered === true)
+		{
+			$reihungstestClause = "
+					AND EXISTS (
+						SELECT 1
+						FROM
+							public.tbl_rt_person rtp
+							JOIN tbl_reihungstest rt ON(rtp.rt_id = rt.reihungstest_id)
+						WHERE
+							rtp.person_id = studenten.person_id
+							AND rt.studiensemester_kurzbz = studenten.studiensemester_kurzbz
+					)";
+		}
+
+		// if only students with UHSTAT1 data should be sent
+		$afterUhstat1Clause = "";
+		if ($onlyAfterUhstat1 === true)
+		{
+			$afterUhstat1Clause = "
+					AND (
+						EXISTS (
+							SELECT 1
+							FROM
+								sync.tbl_bis_uhstat1
+							JOIN
+								bis.tbl_uhstat1daten USING (uhstat1daten_id)
+							WHERE
+								person_id = studenten.person_id
+						)
+						OR EXISTS (
+							SELECT 1
+							FROM
+								public.tbl_dokumentprestudent
+							WHERE
+								prestudent_id = studenten.prestudent_id
+								AND dokument_kurzbz = 'Statisti'
+						)
+					)";
+		}
+
+		// main query to get students not sent to BIS yet
+		$qry = "SELECT prestudent_id, studiensemester_kurzbz FROM (
+					SELECT
+						DISTINCT ps.person_id, prestudent_id, studiensemester_kurzbz
+					FROM
+						public.tbl_prestudent ps
+						JOIN public.tbl_prestudentstatus pss USING (prestudent_id)
+						JOIN public.tbl_studiengang stg on ps.studiengang_kz = stg.studiengang_kz
+					WHERE
+						studiensemester_kurzbz IN ?
+						AND status_kurzbz IN ?
+						AND ps.bismelden
+						AND stg.melderelevant
+						{$studiengangTypClause}
+						{$terminatedClause}
+				) studenten
+				WHERE
+					-- has not been sent to BIS yet
+					NOT EXISTS (
+						SELECT 1
+						FROM
+							sync.tbl_bis_uhstat0
+						WHERE
+							prestudent_id = studenten.prestudent_id
+							AND studiensemester_kurzbz = studenten.studiensemester_kurzbz
+					)
+					{$reihungstestClause}
+					{$afterUhstat1Clause}
+				ORDER BY prestudent_id";
+
 
 		$dbModel = new DB_Model();
 

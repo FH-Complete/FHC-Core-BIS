@@ -112,7 +112,7 @@ class JQMSchedulerLib
 			$qry .= " AND stg.typ IN ?";
 		}
 
-		if (isset($this->_terminated_student_status_kurzbz))
+		if (isset($this->_terminated_student_status_kurzbz) && !isEmptyArray($this->_terminated_student_status_kurzbz))
 		{
 			$qry .= "
 				AND NOT EXISTS (
@@ -179,7 +179,7 @@ class JQMSchedulerLib
 
 		// exclude terminated
 		$terminatedClause = "";
-		if (isset($this->_terminated_student_status_kurzbz))
+		if (isset($this->_terminated_student_status_kurzbz) && !isEmptyArray($this->_terminated_student_status_kurzbz))
 		{
 			$terminatedClause = "
 					AND NOT EXISTS (

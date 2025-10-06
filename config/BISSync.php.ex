@@ -18,7 +18,7 @@ $config['fhc_bis_studiensemester_meldezeitraum'] = array(
 
 // Only students with given status_kurzbz (defined for each job) are sent
 $config['fhc_bis_status_kurzbz'] = array(
-	'BISUHSTAT0' => array('Interessent'),
+	'BISUHSTAT0' => array('Bewerber'),
 	'BISUHSTAT1' => array('Bewerber')
 );
 
@@ -28,7 +28,7 @@ $config['fhc_bis_studiengangtyp'] = array(
 );
 
 // All status_kurzbz which a student who terminated studies can have
-$config['fhc_bis_terminated_student_status_kurzbz'] = array('Abgewiesener', 'Abbrecher');
+$config['fhc_bis_terminated_student_status_kurzbz'] = array();
 
 // whether only students registered to Reihungstest should be sent for UHSTAT0
 $config['fhc_bis_UHSTAT0_nur_reihungstest_registrierte_senden'] = true;

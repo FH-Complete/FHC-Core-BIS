@@ -112,6 +112,24 @@ class JQMSchedulerLib
 			$qry .= " AND stg.typ IN ?";
 		}
 
+		$lastSemesterAmount = $this->_ci->config->item('fhc_bis_UHSTAT1_meldezeitraum_anzahl_studiensemester');
+		if (isset($lastSemesterAmount) && is_numeric($lastSemesterAmount) && $lastSemesterAmount > 0)
+		{
+			$qry .= "
+				AND pss.studiensemester_kurzbz IN (
+					SELECT
+						studiensemester_kurzbz
+					FROM
+						public.tbl_studiensemester
+					WHERE
+						start <= NOW()
+					ORDER BY
+						start DESC
+					LIMIT ?
+				)";
+			$params[] = $lastSemesterAmount;
+		}
+
 		if (isset($this->_terminated_student_status_kurzbz) && !isEmptyArray($this->_terminated_student_status_kurzbz))
 		{
 			$qry .= "
@@ -125,6 +143,8 @@ class JQMSchedulerLib
 				)";
 			$params[] = $this->_terminated_student_status_kurzbz;
 		}
+
+		$qry .= ' ORDER BY person_id';
 
 		$dbModel = new DB_Model();
 

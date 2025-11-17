@@ -32,3 +32,6 @@ $config['fhc_bis_terminated_student_status_kurzbz'] = array();
 
 // whether only students registered to Reihungstest should be sent for UHSTAT0
 $config['fhc_bis_UHSTAT0_nur_reihungstest_registrierte_senden'] = true;
+
+// amount of latest semesters, including current one, for which UHSTAT1 data should be sent
+$config['fhc_bis_UHSTAT1_meldezeitraum_anzahl_studiensemester'] = 3;

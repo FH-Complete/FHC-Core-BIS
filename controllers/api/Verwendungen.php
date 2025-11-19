@@ -199,6 +199,8 @@ class Verwendungen extends FHCAPI_Controller
 
 		$bis = isset($data['bis']) ? $data['bis'] : null;
 
+		$paralellCodes = [$data['verwendung_code']];
+
 		// check if there are paralell codes, so that Verwendung cannot be added
 		$paralellCodesRes = $this->_getParalellCodes($data['mitarbeiter_uid'], $data['verwendung_code'], $data['von'], $bis);
 
@@ -206,7 +208,7 @@ class Verwendungen extends FHCAPI_Controller
 
 		if (hasData($paralellCodesRes))
 		{
-			$paralellCodes = array_column(getData($paralellCodesRes), 'verwendung_code');
+			$paralellCodes = array_merge($paralellCodes, array_unique(array_column(getData($paralellCodesRes), 'verwendung_code')));
 			$this->terminateWithError('Es gibt folgende paralelle Codes für den eingegebenen Zeitraum: '.implode(', ', $paralellCodes));
 		}
 

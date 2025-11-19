@@ -1,11 +1,11 @@
-import VerwendungenAPI from '../../../mixins/api/VerwendungenAPI.js';
+import ApiVerwendungen from '../../../api/factory/Verwendungen.js';
 import PersonalmeldungDates from '../../../mixins/PersonalmeldungDates.js';
 
 export const UpdateVerwendungForm = {
 	emits: [
 		'verwendungUpdated'
 	],
-	mixins: [PersonalmeldungDates, VerwendungenAPI],
+	mixins: [PersonalmeldungDates],
 	props: {
 		verwendung: Object
 	},
@@ -28,24 +28,21 @@ export const UpdateVerwendungForm = {
 	},
 	methods: {
 		prefill(verwendung_code) {
-			this.callGetVerwendungList(
-				verwendung_code,
-				(data) => {
-					this.verwendungList = data.verwendungList;
-				}
-			);
+			this.$api
+				.call(ApiVerwendungen.getVerwendungList(verwendung_code))
+				.then((response) => {
+					this.verwendungList = response.data.verwendungList;
+				})
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		update() {
-			this.callUpdateVerwendung(
-				this.verwendung,
-				(data) => {
+			return this.$api
+				.call(ApiVerwendungen.updateVerwendung(this.verwendung))
+				.then(() => {
 					this.$emit('verwendungUpdated');
 					this.resetError();
-				},
-				(error) => {
-					this.errorText = error;
-				}
-			);
+				})
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		resetError() {
 			this.errorText = null;

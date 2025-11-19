@@ -1,8 +1,7 @@
-import StudiensemesterAPI from '../../../mixins/api/StudiensemesterAPI.js';
+import ApiPersonalmeldung from '../../../api/factory/Personalmeldung.js';
 
 export default {
 	emits: ['passSemester'],
-	mixins: [StudiensemesterAPI],
 	data: function() {
 		return {
 			semList: null, // all Studiensemester for dropdown
@@ -17,14 +16,15 @@ export default {
 		 * get Studiensemester
 		 */
 		getStudiensemester: function() {
-			this.callGetStudiensemester(
-				(data) => {
+			return this.$api
+				.call(ApiPersonalmeldung.getStudiensemester())
+				.then((response) => {
 					// set the Studiensemester data
-					this.semList = data.semList;
-					this.currSem = data.currSem;
+					this.semList = response.data.semList;
+					this.currSem = response.data.currSem;
 					this.onSemesterChange(this.currSem);
-				}
-			);
+				})
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		onSemesterChange: function() {
 			this.$emit('passSemester', this.currSem);

@@ -1,11 +1,10 @@
-import VerwendungenAPI from '../../../mixins/api/VerwendungenAPI.js';
+import ApiVerwendungen from '../../../api/factory/Verwendungen.js';
 import uids from '../personalmeldunguids/Uids.js';
 
 export const NewVerwendungForm = {
 	emits: [
 		'verwendungAdded'
 	],
-	mixins: [VerwendungenAPI],
 	components: {
 		uids,
 		"datepicker": VueDatePicker
@@ -30,23 +29,19 @@ export const NewVerwendungForm = {
 	},
 	methods: {
 		prefill() {
-			this.callGetFullVerwendungList(
-				(data) => {
-					this.verwendungList = data.verwendungList;
-				}
-			);
+			this.$api
+				.call(ApiVerwendungen.getFullVerwendungList())
+				.then((response) => {this.verwendungList = response.data.verwendungList;})
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		add() {
-			this.callAddVerwendung(
-				this.fullVerwendung,
-				(data) => {
+			return this.$api
+				.call(ApiVerwendungen.addVerwendung(this.fullVerwendung))
+				.then(() => {
 					this.$emit('verwendungAdded');
 					this.reset();
-				},
-				(error) => {
-					this.$fhcAlert.alertError(error);
-				}
-			);
+				})
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		setMitarbeiterUid(mitarbeiter_uid) {
 			this.verwendung.mitarbeiter_uid = mitarbeiter_uid;

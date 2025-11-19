@@ -17,13 +17,13 @@
 
 import {CoreFilterCmpt} from '../../../../../js/components/filter/Filter.js';
 import FhcLoader from '../../../../../js/components/Loader.js';
-import HauptberufAPI from '../../mixins/api/HauptberufAPI.js';
+import ApiHauptberuf from '../../api/factory/Hauptberuf.js';
 import studiensemester from './studiensemester/Studiensemester.js';
 import HauptberufModal from "./Modals/HauptberufModal.js";
 import PersonalmeldungDates from "../../mixins/PersonalmeldungDates.js";
 
 export const Hauptberuf = {
-	mixins: [PersonalmeldungDates, HauptberufAPI],
+	mixins: [PersonalmeldungDates],
 	components: {
 		CoreFilterCmpt,
 		FhcLoader,
@@ -59,11 +59,11 @@ export const Hauptberuf = {
 			hauptberufTabulatorOptions: {
 				index: 'bis_hauptberuf_id',
 				persistenceID: 'hauptberufTable',
-				layout: 'fitColumns',
+				//layout: 'fitColumns',
 				columns: [
-					{title: 'ID', field: 'bis_hauptberuf_id', headerFilter: true, visible: false, width: '10%'},
-					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true, width: '10%'},
-					{title: 'Hauptberuflich lehrend', field: 'hauptberuflich', headerFilter: true, width: '15%',
+					{title: 'ID', field: 'bis_hauptberuf_id', headerFilter: true, visible: false, widthGrow: 1},
+					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true, widthGrow: 1},
+					{title: 'Hauptberuflich lehrend', field: 'hauptberuflich', headerFilter: true, widthGrow: 1, widthGrow: 1,
 						formatter: (cell) => {
 							return cell.getValue() ? 'Ja' : 'Nein';
 						},
@@ -73,18 +73,18 @@ export const Hauptberuf = {
 							return false;
 						}
 					},
-					{title: 'Hauptberuf Code', field: 'hauptberufcode', headerFilter: true, width: '15%'},
-					{title: 'Hauptberuf Bezeichnung', field: 'bezeichnung', headerFilter: true, width: '20%'},
-					{title: 'Von', field: 'von', headerFilter: true, width: '15%', formatter: (cell) => {
+					{title: 'Hauptberuf Code', field: 'hauptberufcode', headerFilter: true, widthGrow: 1},
+					{title: 'Hauptberuf Bezeichnung', field: 'bezeichnung', headerFilter: true, widthGrow: 2},
+					{title: 'Von', field: 'von', headerFilter: true, widthGrow: 1, formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Bis', field: 'bis', headerFilter: true, width: '15%', resizable: true, formatter: (cell) => {
+					{title: 'Bis', field: 'bis', headerFilter: true, widthGrow: 1, resizable: true, formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false, width: '15%'},
-					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false, width: '15%'},
+					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false, widthGrow: 1},
+					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false, widthGrow: 1},
 					{
 						title: 'Aktionen',
 						field: 'actions',
@@ -121,10 +121,11 @@ export const Hauptberuf = {
 		},
 		getHauptberufe() {
 			this.$refs.loader.show();
-			let successCallback = (data) => {
+			let successCallback = (response) => {
+				console.log(response);
 				// set the employee data
 				if (this.$refs.hauptberufTable && this.$refs.hauptberufTable.tabulator)
-					this.$refs.hauptberufTable.tabulator.setData(data.hauptberufe);
+					this.$refs.hauptberufTable.tabulator.setData(response.data.hauptberufe);
 				// hide loading
 				this.$refs.loader.hide();
 			};
@@ -139,27 +140,22 @@ export const Hauptberuf = {
 			}
 		},
 		getAllHauptberufe(successCallback) {
-			this.callGetHauptberufe(
-				this.studiensemester_kurzbz,
-				successCallback
-			);
+			return this.$api
+				.call(ApiHauptberuf.getHauptberufe(this.studiensemester_kurzbz))
+				.then(successCallback)
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		getHauptberufeByUid(successCallback) {
-			this.callGetHauptberufeByUid(
-				this.modelValue.personUID,
-				successCallback
-			);
+			return this.$api
+				.call(ApiHauptberuf.getHauptberufeByUid(this.modelValue.personUID))
+				.then(successCallback)
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		deleteHauptberuf(bis_hauptberuf_id) {
-			this.callDeleteHauptberuf(
-				bis_hauptberuf_id,
-				(data) => {
-					this.getHauptberufe();
-				},
-				(error) => {
-					this.$fhcAlert.alertError(error);
-				}
-			);
+			return this.$api
+				.call(ApiHauptberuf.deleteHauptberuf(bis_hauptberuf_id))
+				.then(() => {this.getHauptberufe(); this.$fhcAlert.alertSuccess(this.$p.t('ui', 'successDelete'));})
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		/**
 		 * Set Studiensemester

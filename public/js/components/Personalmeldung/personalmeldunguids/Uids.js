@@ -1,8 +1,7 @@
-import UidAPI from '../../../mixins/api/UidAPI.js';
+import ApiVerwendungen from '../../../api/factory/Verwendungen.js';
 
 export default {
 	emits: ['passUid'],
-	mixins: [UidAPI],
 	components: {
 		AutoComplete: primevue.autocomplete
 	},
@@ -23,17 +22,16 @@ export default {
 			}
 		},
 		getMitarbeiterUids: function(event) {
-			this.callGetMitarbeiterUids(
-				this.studiensemester_kurzbz,
-				event.query,
-				(data) => {
-					for (let mitarbeiter of data.mitarbeiterUids) {
+			return this.$api
+				.call(ApiVerwendungen.getMitarbeiterUids(this.studiensemester_kurzbz, event.query))
+				.then((response) => {
+					for (let mitarbeiter of response.data.mitarbeiterUids) {
 						// set Bezeichnung for autocomplete option text
 						mitarbeiter.bezeichnung = this.getBezeichnungFromMitarbeiter(mitarbeiter);
 					}
-					this.mitarbeiterUids = data.mitarbeiterUids;
-				}
-			);
+					this.mitarbeiterUids = response.data.mitarbeiterUids;
+				})
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		getBezeichnungFromMitarbeiter: function(mitarbeiter) {
 			if (mitarbeiter == null) return "";

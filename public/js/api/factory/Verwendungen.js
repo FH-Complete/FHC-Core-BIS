@@ -2,35 +2,35 @@ export default {
 	generateVerwendungen(studiensemester_kurzbz) {
 		return {
 			method: 'get',
-			url: 'extensions/FHC-Core-BIS/api/verwendungen/generateVerwendungen',
+			url: 'extensions/FHC-Core-BIS/api/frontend/v1/verwendungen/generateVerwendungen',
 			params: { studiensemester_kurzbz }
 		};
 	},
 	getVerwendungen(studiensemester_kurzbz) {
 		return {
 			method: 'get',
-			url: 'extensions/FHC-Core-BIS/api/verwendungen/getVerwendungen',
+			url: 'extensions/FHC-Core-BIS/api/frontend/v1/verwendungen/getVerwendungen',
 			params: { studiensemester_kurzbz }
 		};
 	},
 	getVerwendungenByUid(mitarbeiter_uid) {
 		return {
 			method: 'get',
-			url: 'extensions/FHC-Core-BIS/api/verwendungen/getVerwendungenByUid',
+			url: 'extensions/FHC-Core-BIS/api/frontend/v1/verwendungen/getVerwendungenByUid',
 			params: { mitarbeiter_uid }
 		};
 	},
 	addVerwendung(data) {
 		return {
 			method: 'post',
-			url: 'extensions/FHC-Core-BIS/api/verwendungen/addVerwendung',
+			url: 'extensions/FHC-Core-BIS/api/frontend/v1/verwendungen/addVerwendung',
 			params: { data }
 		};
 	},
 	updateVerwendung(data) {
 		return {
 			method: 'post',
-			url: 'extensions/FHC-Core-BIS/api/verwendungen/updateVerwendung',
+			url: 'extensions/FHC-Core-BIS/api/frontend/v1/verwendungen/updateVerwendung',
 			params: {
 				bis_verwendung_id: data.bis_verwendung_id,
 				verwendung_code: data.verwendung_code
@@ -40,27 +40,27 @@ export default {
 	deleteVerwendung(bis_verwendung_id) {
 		return {
 			method: 'post',
-			url: 'extensions/FHC-Core-BIS/api/verwendungen/deleteVerwendung',
+			url: 'extensions/FHC-Core-BIS/api/frontend/v1/verwendungen/deleteVerwendung',
 			params: { bis_verwendung_id }
 		};
 	},
 	getVerwendungList(verwendung_code) {
 		return {
 			method: 'get',
-			url: 'extensions/FHC-Core-BIS/api/verwendungen/getVerwendungList',
+			url: 'extensions/FHC-Core-BIS/api/frontend/v1/verwendungen/getVerwendungList',
 			params: { verwendung_code }
 		};
 	},
 	getFullVerwendungList() {
 		return {
 			method: 'get',
-			url: 'extensions/FHC-Core-BIS/api/verwendungen/getFullVerwendungList'
+			url: 'extensions/FHC-Core-BIS/api/frontend/v1/verwendungen/getFullVerwendungList'
 		};
 	},
 	getMitarbeiterUids(studiensemester_kurzbz, mitarbeiter_uid_searchtext) {
 		return {
 			method: 'get',
-			url: 'extensions/FHC-Core-BIS/api/verwendungen/getMitarbeiterUids',
+			url: 'extensions/FHC-Core-BIS/api/frontend/v1/verwendungen/getMitarbeiterUids',
 			params: {
 				studiensemester_kurzbz: studiensemester_kurzbz,
 				mitarbeiter_uid_searchtext: mitarbeiter_uid_searchtext

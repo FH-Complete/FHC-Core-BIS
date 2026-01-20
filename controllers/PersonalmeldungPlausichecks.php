@@ -6,17 +6,17 @@ class PersonalmeldungPlausichecks extends Auth_Controller
 {
 	const GENERIC_ISSUE_OCCURED_TEXT = 'Issue aufgetreten';
 
-	private $_fehlerLibMappings = array(
-		'aktiveMitarbeiterOhneDienstverhaeltnis' => 'AktiveMitarbeiterOhneDienstverhaeltnis',
-		'aktiveFixeMitarbeiterOhneDienstverhaeltnis' => 'AktiveFixeMitarbeiterOhneDienstverhaeltnis',
-		'hauptberufcodeOhneLehreVerwendung' => 'HauptberufcodeOhneLehreVerwendung',
-		'inaktiveMitarbeiterMitDienstverhaeltnis' => 'InaktiveMitarbeiterMitDienstverhaeltnis',
-		'lehrauftragOhneDienstverhaeltnis' => 'LehrauftragOhneDienstverhaeltnis',
-		'mitarbeiterMitDienstverhaeltnisOhneVerwendung' => 'MitarbeiterMitDienstverhaeltnisOhneVerwendung',
-		'mitarbeiterOhneStammdaten' => 'MitarbeiterOhneStammdaten',
-		'mitarbeiterUngueltigeSemesterwochenstunden' => 'MitarbeiterUngueltigeSemesterwochenstunden',
-		'mitarbeiterUngueltigesGeburtsjahr' => 'MitarbeiterUngueltigesGeburtsjahr',
-		'mitarbeiterUngueltigesVzae' => 'MitarbeiterUngueltigesVzae'
+	private $_fehlerKurzbz = array(
+		'aktiveMitarbeiterOhneDienstverhaeltnis',
+		'aktiveFixeMitarbeiterOhneDienstverhaeltnis',
+		'hauptberufcodeOhneLehreVerwendung',
+		'inaktiveMitarbeiterMitDienstverhaeltnis',
+		'lehrauftragOhneDienstverhaeltnis',
+		'mitarbeiterMitDienstverhaeltnisOhneVerwendung',
+		'mitarbeiterOhneStammdaten',
+		'mitarbeiterUngueltigeSemesterwochenstunden',
+		'mitarbeiterUngueltigesGeburtsjahr',
+		'mitarbeiterUngueltigesVzae'
 	);
 
 	public function __construct()
@@ -29,7 +29,7 @@ class PersonalmeldungPlausichecks extends Auth_Controller
 		);
 
 		// Load libraries
-		$this->load->library('issues/PlausicheckProducerLib', array('app' => 'personalmeldung', 'extensionName' => 'FHC-Core-BIS'));
+		$this->load->library('issues/PlausicheckProducerLib', array('fehlerKurzbz' => $this->_fehlerKurzbz));
 		$this->load->library('WidgetLib');
 
 		// Load models
@@ -57,7 +57,7 @@ class PersonalmeldungPlausichecks extends Auth_Controller
 		$allIssues = array();
 
 		// get the data returned by Plausicheck
-		foreach ($this->_fehlerLibMappings as $fehler_kurzbz => $libName)
+		foreach ($this->_fehlerKurzbz as $fehler_kurzbz)
 		{
 			// get Text and fehlercode of the Fehler
 			$this->FehlerModel->addSelect('fehlercode, fehlertext, fehlertyp_kurzbz');
@@ -76,7 +76,6 @@ class PersonalmeldungPlausichecks extends Auth_Controller
 
 			// execute the check
 			$plausicheckRes = $this->plausicheckproducerlib->producePlausicheckIssue(
-				$libName,
 				$fehler_kurzbz,
 				array(
 					'studiensemester_kurzbz' => $studiensemester_kurzbz

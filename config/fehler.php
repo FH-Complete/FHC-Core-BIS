@@ -68,7 +68,7 @@ $config['fehler'] = array(
 		'app' => array('dvuh'),
 		'producerLibName' => null,
 		'resolverLibName' => 'BIS_UHSTAT1_0001',
-		'producerIsResolver' => true
+		'producerIsResolver' => false
 	),
 	array(
 		'fehlercode' => 'BIS_UHSTAT1_0002',
@@ -79,7 +79,7 @@ $config['fehler'] = array(
 		'app' => array('dvuh'),
 		'producerLibName' => null,
 		'resolverLibName' => 'BIS_UHSTAT1_0002',
-		'producerIsResolver' => true
+		'producerIsResolver' => false
 	),
 	/* Personalmeldung errors */
 	array(

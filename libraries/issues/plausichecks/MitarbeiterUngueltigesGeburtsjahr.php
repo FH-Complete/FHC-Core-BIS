@@ -30,7 +30,7 @@ class MitarbeiterUngueltigesGeburtsjahr extends PlausiChecker
 
 		$qry = "
 				SELECT DISTINCT
-					pers.gebdatum, pers.vorname, pers.nachname
+					pers.gebdatum, pers.vorname, pers.nachname, pers.person_id
 				FROM
 					public.tbl_mitarbeiter ma
 					JOIN tbl_benutzer ben ON ma.mitarbeiter_uid = ben.uid
@@ -80,6 +80,7 @@ class MitarbeiterUngueltigesGeburtsjahr extends PlausiChecker
 				if (!isEmptyArray($errorTexts))
 				{
 					$results[] = array(
+						'person_id' => $dataObj->person_id,
 						'fehlertext_params' => array('fehler_texte' => implode(', ', $errorTexts))
 					);
 				}

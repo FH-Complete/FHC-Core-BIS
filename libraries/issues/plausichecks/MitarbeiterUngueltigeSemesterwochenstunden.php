@@ -62,7 +62,15 @@ class MitarbeiterUngueltigeSemesterwochenstunden extends PlausiChecker
 
 				if (!isEmptyArray($errorTexts))
 				{
+					// get person_id
+					$this->_ci->load->model('extensions/FHC-Core-BIS/person/Benutzer_model', 'BenutzerModel');
+
+					$this->_ci->BenutzerModel->addSelect('person_id');
+					$benRes = $this->_ci->BenutzerModel->loadWhere(['uid' => $dataObj->mitarbeiter_uid]);
+					if (isError($benRes)) return $benRes;
+
 					$results[] = array(
+						'person_id' => hasData($benRes) ? getData($benRes)[0]->person_id : null,
 						'fehlertext_params' => array(
 							'mitarbeiter_uid' => $dataObj->mitarbeiter_uid, 'fehler_texte' => implode(', ', $errorTexts)
 						)

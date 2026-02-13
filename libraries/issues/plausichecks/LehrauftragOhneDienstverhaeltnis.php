@@ -33,7 +33,7 @@ class LehrauftragOhneDienstverhaeltnis extends PlausiChecker
 
 		$qry = "
 				SELECT
-					DISTINCT ma.mitarbeiter_uid, pers.vorname, pers.nachname, sem.studiensemester_kurzbz
+					DISTINCT ma.mitarbeiter_uid, pers.vorname, pers.nachname, sem.studiensemester_kurzbz, pers.person_id
 				FROM
 					public.tbl_mitarbeiter ma
 					JOIN tbl_benutzer ben ON ma.mitarbeiter_uid = ben.uid
@@ -85,6 +85,7 @@ class LehrauftragOhneDienstverhaeltnis extends PlausiChecker
 			foreach ($data as $dataObj)
 			{
 				$results[] = array(
+					'person_id' => $dataObj->person_id,
 					'fehlertext_params' => array(
 						'mitarbeiter_uid' => $dataObj->mitarbeiter_uid,
 						'studiensemester_kurzbz' => $dataObj->studiensemester_kurzbz

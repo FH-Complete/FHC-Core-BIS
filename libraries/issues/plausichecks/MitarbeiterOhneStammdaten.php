@@ -38,7 +38,8 @@ class MitarbeiterOhneStammdaten extends PlausiChecker
 					pers.nachname,
 					pers.geschlecht,
 					pers.gebdatum,
-					pers.staatsbuergerschaft
+					pers.staatsbuergerschaft,
+					pers.person_id
 				FROM
 					public.tbl_mitarbeiter ma
 					JOIN tbl_benutzer ben ON ma.mitarbeiter_uid = ben.uid
@@ -82,6 +83,7 @@ class MitarbeiterOhneStammdaten extends PlausiChecker
 				if (!isEmptyArray($missing_fields))
 				{
 					$results[] = array(
+						'person_id' => $dataObj->person_id,
 						'fehlertext_params' => array(
 							'missing_fields' => implode(', ', $missing_fields),
 							'mitarbeiter_uid' => $dataObj->mitarbeiter_uid

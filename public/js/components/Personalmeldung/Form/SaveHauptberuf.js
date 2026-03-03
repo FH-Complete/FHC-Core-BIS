@@ -1,11 +1,10 @@
-import HauptberufAPI from '../../../mixins/api/HauptberufAPI.js';
+import ApiHauptberuf from '../../../api/factory/Hauptberuf.js';
 import uids from '../personalmeldunguids/Uids.js';
 
 export const HauptberufForm = {
 	emits: [
 		'hauptberufSaved'
 	],
-	mixins: [HauptberufAPI],
 	components: {
 		uids,
 		"datepicker": VueDatePicker
@@ -32,11 +31,11 @@ export const HauptberufForm = {
 	},
 	methods: {
 		prefill(hauptberuf) {
-			this.callGetHauptberufcodeList(
-				(data) => {
-					this.hauptberufcodeList = data.hauptberufcodeList;
-				}
-			);
+			this.$api
+				.call(ApiHauptberuf.getHauptberufcodeList(this.fullHauptberuf))
+				.then((response) => {this.hauptberufcodeList = response.data.hauptberufcodeList;})
+				.catch(this.$fhcAlert.handleSystemError);
+
 			if (hauptberuf.hasOwnProperty('mitarbeiter_uid'))
 			{
 				this.hauptberuf = JSON.parse(JSON.stringify(hauptberuf)); // deep copy
@@ -44,7 +43,7 @@ export const HauptberufForm = {
 			}
 		},
 		save() {
-			let successCallback = (data) => {
+			let successCallback = () => {
 				this.$emit('hauptberufSaved');
 				this.reset();
 			};
@@ -52,19 +51,17 @@ export const HauptberufForm = {
 				this.$fhcAlert.alertError(error);
 			};
 			if (this.fullHauptberuf.hasOwnProperty('bis_hauptberuf_id')) {
-				this.callUpdateHauptberuf(
-					this.fullHauptberuf,
-					successCallback,
-					errorCallback
-				);
+				return this.$api
+					.call(ApiHauptberuf.updateHauptberuf(this.fullHauptberuf))
+					.then(successCallback)
+					.catch(this.$fhcAlert.handleSystemError);
 			}
 			else
 			{
-				this.callAddHauptberuf(
-					this.fullHauptberuf,
-					successCallback,
-					errorCallback
-				);
+				return this.$api
+					.call(ApiHauptberuf.addHauptberuf(this.fullHauptberuf))
+					.then(successCallback)
+					.catch(this.$fhcAlert.handleSystemError);
 			}
 		},
 		handleHauptberuflichChange() {

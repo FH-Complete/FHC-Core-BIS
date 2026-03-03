@@ -17,14 +17,14 @@
 
 import {CoreFilterCmpt} from '../../../../../js/components/filter/Filter.js';
 import FhcLoader from '../../../../../js/components/Loader.js';
-import VerwendungenAPI from '../../mixins/api/VerwendungenAPI.js';
+import ApiVerwendungen from '../../api/factory/Verwendungen.js';
 import studiensemester from './studiensemester/Studiensemester.js';
 import NewVerwendungModal from "./Modals/NewVerwendungModal.js";
 import UpdateVerwendungModal from "./Modals/UpdateVerwendungModal.js";
 import PersonalmeldungDates from "../../mixins/PersonalmeldungDates.js";
 
 export const Verwendungen = {
-	mixins: [PersonalmeldungDates, VerwendungenAPI],
+	mixins: [PersonalmeldungDates],
 	components: {
 		CoreFilterCmpt,
 		FhcLoader,
@@ -63,26 +63,26 @@ export const Verwendungen = {
 			verwendungenTabulatorOptions: {
 				index: 'bis_verwendung_id',
 				persistenceID:'verwendungenTable',
-				layout: 'fitColumns',
+				//layout: 'fitColumns',
 				columns: [
-					{title: 'ID', field: 'bis_verwendung_id', headerFilter: true, visible: false, width: '10%'},
-					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true, width: '10%'},
-					{title: 'Verwendung Code', field: 'verwendung_code', headerFilter: true, width: '15%'},
-					{title: 'Verwendung Bezeichnung', field: 'verwendungbez', headerFilter: true, width: '25%'},
-					{title: 'Von', field: 'von', headerFilter: true, width: '15%', formatter: (cell) => {
+					{title: 'ID', field: 'bis_verwendung_id', headerFilter: true, visible: false, widthGrow: 1},
+					{title: 'Uid', field: 'mitarbeiter_uid', headerFilter: true, widthGrow: 1},
+					{title: 'Verwendung Code', field: 'verwendung_code', headerFilter: true, widthGrow: 1},
+					{title: 'Verwendung Bezeichnung', field: 'verwendungbez', headerFilter: true, widthGrow: 2},
+					{title: 'Von', field: 'von', headerFilter: true, widthGrow: 1, formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Bis', field: 'bis', headerFilter: true, width: '15%', formatter: (cell) => {
+					{title: 'Bis', field: 'bis', headerFilter: true, widthGrow: 1, formatter: (cell) => {
 							return this.formatDate(cell.getValue());
 						}
 					},
-					{title: 'Manuell', field: 'manuell', headerFilter: true, width: '10%', mutator: (value) => {
+					{title: 'Manuell', field: 'manuell', headerFilter: true, widthGrow: 1, mutator: (value) => {
 							return value ? 'Ja' : 'Nein';
 						}}
 					,
-					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false, width: '15%'},
-					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false, width: '15%'},
+					{title: 'Vorname', field: 'vorname', headerFilter: true, visible: false, widthGrow: 1},
+					{title: 'Nachname', field: 'nachname', headerFilter: true, visible: false, widthGrow: 1},
 					{
 						title: 'Aktionen',
 						field: 'actions',
@@ -129,10 +129,10 @@ export const Verwendungen = {
 		 * get Verwendungen
 		 */
 		getVerwendungen() {
-			let successCallback = (data) => {
+			let successCallback = (response) => {
 				// set the employee data
 				if (this.$refs.verwendungTable && this.$refs.verwendungTable.tabulator)
-					this.$refs.verwendungTable.tabulator.setData(data.verwendungen);
+					this.$refs.verwendungTable.tabulator.setData(response.data.verwendungen);
 				// hide loading
 				this.$refs.loader.hide();
 			};
@@ -148,28 +148,25 @@ export const Verwendungen = {
 		 },
 		getAllVerwendungen(successCallback) {
 			this.$refs.loader.show();
-			this.callGetVerwendungen(
-				this.studiensemester_kurzbz,
-				successCallback
-			);
+
+			return this.$api
+				.call(ApiVerwendungen.getVerwendungen(this.studiensemester_kurzbz))
+				.then(successCallback)
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		getVerwendungenByUid(successCallback) {
 			this.$refs.loader.show();
-			this.callGetVerwendungenByUid(
-				this.modelValue.personUID,
-				successCallback
-			);
+
+			return this.$api
+				.call(ApiVerwendungen.getVerwendungenByUid(this.modelValue.personUID))
+				.then(successCallback)
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		deleteVerwendung(bis_verwendung_id) {
-			this.callDeleteVerwendung(
-				bis_verwendung_id,
-				(data) => {
-					this.getVerwendungen();
-				},
-				(error) => {
-					this.$fhcAlert.alertError(error);
-				}
-			);
+			return this.$api
+				.call(ApiVerwendungen.deleteVerwendung(bis_verwendung_id))
+				.then(() => {this.getVerwendungen(); this.$fhcAlert.alertSuccess(this.$p.t('ui', 'successDelete'));})
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		/**
 		 * generate ("refresh") Verwendungen
@@ -177,13 +174,11 @@ export const Verwendungen = {
 		generateVerwendungen: function() {
 			// show loading
 			this.$refs.loader.show();
-			this.callGenerateVerwendungen(
-				this.studiensemester_kurzbz,
-				(data) => {
-					this.getVerwendungen()
-					this.$fhcAlert.alertSuccess("Verwendungen erfolgreich aktualisiert");
-				}
-			);
+
+			return this.$api
+				.call(ApiVerwendungen.generateVerwendungen(this.studiensemester_kurzbz))
+				.then(() => {this.getVerwendungen(); this.$fhcAlert.alertSuccess("Verwendungen erfolgreich aktualisiert");})
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		/**
 		 * Set Studiensemester

@@ -43,7 +43,12 @@ $vzae = $verwendung->vzae < 0 ? $verwendung->vzae : number_format($verwendung->v
 <?php endforeach; ?>
 <?php foreach ($person->lehre as $lehre): ?>
 			<Lehre>
+<?php if (isset($lehre->LehrgangNr)) : ?>
+				<LehrgangNr><?php echo $lehre->LehrgangNr ?></LehrgangNr>
+<?php else: ?>
 				<StgKz><?php echo $lehre->StgKz ?></StgKz>
+<?php endif; ?>
+
 				<SommersemesterSWS><?php echo $lehre->SommersemesterSWS == 0 ? $lehre->SommersemesterSWS : number_format($lehre->SommersemesterSWS, 2, '.', '') ?></SommersemesterSWS>
 				<WintersemesterSWS><?php echo $lehre->WintersemesterSWS == 0 ? $lehre->WintersemesterSWS : number_format($lehre->WintersemesterSWS, 2, '.', '') ?></WintersemesterSWS>
 			</Lehre>

@@ -239,7 +239,6 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				$persons[] = $personObj;
 			}
 		}
-
 		return success($persons);
 	}
 
@@ -1167,7 +1166,6 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		$swsProStgArr = array_filter($swsProStg, function ($obj) {
 			return
 				!in_array($obj->studiengang_kz, $this->_config['exclude_stg']) &&
-				$obj->studiengang_kz > 0 &&
 				$obj->studiengang_kz < 10000;
 		});
 
@@ -1175,6 +1173,8 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		{
 			foreach ($swsProStgArr as $swsProStg)
 			{
+				$isLehrgang = isset($swsProStg->lgartcode);
+				$kennzeichenName = $isLehrgang ? 'LehrgangNr' : 'StgKz';
 				$isSommersemester = $this->_isSommersemester($swsProStg->studiensemester_kurzbz);
 				$isWintersemester = $this->_isWintersemester($swsProStg->studiensemester_kurzbz);
 
@@ -1182,9 +1182,8 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				if (isEmptyArray($lehreArr) || !$this->_lehreStgExists($swsProStg->melde_studiengang_kz, $lehreArr))
 				{
 					$lehreObj = new StdClass();
-
 					$lehreObj->mitarbeiter_uid = $swsProStg->mitarbeiter_uid;
-					$lehreObj->StgKz = $swsProStg->melde_studiengang_kz;
+					$lehreObj->{$kennzeichenName} = $swsProStg->melde_studiengang_kz;
 					$lehreObj->SommersemesterSWS = $isSommersemester ? $swsProStg->sws : 0.00;
 					$lehreObj->WintersemesterSWS = $isWintersemester ? $swsProStg->sws : 0.00;
 
@@ -1194,7 +1193,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				else	// Lehrecontainer mit STG schon vorhanden
 				{
 					$lehreObjArr = array_filter($lehreArr, function (&$obj) use ($swsProStg) {
-						return $obj->StgKz == $swsProStg->melde_studiengang_kz;
+						return $obj->{$kennzeichenName} == $swsProStg->melde_studiengang_kz;
 					});
 
 					// SWS ergaenzen
@@ -1294,11 +1293,12 @@ class PersonalmeldungLib extends BISErrorProducerLib
 	 * @param $lehreArr Array mit Lehre Objekten
 	 * @return true wenn der Studiengang bereits existiert
 	 */
-	private function _lehreStgExists($studiengang_kz, $lehreArr)
+	private function _lehreStgExists($melde_studiengang_kz, $lehreArr)
 	{
 		foreach($lehreArr as $row)
 		{
-			if($row->StgKz == $studiengang_kz)
+			$kennzeichenName = $row->LehrgangNr ?? $row->StgKz;
+			if(isset($row->{$kennzeichenName}) && $row->{$kennzeichenName} == $melde_studiengang_kz)
 				return true;
 		}
 		return false;

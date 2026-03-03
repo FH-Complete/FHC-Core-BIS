@@ -487,7 +487,7 @@ class PersonalmeldungDataProvisionLib
 			WITH semester_sws_tbl AS (
 				SELECT
 					DISTINCT mitarbeiter_uid, lehreinheit_id, studiensemester_kurzbz,
-					lema.semesterstunden, stg.studiengang_kz, stg.melde_studiengang_kz
+					lema.semesterstunden, stg.studiengang_kz, stg.melde_studiengang_kz, stg.lgartcode
 				FROM lehre.tbl_lehreinheitmitarbeiter lema
 					JOIN lehre.tbl_lehreinheit USING (lehreinheit_id)
 					JOIN lehre.tbl_lehrveranstaltung lv USING (lehrveranstaltung_id)
@@ -498,10 +498,10 @@ class PersonalmeldungDataProvisionLib
 					JOIN public.tbl_studiensemester ss USING (studiensemester_kurzbz)
 				WHERE
 					(ss.start BETWEEN ? AND ?)
-					-- nur lehre, die bisgemeldet wird
+					/* nur lehre, die bisgemeldet wird */
 					AND lema.bismelden
 					AND stg.melderelevant
-					-- keine lehreinheiten ohne semesterstunden
+					/* keine lehreinheiten ohne semesterstunden */
 					AND lema.semesterstunden != 0';
 
 
@@ -517,6 +517,7 @@ class PersonalmeldungDataProvisionLib
 				mitarbeiter_uid,
 				melde_studiengang_kz,
 				studiengang_kz,
+				lgartcode,
 				studiensemester_kurzbz,
 				sum(semesterstunden) AS summe,
 				round(sum(semesterstunden) / 15, 2)	AS sws
@@ -525,6 +526,7 @@ class PersonalmeldungDataProvisionLib
 			GROUP BY
 				mitarbeiter_uid,
 				melde_studiengang_kz,
+				lgartcode,
 				studiengang_kz,
 				studiensemester_kurzbz
 			ORDER BY

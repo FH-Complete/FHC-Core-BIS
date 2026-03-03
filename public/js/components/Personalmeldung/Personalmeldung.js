@@ -96,6 +96,18 @@ export const Personalmeldung = {
 							html += '</table>';
 
 							return html;
+						},
+						headerFilterFunc: function customHeaderFilter(headerValue, rowValue, rowData, filterParams){
+							//headerValue - the value of the header filter element
+							//rowValue - the value of the column in this row
+							//rowData - the data for the row being filtered
+							//filterParams - params object passed to the headerFilterFuncParams property
+
+							for (let val of rowValue) {
+								if (val.verwendung_code == headerValue) return true;
+							}
+
+							return false; //must return a boolean, true if it passes the filter.
 						}
 					},
 					{title: 'Funktionen', field: 'funktionen', widthGrow: 2, headerFilter: true,
@@ -139,6 +151,14 @@ export const Personalmeldung = {
 							html += '</table>';
 
 							return html;
+						},
+						headerFilterFunc: function customHeaderFilter(headerValue, rowValue, rowData, filterParams){
+
+							for (let val of rowValue) {
+								if (val.funktionscode == headerValue) return true;
+							}
+
+							return false; //must return a boolean, true if it passes the filter.
 						}
 					},
 					{title: 'Lehre', field: 'lehre', widthGrow: 2, headerFilter: true,
@@ -162,7 +182,7 @@ export const Personalmeldung = {
 								html +=
 									'<tr>'+
 										'<td>'+
-											le.StgKz +
+											(le.LehrgangNr ?? le.StgKz) +
 										'</td>'+
 										'<td>'+
 											le.SommersemesterSWS +
@@ -176,6 +196,14 @@ export const Personalmeldung = {
 							html += '</table>';
 
 							return html;
+						},
+						fheaderFilterFunc: function customHeaderFilter(headerValue, rowValue, rowData, filterParams){
+
+							for (let val of rowValue) {
+								if ((val.LehrgangNr ?? val.StgKz) == headerValue) return true;
+							}
+
+							return false; //must return a boolean, true if it passes the filter.
 						}
 					}
 				]

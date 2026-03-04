@@ -21,13 +21,18 @@ $config['fhc_bis_pauschale_studentische_hilfskraft'] = 5.5;
 $config['fhc_bis_pauschale_sonstiges_dienstverhaeltnis'] = 5.5;
 
 /** -------------------------------------------------------- Generierung der Verwendungen ---------------------------------------------------------**/
-// Alle vorhandenen Vertragsarten
+
+// Vertragsarten, für die Vollzeitaequivalenz individuell berechnet wird
 $config['fhc_bis_vertragsarten'] = array(
 	'echterDienstvertrag' => 'echterdv',
 	'freierDienstvertrag' => 'freierdv',
-	'studentischeHilfskraft' => 'studentischehilfskr',
-	'werkvertrag' => 'werkvertrag',
 	'externeLehre' => 'externerlehrender'
+);
+
+// Vertragsarten, für die Vollzeitaequivalenz pauschal berechnet wird
+$config['fhc_bis_vertragsarten_pauschal'] = array(
+	'studentischeHilfskraft' => 'studentischehilfskr',
+	'werkvertrag' => 'werkvertrag'
 );
 
 // Alle Beschäftigungsart 2 BIS codes (betreffen Befristung)

@@ -20,6 +20,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 		'exclude_stg' => array(),
 		'halbjahres_gewichtung_sws' => null,
 		'vertragsarten' => array(),
+		'vertragsarten_pauschal' => array(),
 		'pauschale_studentische_hilfskraft' => null,
 		'pauschale_sonstiges_dienstverhaeltnis' => null,
 		'funktionscodes' => array(),
@@ -525,7 +526,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				$verwendung->verwendung_code = null;
 				$verwendung->vertragsart_kurzbz = null;
 				$verwendung->ba1code = null;
-				$verwendung->ba2code = $this->_config['beschaeftigungsart2_codes']['unbefristet'];
+				$verwendung->ba2code = $this->_config['beschaeftigungsart2_codes']['unbefristet'] ?? null;
 				$verwendung->karenz = false;
 				$verwendung->wochenstunden = null;
 				$verwendung->von = $verwendungDates[$i-1];
@@ -551,7 +552,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 						)
 						{
 							// set vertragsbestandteil properties
-							if (isset($dvPart->befristet))
+							if (isset($dvPart->befristet) && isset($this->_config['beschaeftigungsart2_codes']['befristet']))
 							{
 								$verwendung->ba2code =  $this->_config['beschaeftigungsart2_codes']['befristet'];
 							}
@@ -651,13 +652,12 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				$overlapping = $lehreVerwendungCode->beginn_im_bismeldungsjahr <= $verwendung->bis
 					&& $lehreVerwendungCode->ende_im_bismeldungsjahr >= $verwendung->von;
 				// if pauschale should be used for calculation instead of semesterstunden
-				$pauschale =
-					$verwendung->vertragsart_kurzbz == $this->_config['vertragsarten']['studentischeHilfskraft']
-					|| $verwendung->vertragsart_kurzbz == $this->_config['vertragsarten']['werkvertrag'];
+				$pauschale = in_array($verwendung->vertragsart_kurzbz, $this->_config['vertragsarten_pauschal']);
+
 				// check if there are other contracts: Lehre sws should still be added to stand alone contracts
 				$hasOtherVertraege = $this->_verwendungWithOtherVertragsartExists(
 					$verwendungen,
-					array($this->_config['vertragsarten']['werkvertrag'], $this->_config['vertragsarten']['studentischeHilfskraft'])
+					$this->_config['vertragsarten_pauschal']
 				);
 
 				// if karenz or no other Verwendung, "stand alone" Lehre with Vertragsstunden
@@ -665,7 +665,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				{
 					if ($overlapping) $verwendung->verwendung_code = $lehreVerwendungCode->verwendung_code;
 					// set the lehre code for the verwendung, regardless of dates
-					elseif (is_null($verwendung->verwendung_code)) $verwendung->verwendung_code = $this->_config['verwendung_codes']['lehre'];
+					elseif (is_null($verwendung->verwendung_code)) $verwendung->verwendung_code = $this->_config['verwendung_codes']['lehre'] ?? null;
 				}
 				elseif ($overlapping) // if lehre overlaps with bis verwendung
 				{
@@ -691,14 +691,17 @@ class PersonalmeldungLib extends BISErrorProducerLib
 						}
 
 						// add additional days, which fall into next year, but have no DV assigned
+						$extendableVertragsarten = [];
+						if (isset($this->_config['vertragsarten']['echterDienstvertrag']))
+							$extendableVertragsarten = [$this->_config['vertragsarten']['echterDienstvertrag']];
+						if (isset($this->_config['vertragsarten']['externeLehre']))
+							$extendableVertragsarten = [$this->_config['vertragsarten']['externeLehre']];
+
 						if (
 							isset($lehreVerwendungCode->extended_enddate)
 							&& in_array(
 								$verwendung->vertragsart_kurzbz,
-								array(
-									$this->_config['vertragsarten']['echterDienstvertrag'],
-									$this->_config['vertragsarten']['externeLehre']
-								)
+								$extendableVertragsarten
 							)
 						)
 						{
@@ -748,8 +751,6 @@ class PersonalmeldungLib extends BISErrorProducerLib
 			$isKarenziertVz = $verwendung->karenz;// && !$hasVertragsstunden;
 			$isLehre = in_array($verwendung->verwendung_code, $this->_config['verwendung_codes_lehre']);
 			$hasLehreSws = isset($verwendung->sws); //  && $verwendung->sws > 0
-			$isStudentischeHilfskraft = $verwendung->vertragsart_kurzbz == $this->_config['vertragsarten']['studentischeHilfskraft'];
-			$isWerkvertrag = $verwendung->vertragsart_kurzbz == $this->_config['vertragsarten']['werkvertrag'];
 
 			$verwendung->has_vertragsstunden = $hasVertragsstunden;
 
@@ -817,7 +818,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				}
 
 				// need to add Pauschale for the dv of Verwendung
-				if ($isStudentischeHilfskraft || $isWerkvertrag)
+				if (in_array($verwendung->vertragsart_kurzbz, $this->_config['vertragsarten_pauschal']))
 					$dvPauschale[$verwendung->dienstverhaeltnis_id] = $idx;
 			}
 		}
@@ -834,7 +835,8 @@ class PersonalmeldungLib extends BISErrorProducerLib
 
 			// Pauschale pro Jahr und Person (in Stunden), different for Stud. Hilfskraft and Werkvertrag
 			$pauschaleInStunden =
-				$vw->vertragsart_kurzbz == $this->_config['vertragsarten']['studentischeHilfskraft']
+				isset($this->_config['vertragsarten_pauschal']['studentischeHilfskraft'])
+				&& $vw->vertragsart_kurzbz == $this->_config['vertragsarten_pauschal']['studentischeHilfskraft']
 				? $this->_config['pauschale_studentische_hilfskraft']
 				: $this->_config['pauschale_sonstiges_dienstverhaeltnis'];
 
@@ -927,7 +929,8 @@ class PersonalmeldungLib extends BISErrorProducerLib
 						(
 							isset($verwendungTmp->beschaeftigungsausmass_relativ)
 							&& !( // vzae -1 if lehre extern and no lehre
-								$verwendungTmp->vertragsart_kurzbz == $this->_config['vertragsarten']['externeLehre']
+								isset($this->_config['vertragsarten']['externeLehre'])
+								&& $verwendungTmp->vertragsart_kurzbz == $this->_config['vertragsarten']['externeLehre']
 								&& $verwendungTmp->beschaeftigungsausmass_relativ == 0
 							)
 						)

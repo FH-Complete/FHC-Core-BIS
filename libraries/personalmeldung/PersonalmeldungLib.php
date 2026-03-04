@@ -1195,8 +1195,8 @@ class PersonalmeldungLib extends BISErrorProducerLib
 				}
 				else	// Lehrecontainer mit STG schon vorhanden
 				{
-					$lehreObjArr = array_filter($lehreArr, function (&$obj) use ($swsProStg) {
-						return $obj->{$kennzeichenName} == $swsProStg->melde_studiengang_kz;
+					$lehreObjArr = array_filter($lehreArr, function (&$obj) use ($swsProStg, $kennzeichenName) {
+						return isset($obj->{$kennzeichenName}) && $obj->{$kennzeichenName} == $swsProStg->melde_studiengang_kz;
 					});
 
 					// SWS ergaenzen
@@ -1300,7 +1300,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 	{
 		foreach($lehreArr as $row)
 		{
-			$kennzeichenName = $row->LehrgangNr ?? $row->StgKz;
+			$kennzeichenName = isset($row->LehrgangNr) ? 'LehrgangNr' : 'StgKz';
 			if(isset($row->{$kennzeichenName}) && $row->{$kennzeichenName} == $melde_studiengang_kz)
 				return true;
 		}

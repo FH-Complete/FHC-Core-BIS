@@ -1165,7 +1165,7 @@ class PersonalmeldungLib extends BISErrorProducerLib
 	{
 		$lehreArr = array();
 
-		// Lehrgaenge und STG, die nicht BIS gemeldet werden, extrahieren
+		// STG, die nicht BIS gemeldet werden, extrahieren
 		$swsProStgArr = array_filter($swsProStg, function ($obj) {
 			return
 				!in_array($obj->studiengang_kz, $this->_config['exclude_stg']) &&

@@ -72,7 +72,7 @@ export const NewVerwendungForm = {
 					id="verwendung_code"
 					required
 					v-model="verwendung.verwendung_code">
-					<option v-for="verw in verwendungList" :key="index" :value="verw.verwendung_code">
+					<option v-for="verw in verwendungList" :key="verw.verwendung_code" :value="verw.verwendung_code">
 						{{verw.verwendung_code}} - {{verw.verwendungbez}}
 					</option>
 				</select>

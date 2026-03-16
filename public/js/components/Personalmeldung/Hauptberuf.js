@@ -122,7 +122,6 @@ export const Hauptberuf = {
 		getHauptberufe() {
 			this.$refs.loader.show();
 			let successCallback = (response) => {
-				console.log(response);
 				// set the employee data
 				if (this.$refs.hauptberufTable && this.$refs.hauptberufTable.tabulator)
 					this.$refs.hauptberufTable.tabulator.setData(response.data.hauptberufe);

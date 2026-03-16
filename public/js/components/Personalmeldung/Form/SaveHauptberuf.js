@@ -110,7 +110,7 @@ export const HauptberufForm = {
 						id="hauptberufcode"
 						required
 						v-model="hauptberuf.hauptberufcode">
-						<option v-for="hb in hauptberufcodeList" :key="index" :value="hb.hauptberufcode">
+						<option v-for="hb in hauptberufcodeList" :key="hb.hauptberufcode" :value="hb.hauptberufcode">
 							{{hb.hauptberufcode}} - {{hb.bezeichnung}}
 						</option>
 					</select>

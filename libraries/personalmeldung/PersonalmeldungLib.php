@@ -693,9 +693,9 @@ class PersonalmeldungLib extends BISErrorProducerLib
 						// add additional days, which fall into next year, but have no DV assigned
 						$extendableVertragsarten = [];
 						if (isset($this->_config['vertragsarten']['echterDienstvertrag']))
-							$extendableVertragsarten = [$this->_config['vertragsarten']['echterDienstvertrag']];
+							$extendableVertragsarten[] = $this->_config['vertragsarten']['echterDienstvertrag'];
 						if (isset($this->_config['vertragsarten']['externeLehre']))
-							$extendableVertragsarten = [$this->_config['vertragsarten']['externeLehre']];
+							$extendableVertragsarten[] = $this->_config['vertragsarten']['externeLehre'];
 
 						if (
 							isset($lehreVerwendungCode->extended_enddate)

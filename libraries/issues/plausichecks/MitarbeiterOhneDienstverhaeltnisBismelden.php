@@ -11,6 +11,9 @@ class MitarbeiterOhneDienstverhaeltnisBismelden extends PlausiChecker
 {
 	public function executePlausiCheck($params)
 	{
+		// loa libraries
+		$this->_ci->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDateLib');
+
 		$results = array();
 
 		$mitarbeiter_uid = isset($params['mitarbeiter_uid']) ? $params['mitarbeiter_uid'] : null;

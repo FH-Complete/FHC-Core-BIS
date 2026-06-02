@@ -16,7 +16,7 @@ class HauptberufcodeOhneLehreVerwendung extends PlausiChecker
 		// load config
 		$this->_ci->config->load('extensions/FHC-Core-BIS/Personalmeldung');
 
-		// loa libraries
+		// load libraries
 		$this->_ci->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDateLib');
 
 		$verwendungCodes = $this->_ci->config->item('fhc_bis_verwendung_codes');

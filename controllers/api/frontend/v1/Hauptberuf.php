@@ -1,0 +1,241 @@
+<?php
+
+/**
+ * Manages Personal Hauptberuf.
+ */
+class Hauptberuf extends FHCAPI_Controller
+{
+	private $_uid;
+
+	/**
+	 * Constructor
+	 */
+	public function __construct()
+	{
+		parent::__construct(
+			array(
+				'getHauptberufe' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'getHauptberufeByUid' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'getHauptberufcodeList' => array('admin:r','mitarbeiter/stammdaten:r'),
+				'addHauptberuf' => array('admin:rw','mitarbeiter/stammdaten:rw'),
+				'updateHauptberuf' => array('admin:rw','mitarbeiter/stammdaten:rw'),
+				'deleteHauptberuf' => array('admin:rw','mitarbeiter/stammdaten:rw')
+			)
+		);
+
+		// Loads models
+		$this->load->model('organisation/Studiensemester_model', 'StudiensemesterModel');
+		$this->load->model('codex/Hauptberuf_model', 'HauptberufcodeModel');
+		$this->load->model('extensions/FHC-Core-BIS/personalmeldung/BisHauptberuf_model', 'BisHauptberufModel');
+
+		// Loads libraries
+		$this->load->library('extensions/FHC-Core-BIS/personalmeldung/PersonalmeldungDateLib');
+
+		// Loads config
+		$this->config->load('extensions/FHC-Core-BIS/Personalmeldung');
+
+		// set uid of logged in user
+		$this->_setAuthUID();
+	}
+
+	//------------------------------------------------------------------------------------------------------------------
+	// Public methods
+
+	/**
+	 * Gets Hauptberuf data
+	 */
+	public function getHauptberufe()
+	{
+		$studiensemester_kurzbz = $this->input->get('studiensemester_kurzbz');
+		if (isEmptyString($studiensemester_kurzbz)) $this->terminateWithError('Ungültiges Studiensemester');
+
+		$hauptberufe = array();
+
+		$dateDataRes = $this->personalmeldungdatelib->getDateData($studiensemester_kurzbz);
+		if (isError($dateDataRes)) $this->terminateWithError(getError($dateDataRes));
+
+		$dateData = getData($dateDataRes);
+
+		$bismeldungYear = $dateData['bismeldungYear'];
+
+		$hauptberufeRes = $this->BisHauptberufModel->getByYear($bismeldungYear);
+
+		if (isError($hauptberufeRes)) $this->terminateWithError(getError($hauptberufeRes));
+
+		if (hasData($hauptberufeRes)) $hauptberufe = getData($hauptberufeRes);
+
+		$this->terminateWithSuccess(
+			array(
+				'hauptberufe' => $hauptberufe
+			)
+		);
+	}
+	/**
+
+	 * Gets Hauptberuf data
+	 */
+	public function getHauptberufeByUid()
+	{
+		$mitarbeiter_uid = $this->input->get('mitarbeiter_uid');
+		if (isEmptyString($mitarbeiter_uid)) $this->terminateWithError('Ungültige Uid');
+
+		$hauptberufe = array();
+
+		$hauptberufeRes = $this->BisHauptberufModel->getByUid($mitarbeiter_uid);
+
+		if (isError($hauptberufeRes)) $this->terminateWithError(getError($hauptberufeRes));
+
+		if (hasData($hauptberufeRes)) $hauptberufe = getData($hauptberufeRes);
+
+		$this->terminateWithSuccess(
+			array(
+				'hauptberufe' => $hauptberufe
+			)
+		);
+	}
+
+	/**
+	 * Get list with all possible Hauptberuf codes
+	 */
+	public function getHauptberufcodeList()
+	{
+		$hauptberufcodeList = array();
+
+		$this->HauptberufcodeModel->addSelect('hauptberufcode, bezeichnung');
+		$hauptberufcodeListRes = $this->HauptberufcodeModel->load();
+
+		if (isError($hauptberufcodeListRes)) $this->terminateWithError(getError($hauptberufcodeListRes));
+
+		if (hasData($hauptberufcodeListRes)) $hauptberufcodeList = getData($hauptberufcodeListRes);
+
+		$this->terminateWithSuccess(
+			array(
+				'hauptberufcodeList' => $hauptberufcodeList
+			)
+		);
+	}
+
+	/**
+	 * Add new Hauptberuf
+	 */
+	public function addHauptberuf()
+	{
+		$data = $this->input->post('data');
+
+		$validateRes = $this->_validate($data);
+
+		if (isError($validateRes)) $this->terminateWithError(getError($validateRes));
+
+		$hauptberuf = array_merge($this->_getHauptberufArray($data), array('insertamum' => 'NOW()', 'insertvon' => $this->_uid));
+
+		$data = $this->getDataOrTerminateWithError(
+			$this->BisHauptberufModel->insert(
+				$hauptberuf
+			)
+		);
+
+		$this->terminateWithSuccess($data);
+	}
+
+	/**
+	 * Update a Hauptberuf
+	 */
+	public function updateHauptberuf()
+	{
+		$data = $this->input->post('data');
+
+		if (!isset($data['bis_hauptberuf_id']) || !is_numeric($data['bis_hauptberuf_id'])) $this->terminateWithError('Ungültige Hauptberuf Id');
+
+		$validateRes = $this->_validate($data);
+
+		if (isError($validateRes)) $this->terminateWithError(getError($validateRes));
+
+		$hauptberuf = array_merge($this->_getHauptberufArray($data), array('updateamum' => 'NOW()', 'updatevon' => $this->_uid));
+
+		$data = $this->getDataOrTerminateWithError(
+			$this->BisHauptberufModel->update(
+				$data['bis_hauptberuf_id'],
+				$hauptberuf
+			)
+		);
+
+		$this->terminateWithSuccess($data);
+	}
+
+	/**
+	 * Deletes a Hauptberuf
+	 */
+	public function deleteHauptberuf()
+	{
+		$bis_hauptberuf_id = $this->input->post('bis_hauptberuf_id');
+
+		if (!isset($bis_hauptberuf_id) || !is_numeric($bis_hauptberuf_id)) $this->terminateWithError('Ungültige Hauptberuf Id');
+
+		$data = $this->getDataOrTerminateWithError(
+			$this->BisHauptberufModel->delete(
+				$bis_hauptberuf_id
+			)
+		);
+
+		$this->terminateWithSuccess($data);
+	}
+
+	//------------------------------------------------------------------------------------------------------------------
+	// Private methods
+
+	/**
+	 * Retrieve the UID of the logged user and checks if it is valid
+	 */
+	private function _setAuthUID()
+	{
+		$this->_uid = getAuthUID();
+
+		if (!$this->_uid) show_error('User authentification failed');
+	}
+
+	/**
+	 * Validate the data
+	 * @param data
+	 * @return object success if valid, error otherwise
+	 */
+	private function _validate($data)
+	{
+		$errorTexts = array();
+		if (!isset($data['mitarbeiter_uid'])) $errorTexts[] = 'Ungültige uid';
+		if (!isset($data['hauptberuflich'])) $errorTexts[] = 'hauptberuflich nicht gesetzt';
+		if ($data['hauptberuflich'] === false && (!isset($data['hauptberufcode']) || !is_numeric($data['hauptberufcode'])))
+			$errorTexts[] = 'Hauptberuf Code fehlt oder ungültig';
+
+		$von = isset($data['von']) && !isEmptyString($data['von']) ? $data['von'] : null;
+		$bis = isset($data['bis']) && !isEmptyString($data['bis']) ? $data['bis'] : null;
+		if (isset($von) && isset($bis) && new DateTime($von) > new DateTime($bis)) $errorTexts[] = 'Von Datum größer als Bis Datum';
+
+		$bis_hauptberuf_id = isset($data['bis_hauptberuf_id']) ? $data['bis_hauptberuf_id'] : null;
+
+		$bisHauptberufRes = $this->BisHauptberufModel->getByDate($data['mitarbeiter_uid'], $von, $bis, $bis_hauptberuf_id);
+
+		if (isError($bisHauptberufRes)) return $bisHauptberufRes;
+
+		if (hasData($bisHauptberufRes)) $errorTexts[] = 'Es gibt bereits Hauptberuf Einträge für den eingegebenen Zeitraum';
+
+		if (!isEmptyArray($errorTexts)) return error(implode('; ', $errorTexts));
+
+		return success();
+	}
+
+	/**
+	 * Get Hauptberuf array from hauptberuf data, for saving in datbase.
+	 * @param $data
+	 * @return array
+	 */
+	private function _getHauptberufArray($data)
+	{
+		return array(
+			'mitarbeiter_uid' => $data['mitarbeiter_uid'],
+			'hauptberuflich' => $data['hauptberuflich'],
+			'hauptberufcode' => $data['hauptberufcode'] ?? null,
+			'von' => isset($data['von']) && !isEmptyString($data['von']) ? $data['von'] : null,
+			'bis' => isset($data['bis']) && !isEmptyString($data['bis']) ? $data['bis'] : null
+		);
+	}
+}

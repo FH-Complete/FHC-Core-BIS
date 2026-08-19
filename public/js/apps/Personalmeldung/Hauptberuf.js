@@ -17,8 +17,8 @@
 
 import {CoreNavigationCmpt} from '../../../../../js/components/navigation/Navigation.js';
 import {Hauptberuf} from '../../components/Personalmeldung/Hauptberuf.js';
-import FhcAlert from '../../../../../js/plugin/FhcAlert.js';
-import Phrasen from '../../../../../js/plugin/Phrasen.js';
+import FhcAlert from '../../../../../js/plugins/FhcAlert.js';
+import Phrasen from '../../../../../js/plugins/Phrasen.js';
 
 const verwendungenApp = Vue.createApp({
 	components: {

@@ -16,11 +16,10 @@
  */
 
 import FhcLoader from '../../../../../js/components/Loader.js';
-import PersonalmeldungAPI from '../../mixins/api/PersonalmeldungAPI.js';
+import ApiPersonalmeldungPlausichecks from '../../api/factory/PersonalmeldungPlausichecks.js';
 import studiensemester from './studiensemester/Studiensemester.js';
 
 export const Plausichecks = {
-	mixins: [PersonalmeldungAPI],
 	data: function() {
 		return {
 			studiensemester_kurzbz: null,
@@ -37,14 +36,15 @@ export const Plausichecks = {
 		 */
 		startPlausichecks: function() {
 			this.$refs.loader.show();
-			this.callRunPlausichecks(
-				this.studiensemester_kurzbz,
-				(data) => {
+
+			this.$api
+				.call(ApiPersonalmeldungPlausichecks.runPlausichecks(this.studiensemester_kurzbz))
+				.then((response) => {
 					// set the issue data
-					this.issues = data;
+					this.issues = response.data;
 					this.$refs.loader.hide();
-				}
-			);
+				})
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		getSemester: function(studiensemester_kurzbz) {
 			this.studiensemester_kurzbz = studiensemester_kurzbz;

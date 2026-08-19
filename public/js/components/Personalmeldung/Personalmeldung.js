@@ -17,13 +17,12 @@
 
 import {CoreFilterCmpt} from '../../../../../js/components/filter/Filter.js';
 import FhcLoader from '../../../../../js/components/Loader.js';
-import PersonalmeldungAPI from '../../mixins/api/PersonalmeldungAPI.js';
-import VerwendungenAPI from '../../mixins/api/VerwendungenAPI.js';
+import ApiPersonalmeldung from '../../api/factory/Personalmeldung.js';
+import ApiVerwendungen from '../../api/factory/Verwendungen.js';
 import studiensemester from './studiensemester/Studiensemester.js';
 import personalmeldungSums from './personalmeldungsums/PersonalmeldungSums.js';
 
 export const Personalmeldung = {
-	mixins: [PersonalmeldungAPI, VerwendungenAPI],
 	components: {
 		CoreFilterCmpt,
 		FhcLoader,
@@ -36,21 +35,21 @@ export const Personalmeldung = {
 			studiensemester_kurzbz: null,
 			personalmeldungSums: null,
 			personalmeldungTabulatorOptions: {
-				layout: 'fitColumns',
+				//layout: 'fitColumns',
 				columns: [
-					{title: 'PersNr', field: 'personalnummer', headerFilter: true,
+					{title: 'PersNr', field: 'personalnummer', headerFilter: true, widthGrow: 1,
 						formatter: function(cell) {return cell.getValue().replace(/^0+/, '');}
 					},
-					{title: 'Uid', field: 'uid', headerFilter: true},
-					{title: 'Vorname', field: 'vorname', headerFilter: true},
-					{title: 'Nachname', field: 'nachname', headerFilter: true},
-					{title: 'Geschlecht (X)', field: 'geschlechtX', headerFilter: true, visible: false},
-					{title: 'Geburtsjahr', field: 'geburtsjahr', headerFilter: true, visible: false},
-					{title: 'Staat', field: 'staatsangehoerigkeit', headerFilter: true, visible: false},
-					{title: 'Höchste Ausb.', field: 'hoechste_abgeschlossene_ausbildung', headerFilter: true, visible: false},
-					{title: 'Habilitation', field: 'habilitation', headerFilter: true, visible: false},
-					{title: 'Hauptberufcode', field: 'hauptberufcode', headerFilter: true, visible: false},
-					{title: 'Verwendungen', field: 'verwendungen', headerFilter: true,
+					{title: 'Uid', field: 'uid', widthGrow: 1, headerFilter: true},
+					{title: 'Vorname', field: 'vorname', widthGrow: 1, headerFilter: true},
+					{title: 'Nachname', field: 'nachname', widthGrow: 1, headerFilter: true},
+					{title: 'Geschlecht (X)', field: 'geschlechtX', widthGrow: 1, headerFilter: true, visible: false},
+					{title: 'Geburtsjahr', field: 'geburtsjahr', widthGrow: 1, headerFilter: true, visible: false},
+					{title: 'Staat', field: 'staatsangehoerigkeit', widthGrow: 1, headerFilter: true, visible: false},
+					{title: 'Höchste Ausb.', field: 'hoechste_abgeschlossene_ausbildung', widthGrow: 1, headerFilter: true, visible: false},
+					{title: 'Habilitation', field: 'habilitation', widthGrow: 1, headerFilter: true, visible: false},
+					{title: 'Hauptberufcode', field: 'hauptberufcode', widthGrow: 1, headerFilter: true, visible: false},
+					{title: 'Verwendungen', field: 'verwendungen', widthGrow: 2, headerFilter: true,
 						formatter: function(cell, formatterParams, onRendered) {
 							let verwendungen = cell.getValue();
 							let html = ''+
@@ -97,9 +96,21 @@ export const Personalmeldung = {
 							html += '</table>';
 
 							return html;
+						},
+						headerFilterFunc: function customHeaderFilter(headerValue, rowValue, rowData, filterParams){
+							//headerValue - the value of the header filter element
+							//rowValue - the value of the column in this row
+							//rowData - the data for the row being filtered
+							//filterParams - params object passed to the headerFilterFuncParams property
+
+							for (let val of rowValue) {
+								if (val.verwendung_code == headerValue) return true;
+							}
+
+							return false; //must return a boolean, true if it passes the filter.
 						}
 					},
-					{title: 'Funktionen', field: 'funktionen', headerFilter: true,
+					{title: 'Funktionen', field: 'funktionen', widthGrow: 2, headerFilter: true,
 						formatter: function(cell, formatterParams, onRendered) {
 							let funktionen = cell.getValue();
 							let html = ''+
@@ -140,9 +151,17 @@ export const Personalmeldung = {
 							html += '</table>';
 
 							return html;
+						},
+						headerFilterFunc: function customHeaderFilter(headerValue, rowValue, rowData, filterParams){
+
+							for (let val of rowValue) {
+								if (val.funktionscode == headerValue) return true;
+							}
+
+							return false; //must return a boolean, true if it passes the filter.
 						}
 					},
-					{title: 'Lehre', field: 'lehre', headerFilter: true,
+					{title: 'Lehre', field: 'lehre', widthGrow: 2, headerFilter: true,
 						formatter: function(cell, formatterParams, onRendered) {
 							let lehre = cell.getValue();
 							let html = ''+
@@ -163,7 +182,7 @@ export const Personalmeldung = {
 								html +=
 									'<tr>'+
 										'<td>'+
-											le.StgKz +
+											(le.LehrgangNr ?? le.StgKz) +
 										'</td>'+
 										'<td>'+
 											le.SommersemesterSWS +
@@ -177,6 +196,14 @@ export const Personalmeldung = {
 							html += '</table>';
 
 							return html;
+						},
+						fheaderFilterFunc: function customHeaderFilter(headerValue, rowValue, rowData, filterParams){
+
+							for (let val of rowValue) {
+								if ((val.LehrgangNr ?? val.StgKz) == headerValue) return true;
+							}
+
+							return false; //must return a boolean, true if it passes the filter.
 						}
 					}
 				]
@@ -190,18 +217,19 @@ export const Personalmeldung = {
 		getMitarbeiter: function() {
 			// show loading
 			this.$refs.loader.show();
-			this.callGetMitarbeiter(
-				this.studiensemester_kurzbz,
-				(data) => {
+
+			return this.$api
+				.call(ApiPersonalmeldung.getMitarbeiter(this.studiensemester_kurzbz))
+				.then((response) => {
 					// set the employee data
 					if (this.$refs.personalmeldungTable)
-						this.$refs.personalmeldungTable.tabulator.setData(data.mitarbeiter);
+						this.$refs.personalmeldungTable.tabulator.setData(response.data.mitarbeiter);
 					// set employee sum data
-					this.personalmeldungSums = data.personalmeldungSums;
+					this.personalmeldungSums = response.data.personalmeldungSums;
 					// hide loading
 					this.$refs.loader.hide();
-				}
-			);
+				})
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		/**
 		 * save ("refresh") Verwendungen
@@ -209,14 +237,15 @@ export const Personalmeldung = {
 		generateVerwendungen: function() {
 			// show loading
 			this.$refs.loader.show();
-			this.callGenerateVerwendungen(
-				this.studiensemester_kurzbz,
-				(data) => {
+
+			return this.$api
+				.call(ApiVerwendungen.generateVerwendungen(this.studiensemester_kurzbz))
+				.then(() => {
 					// hide loading
 					this.$refs.loader.hide();
 					this.$fhcAlert.alertSuccess('Verwendungen erfolgreich aktualisiert');
-				}
-			);
+				})
+				.catch(this.$fhcAlert.handleSystemError);
 		},
 		/**
 		 * Download XML by changing url

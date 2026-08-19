@@ -26,7 +26,7 @@ export default {
 	},
 	methods: {
 		onHiddenBsModal() {
-			this.$refs.verwendungFormCmpt.resetError();
+			this.$refs.verwendungFormCmpt.reset();
 		},
 		onBsModalSave() {
 			this.$refs.verwendungFormCmpt.add();

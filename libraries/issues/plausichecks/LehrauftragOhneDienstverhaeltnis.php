@@ -17,48 +17,79 @@ class LehrauftragOhneDienstverhaeltnis extends PlausiChecker
 		$results = array();
 
 		$mitarbeiter_uid = isset($params['mitarbeiter_uid']) ? $params['mitarbeiter_uid'] : null;
+		if (isset($params['issue_person_id'])) $person_id = $params['issue_person_id'];
+		if (isset($params['person_id'])) $person_id = $params['person_id'];
 
 		$studiensemester_kurzbz = isset($params['studiensemester_kurzbz']) ? $params['studiensemester_kurzbz'] : null;
 
-		$dateData = $this->_ci->personalmeldungdatelib->getDateData($studiensemester_kurzbz);
-
-		if (isError($dateData)) return $dateData;
-		$dateData = getData($dateData);
-
-		$ws = $dateData['winterSemesterImMeldungsjahr'];
-		$ss = $dateData['sommerSemesterImMeldungsjahr'];
-
 		// get employee data
-		$qryParams = array($ws, $ss);
+		$qryParams = array();
+		$studiensemester_clause = '';
+		$person_id_clause = '';
+
+		if (isset($person_id))
+		{
+			$person_id_clause = 'AND pers.person_id = ?';
+			$qryParams[] = $person_id;
+		}
+
+		if (isset($studiensemester_kurzbz))
+		{
+			$dateData = $this->_ci->personalmeldungdatelib->getDateData($studiensemester_kurzbz);
+
+			if (isError($dateData)) return $dateData;
+			$dateData = getData($dateData);
+
+			$qryParams[] = $dateData['winterSemesterImMeldungsjahr'];
+			$qryParams[] = $dateData['sommerSemesterImMeldungsjahr'];
+
+			$studiensemester_clause = '
+				AND (
+					le.studiensemester_kurzbz = ?
+					OR le.studiensemester_kurzbz = ?
+				)';
+		}
 
 		$qry = "
 				SELECT
-					DISTINCT ma.mitarbeiter_uid, pers.vorname, pers.nachname, sem.studiensemester_kurzbz, pers.person_id
+					DISTINCT ma.mitarbeiter_uid, pers.vorname, pers.nachname, lehrauftraege.studiensemester_kurzbz, pers.person_id
 				FROM
 					public.tbl_mitarbeiter ma
 					JOIN tbl_benutzer ben ON ma.mitarbeiter_uid = ben.uid
 					JOIN tbl_person pers USING (person_id)
-					JOIN lehre.tbl_lehreinheitmitarbeiter lm ON ma.mitarbeiter_uid = lm.mitarbeiter_uid
-					JOIN lehre.tbl_lehreinheit le USING (lehreinheit_id)
-					JOIN lehre.tbl_lehrveranstaltung USING (lehrveranstaltung_id)
-					JOIN public.tbl_studiensemester sem ON le.studiensemester_kurzbz = sem.studiensemester_kurzbz
-				WHERE
-					(
-						le.studiensemester_kurzbz = ?
-						OR le.studiensemester_kurzbz = ?
-					)
-					AND lm.stundensatz != 0
-					AND lm.semesterstunden != 0
+					JOIN (
+						SELECT
+							b.person_id, sem.studiensemester_kurzbz, sem.start AS semester_start, sem.ende AS semester_ende
+						FROM
+							lehre.tbl_lehreinheitmitarbeiter lema
+							JOIN lehre.tbl_lehreinheit USING(lehreinheit_id)
+							JOIN tbl_benutzer b ON lema.mitarbeiter_uid = b.uid
+							JOIN public.tbl_studiensemester sem USING(studiensemester_kurzbz)
+						WHERE
+							lema.stundensatz != 0
+							AND lema.semesterstunden != 0
+						UNION
+						SELECT
+							pb.person_id, sem.studiensemester_kurzbz, sem.start AS semester_start, sem.ende AS semester_ende
+						FROM
+							lehre.tbl_projektbetreuer pb
+							JOIN lehre.tbl_projektarbeit USING(projektarbeit_id)
+							JOIN lehre.tbl_lehreinheit USING(lehreinheit_id)
+							JOIN public.tbl_studiensemester sem USING(studiensemester_kurzbz)
+					) lehrauftraege ON pers.person_id = lehrauftraege.person_id
+				WHERE TRUE
+					{$person_id_clause}
+					{$studiensemester_clause}
 					AND NOT EXISTS (
-						SELECT *
+						SELECT 1
 						FROM
 							hr.tbl_dienstverhaeltnis dv
 						WHERE
 						(
-							dv.von <= sem.ende
-							AND (dv.bis >= sem.start OR dv.bis IS NULL)
+							dv.von <= lehrauftraege.semester_ende
+							AND (dv.bis >= lehrauftraege.semester_start OR dv.bis IS NULL)
 						)
-						AND mitarbeiter_uid=lm.mitarbeiter_uid
+						AND mitarbeiter_uid=ma.mitarbeiter_uid
 					)";
 
 		if (isset($mitarbeiter_uid))
